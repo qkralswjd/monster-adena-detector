@@ -127,12 +127,14 @@ class MonsterTrackerApp:
         self._drag_dx         = acfg.get("drag_dx", 0)
         self._drag_dy         = acfg.get("drag_dy", 30)
         self._hold_ms         = acfg.get("hold_ms", 80)
-        self._aim_offset_y    = acfg.get("aim_offset_y", -10)  # 머리 조준 (음수=위)
+        self._aim_offset_y    = acfg.get("aim_offset_y", 0)
+        self._click_offset_x  = acfg.get("click_offset_x", 0)
+        self._click_offset_y  = acfg.get("click_offset_y", 0)
         self._last_attack_time = 0.0
         print(f"[Attack] enabled={self._attack_enabled} "
               f"drag=({self._drag_dx},{self._drag_dy}) "
               f"hold={self._hold_ms}ms "
-              f"aim_offset_y={self._aim_offset_y}")
+              f"offset=({self._click_offset_x},{self._click_offset_y})")
 
         # ── 타겟 상태 ───────────────────────────────
         self._target: Optional[Detection] = None
@@ -235,8 +237,9 @@ class MonsterTrackerApp:
             return
 
         # 전체화면 절대좌표로 변환 (피코 _cur_x/y 와 동일 기준)
-        sc_x, sc_y = self._to_screen(self._target.cx,
-                                     self._target.cy + self._aim_offset_y)
+        sc_x, sc_y = self._to_screen(
+            self._target.cx + self._click_offset_x,
+            self._target.cy + self._aim_offset_y + self._click_offset_y)
 
         # 공격 중이면 최신 좌표만 갱신
         if hasattr(self._ctrl, 'is_attacking') and self._ctrl.is_attacking:

@@ -39,9 +39,11 @@
         "drag_dy": 30,
         "drag_dx": 0,
         "hold_ms": 80,
-        "aim_offset_y": -10,
+        "aim_offset_y": 0,
+        "click_offset_x": 0,
+        "click_offset_y": 0,
         "_note_drag": "drag_dy=30: 아래로 드래그 → 공격모션. drag_dx=0: 가로 이동 없음",
-        "_note_aim": "aim_offset_y=-10: 몬스터 cx/cy보다 10px 위를 클릭 (머리 조준)"
+        "_note_aim": "aim_offset_y=0: 보정 없음. click_offset_x/y=0: 추가 보정 없음"
     },
     "adena": {
         "enabled": true,
@@ -51,10 +53,11 @@
         "max_picks": 5
     },
     "roi": {
-        "x": 522,
-        "y": 234,
-        "width": 912,
-        "height": 432
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "_note": "width=0, height=0 이면 ROI 없이 전체 화면 탐지"
     },
     "display": {
         "show_window": true
