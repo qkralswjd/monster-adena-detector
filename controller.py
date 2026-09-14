@@ -105,7 +105,7 @@ class PicoController(BaseController):
     SCALE_Y = 0.395
 
     def __init__(self, port: str, baudrate: int = 115200,
-                 screen_w: int = 2560, screen_h: int = 1920):
+                 screen_w: int = 1920, screen_h: int = 1080):
         """
         Args:
             port      : 시리얼 포트 (예: "COM4")
