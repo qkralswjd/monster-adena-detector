@@ -99,10 +99,9 @@ class MonsterTrackerApp:
         # 리셋 후 게임화면 내 상대좌표(0~1920, 0~1080)로만 이동하면 됨
         # → mon_left/top 은 항상 0 (프레임 내 좌표 = 피코 이동 좌표)
         mon = self._capture._monitor
-        self._mon_left = 0
-        self._mon_top  = 0
-        print(f"[Capture] 게임모니터: mss left={mon['left']}, top={mon['top']} "
-              f"| 피코기준 오프셋: 0, 0")
+        self._mon_left = mon["left"]
+        self._mon_top  = mon["top"]
+        print(f"[Capture] 게임모니터: left={self._mon_left}, top={self._mon_top}")
 
         # ── 공격 설정 ───────────────────────────────
         acfg = self._cfg["attack"]

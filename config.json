@@ -1,7 +1,7 @@
 {
     "capture": {
         "fps": 30,
-        "monitor": 1
+        "monitor": 2
     },
 
     "detector": {

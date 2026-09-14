@@ -97,10 +97,9 @@ class PicoController(BaseController):
     SCALE_Y = 0.395
 
     # 게임 모니터 오프셋 (Windows 가상 데스크탑 기준)
-    # 모니터2가 왼쪽: MON_OFFSET_X = -1920
-    # 모니터2가 오른쪽: MON_OFFSET_X = 1920
-    # 모니터1(기본): MON_OFFSET_X = 0
-    MON_OFFSET_X = -1920
+    # 모니터1(left=0): MON_OFFSET_X = 0  ← 게임이 모니터1에 있음
+    # 모니터2 왼쪽(left=-1920): MON_OFFSET_X = -1920
+    MON_OFFSET_X = 0
     MON_OFFSET_Y = 0
 
     def __init__(self, port: str, baudrate: int = 115200):
@@ -158,14 +157,10 @@ class PicoController(BaseController):
         self._send_text("MOVE:-9999:-9999")
         time.sleep(0.6)
 
-        # 게임 모니터 중앙으로 이동
-        # MON_OFFSET_X=-1920 이면 모니터2가 왼쪽 → 리셋 후 바로 게임화면
-        # 피코 물리좌표 기준: 중앙 = SCREEN_W//2, SCREEN_H//2
+        # 피코 물리 좌상단(0,0) → 게임 모니터1 중앙(960,540)으로 이동
+        # 모니터1 left=0 이므로 오프셋 없이 바로 중앙 좌표 전송
         cx = self.SCREEN_W // 2   # 960
         cy = self.SCREEN_H // 2   # 540
-
-        # 모니터2가 왼쪽(-1920)이면 좌상단 리셋이 이미 게임 모니터 좌상단
-        # 추가 오프셋 없이 게임 화면 중앙(960,540)으로 이동
         scaled_x = int(cx * self.SCALE_X)
         scaled_y = int(cy * self.SCALE_Y)
         self._send_text(f"MOVE:{scaled_x}:{scaled_y}")
@@ -173,7 +168,7 @@ class PicoController(BaseController):
 
         self._cur_x = cx
         self._cur_y = cy
-        print(f"[PicoController] 커서 리셋 완료: 게임중앙({cx},{cy}) 전송({scaled_x},{scaled_y})")
+        print(f"[PicoController] 커서 리셋 완료: 모니터1 중앙({cx},{cy}) 전송({scaled_x},{scaled_y})")
 
     # ── 핵심 공격: 드래그 공격 ────────────────────────────────────
     def drag_attack(self, x: int, y: int,
