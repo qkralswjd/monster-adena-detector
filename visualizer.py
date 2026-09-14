@@ -26,12 +26,17 @@ def _text(img, txt, x, y, color=CLR_HUD, scale=0.55, thick=1):
                 scale, color, thick, cv2.LINE_AA)
 
 
+CLR_ROI     = (0, 255, 255)   # 노랑 - ROI 존 테두리
+CLR_ADENA   = (0, 215, 255)   # 금색 - 아데나
+
+
 def draw(frame: np.ndarray,
          detections: List[Detection],
          target: Optional[Detection],
          miss_elapsed: float = 0.0,
          detector_fps: float = 0.0,
-         capture_fps: float = 0.0) -> np.ndarray:
+         capture_fps: float = 0.0,
+         roi: Optional[tuple] = None) -> np.ndarray:
     """
     탐지 박스 + 타겟 박스 + HUD 그리기.
 
@@ -47,16 +52,40 @@ def draw(frame: np.ndarray,
     """
     out = frame.copy()
 
-    # ── 일반 몬스터 박스 ──────────────────────────────────────
+    # ── ROI 존 표시 ───────────────────────────────────────────
+    if roi:
+        rx, ry, rw, rh = roi
+        # 반투명 오버레이
+        overlay = out.copy()
+        cv2.rectangle(overlay, (rx, ry), (rx+rw, ry+rh), CLR_ROI, -1)
+        cv2.addWeighted(overlay, 0.06, out, 0.94, 0, out)
+        # 테두리 (파선 효과: 두꺼운 외곽 + 얇은 내부)
+        cv2.rectangle(out, (rx, ry), (rx+rw, ry+rh), CLR_ROI, 2)
+        # 코너 강조
+        c = 20
+        for px, py in [(rx,ry),(rx+rw,ry),(rx,ry+rh),(rx+rw,ry+rh)]:
+            sx = 1 if px == rx else -1
+            sy = 1 if py == ry else -1
+            cv2.line(out, (px, py), (px + sx*c, py), CLR_ROI, 3)
+            cv2.line(out, (px, py), (px, py + sy*c), CLR_ROI, 3)
+        _text(out, f"DETECT ZONE  {rw}x{rh}", rx+6, ry+18,
+              color=CLR_ROI, scale=0.5, thick=1)
+
+    # ── 일반 몬스터/아데나 박스 ───────────────────────────────
     for d in detections:
         is_target = (target is not None and
                      d.x == target.x and d.y == target.y)
         if is_target:
             continue  # 타겟은 아래서 따로 그림
         x, y, w, h = d.x, d.y, d.w, d.h
-        cv2.rectangle(out, (x, y), (x+w, y+h), CLR_MONSTER, 1)
-        _text(out, f"{d.confidence:.2f}", x, y - 5,
-              color=CLR_MONSTER, scale=0.45)
+        if d.class_id == 1:  # adena
+            cv2.rectangle(out, (x, y), (x+w, y+h), CLR_ADENA, 1)
+            _text(out, f"adena {d.confidence:.2f}", x, y - 5,
+                  color=CLR_ADENA, scale=0.42)
+        else:  # monster
+            cv2.rectangle(out, (x, y), (x+w, y+h), CLR_MONSTER, 1)
+            _text(out, f"{d.confidence:.2f}", x, y - 5,
+                  color=CLR_MONSTER, scale=0.45)
 
     # ── 타겟 박스 ─────────────────────────────────────────────
     if target is not None:

@@ -55,10 +55,10 @@
     },
 
     "roi": {
-        "x": 0,
-        "y": 0,
-        "width": 0,
-        "height": 0
+        "x": 522,
+        "y": 234,
+        "width": 912,
+        "height": 432
     },
 
     "display": {

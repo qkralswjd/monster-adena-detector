@@ -157,10 +157,15 @@ class MonsterTrackerApp:
         self._cap_fps        = self._cfg["capture"]["fps"]
         self._frame_interval = 1.0 / self._cap_fps
 
-        # ── ROI ─────────────────────────────────────
+        # ── ROI (탐지 필터 존) ──────────────────────
+        # 캡처는 전체 화면 그대로, 탐지 후 ROI 밖 결과만 제거
         rcfg = self._cfg["roi"]
         if rcfg["width"] > 0 and rcfg["height"] > 0:
-            self._capture.set_roi(rcfg["x"], rcfg["y"], rcfg["width"], rcfg["height"])
+            self._roi = (rcfg["x"], rcfg["y"], rcfg["width"], rcfg["height"])
+            print(f"[ROI] 탐지존 설정: ({rcfg['x']},{rcfg['y']}) {rcfg['width']}x{rcfg['height']}")
+        else:
+            self._roi = None
+            print("[ROI] 탐지존 없음 (전체 화면 탐지)")
 
         # ── 로그 타이머 ─────────────────────────────
         self._last_detect_log = 0.0
@@ -317,6 +322,15 @@ class MonsterTrackerApp:
 
                 # ── 탐지 (전 클래스: monster + adena) ──
                 all_detections = self._detector.detect(frame)
+
+                # ── ROI 필터링 (탐지존 밖 결과 제거) ──
+                if self._roi:
+                    rx, ry, rw, rh = self._roi
+                    all_detections = [
+                        d for d in all_detections
+                        if rx <= d.cx <= rx + rw and ry <= d.cy <= ry + rh
+                    ]
+
                 monsters = [d for d in all_detections if d.class_id == 0]
                 adenas   = [d for d in all_detections if d.class_id == 1]
 
@@ -394,6 +408,7 @@ class MonsterTrackerApp:
                 miss_elapsed = miss,
                 detector_fps = self._detector.fps,
                 capture_fps  = self._capture.fps,
+                roi          = self._roi,
             )
             # 아데나 수집 중이면 화면에 표시
             if self._adena.is_collecting:
