@@ -108,6 +108,8 @@ class MonsterTrackerApp:
                 baudrate  = ccfg["baudrate"],
                 screen_w  = gcfg["width"],
                 screen_h  = gcfg["height"],
+                mon_left  = self._mon_left,   # 전체화면 기준 (-1920)
+                mon_top   = self._mon_top,    # 전체화면 기준 (0)
             )
             if not self._ctrl.connect():
                 print("[Controller] 연결 실패 → DummyController로 대체")
@@ -232,23 +234,21 @@ class MonsterTrackerApp:
         if now - self._last_attack_time < self._attack_cooldown:
             return
 
+        # 전체화면 절대좌표로 변환 (피코 _cur_x/y 와 동일 기준)
+        sc_x, sc_y = self._to_screen(self._target.cx,
+                                     self._target.cy + self._aim_offset_y)
+
         # 공격 중이면 최신 좌표만 갱신
         if hasattr(self._ctrl, 'is_attacking') and self._ctrl.is_attacking:
-            aim_y = self._target.cy + self._aim_offset_y
-            self._ctrl.update_target(self._target.cx, aim_y)
+            self._ctrl.update_target(sc_x, sc_y)
             return
 
-        aim_x = self._target.cx
-        aim_y = self._target.cy + self._aim_offset_y
-
-        sc_x, sc_y = self._to_screen(aim_x, aim_y)
         print(f"[Attack #{self._target_no}] 공격! "
-              f"프레임({aim_x},{aim_y})  전체화면({sc_x},{sc_y})  "
-              f"drag_dy={self._drag_dy}")
+              f"전체화면({sc_x},{sc_y})  drag_dy={self._drag_dy}")
 
         self._ctrl.drag_attack(
-            x       = aim_x,
-            y       = aim_y,
+            x       = sc_x,   # 전체화면 절대좌표
+            y       = sc_y,   # 전체화면 절대좌표
             drag_dx = self._drag_dx,
             drag_dy = self._drag_dy,
             hold_ms = self._hold_ms,

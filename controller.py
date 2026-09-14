@@ -101,7 +101,8 @@ class PicoController(BaseController):
     SCALE_Y = 0.395
 
     def __init__(self, port: str, baudrate: int = 115200,
-                 screen_w: int = 1920, screen_h: int = 1080):
+                 screen_w: int = 1920, screen_h: int = 1080,
+                 mon_left: int = 0, mon_top: int = 0):
         self._port     = port
         self._baudrate = baudrate
         self._serial   = None
@@ -110,10 +111,14 @@ class PicoController(BaseController):
 
         self.SCREEN_W = screen_w
         self.SCREEN_H = screen_h
+        self.MON_LEFT = mon_left   # 게임모니터 left (예: -1920)
+        self.MON_TOP  = mon_top    # 게임모니터 top  (보통 0)
 
-        # 피코 커서 추적 (프레임 좌표 기준, 리셋 후 중앙에서 시작)
-        self._cur_x = screen_w // 2
-        self._cur_y = screen_h // 2
+        # 피코 커서 추적 ─ 전체화면 절대좌표 기준
+        # 리셋 후 게임모니터 좌상단(mon_left, mon_top) = 피코(0,0)
+        # 전체화면 중앙 = mon_left + screen_w//2
+        self._cur_x = mon_left + screen_w // 2
+        self._cur_y = mon_top  + screen_h // 2
 
         # 공격 스레드 상태
         self._attack_thread: threading.Thread = None
@@ -121,8 +126,8 @@ class PicoController(BaseController):
         self._attack_lock = threading.Lock()
 
         # 공격 중 최신 타겟 좌표 (메인루프가 갱신)
-        self._target_x = screen_w // 2
-        self._target_y = screen_h // 2
+        self._target_x = mon_left + screen_w // 2
+        self._target_y = mon_top  + screen_h // 2
 
     # ── 연결 ──────────────────────────────────────────────────────
     def connect(self) -> bool:
@@ -180,14 +185,20 @@ class PicoController(BaseController):
     # ── 커서 리셋 ─────────────────────────────────────────────────
     def _reset_cursor(self):
         """
-        피코 커서를 전체 좌상단(0,0)으로 보낸 뒤
-        게임 화면 중앙(SCREEN_W//2, SCREEN_H//2)으로 이동.
+        피코 커서를 전체 좌상단으로 보낸 뒤 게임 화면 중앙으로 이동.
+
+        리셋 후 피코(0,0) = 전체화면(0,0) = Windows 전체 좌상단
+        → 게임모니터 좌상단까지 이동량 = |MON_LEFT|, |MON_TOP|
+        → 이후 _cur_x/y 는 전체화면 절대좌표 기준
         """
         self._send("MOVE:-9999:-9999")
         time.sleep(0.8)
 
-        cx = self.SCREEN_W // 2
-        cy = self.SCREEN_H // 2
+        # 게임모니터 중앙 = 전체화면 기준
+        cx = self.MON_LEFT + self.SCREEN_W // 2   # 예: -1920 + 960 = -960
+        cy = self.MON_TOP  + self.SCREEN_H // 2   # 예: 0 + 540 = 540
+
+        # 피코(0,0)=전체화면(0,0) → 목표(cx,cy)로 이동
         sx = round(cx * self.SCALE_X)
         sy = round(cy * self.SCALE_Y)
         self._send(f"MOVE:{sx}:{sy}")
@@ -195,7 +206,8 @@ class PicoController(BaseController):
 
         self._cur_x = cx
         self._cur_y = cy
-        print(f"[PicoController] 커서 리셋 완료: 게임중앙({cx},{cy}) 전송({sx},{sy})")
+        print(f"[PicoController] 커서 리셋 완료: "
+              f"전체화면중앙({cx},{cy}) 전송MOVE({sx},{sy})")
 
     # ── 드래그 공격 (비동기 스레드) ──────────────────────────────
     def drag_attack(self, x: int, y: int,
