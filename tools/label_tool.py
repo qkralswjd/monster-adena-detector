@@ -35,15 +35,15 @@ ROOT      = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 RAW_DIR   = os.path.join(ROOT, "dataset", "images", "raw")
 IMG_DIR   = os.path.join(ROOT, "dataset", "images", "train")
 LABEL_DIR = os.path.join(ROOT, "dataset", "labels", "train")
-CLASSES   = ["monster"]
+CLASSES   = ["monster", "adena"]
 
 # 자동 bbox 크기 (클릭 주변 탐색 범위)
 AUTO_SEARCH_RADIUS = 80   # 클릭 주변 이 범위 안에서 외곽선 찾기
 MIN_AREA           = 800  # 너무 작은 건 무시
 # ────────────────────────────────────────────────
 
-CLR_BOX    = (0, 255, 0)
-CLR_DRAG   = (0, 200, 255)
+CLR_COLORS = [(0, 255, 0), (0, 180, 255)]  # monster=초록, adena=주황
+CLR_DRAG   = (255, 255, 0)
 CLR_TEXT   = (255, 255, 255)
 CLR_SHADOW = (0, 0, 0)
 
@@ -159,15 +159,16 @@ def put_text(img, txt, x, y, color=CLR_TEXT, scale=0.55, thick=1):
                 scale, color, thick, cv2.LINE_AA)
 
 
-def draw_frame(img, boxes, drag_start, drag_cur, idx, total, img_path):
+def draw_frame(img, boxes, drag_start, drag_cur, idx, total, img_path, cur_class):
     disp = img.copy()
     h, w = img.shape[:2]
 
     # 저장된 박스들
     for i, (cls_id, x1, y1, x2, y2) in enumerate(boxes):
-        cv2.rectangle(disp, (x1, y1), (x2, y2), CLR_BOX, 2)
+        clr = CLR_COLORS[cls_id % len(CLR_COLORS)]
+        cv2.rectangle(disp, (x1, y1), (x2, y2), clr, 2)
         put_text(disp, f"{CLASSES[cls_id]}", x1, y1 - 5,
-                 color=CLR_BOX, scale=0.45)
+                 color=clr, scale=0.45)
 
     # 드래그 중인 박스
     if drag_start and drag_cur:
@@ -176,8 +177,12 @@ def draw_frame(img, boxes, drag_start, drag_cur, idx, total, img_path):
     # 상단 HUD
     fname   = os.path.basename(img_path)
     labeled = len(boxes) > 0
+    cur_clr = CLR_COLORS[cur_class % len(CLR_COLORS)]
     put_text(disp, f"[{idx+1}/{total}] {fname}  boxes:{len(boxes)}",
              8, 22, scale=0.55)
+    # 현재 클래스 표시
+    put_text(disp, f"클래스: [{cur_class}] {CLASSES[cur_class]}  (0=monster 1=adena)",
+             8, 45, scale=0.5, color=cur_clr)
     put_text(disp, "클릭=자동bbox  드래그=수동  Z=취소  D=다음  A=이전  F=스킵  Q=종료",
              8, h - 8, scale=0.42, color=(180, 180, 180))
 
@@ -213,8 +218,9 @@ def main():
     WIN = "Label Tool"
     cv2.namedWindow(WIN, cv2.WINDOW_NORMAL)
 
-    idx   = 0
-    state = State()
+    idx       = 0
+    cur_class = 0   # 0=monster, 1=adena
+    state     = State()
 
     img   = cv2.imread(images[idx])
     ih, iw = img.shape[:2]
@@ -244,14 +250,14 @@ def main():
                 # ── 클릭 → 자동 bbox ──────────────
                 box = auto_bbox(img, x, y)
                 if box:
-                    boxes.append((0, *box))
+                    boxes.append((cur_class, *box))
                     saved = False
             else:
                 # ── 드래그 → 수동 bbox ─────────────
                 x1, y1 = state.drag_start
                 x2, y2 = x, y
                 if abs(x2-x1) > 10 and abs(y2-y1) > 10:
-                    boxes.append((0,
+                    boxes.append((cur_class,
                                   min(x1,x2), min(y1,y2),
                                   max(x1,x2), max(y1,y2)))
                     saved = False
@@ -287,7 +293,7 @@ def main():
         disp = draw_frame(img, boxes,
                           state.drag_start if state.moved else None,
                           state.drag_cur   if state.moved else None,
-                          idx, len(images), images[idx])
+                          idx, len(images), images[idx], cur_class)
         cv2.imshow(WIN, disp)
         key = cv2.waitKey(20) & 0xFF
 
@@ -319,6 +325,12 @@ def main():
 
         elif key in (ord('a'), 81):        # A / ←: 이전
             go_prev()
+
+        elif ord('0') <= key <= ord('9'):   # 숫자키: 클래스 변경
+            cls = key - ord('0')
+            if cls < len(CLASSES):
+                cur_class = cls
+                print(f"  [class] {CLASSES[cur_class]}")
 
     cv2.destroyAllWindows()
 

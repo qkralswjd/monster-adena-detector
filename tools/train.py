@@ -22,7 +22,7 @@ import yaml
 # ── 설정 ────────────────────────────────────────
 ROOT       = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 DATASET    = os.path.join(ROOT, "dataset")
-CLASSES    = ["monster"]          # 클래스 이름 (label_tool.py와 동일하게)
+CLASSES    = ["monster", "adena"]  # 클래스 이름 (label_tool.py와 동일하게)
 
 # 학습 파라미터 (RTX 2060 기준)
 MODEL      = "yolov8s.pt"        # 베이스 모델
