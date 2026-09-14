@@ -33,8 +33,8 @@ import threading
 
 class PicoController:
 
-    SCALE_X = 0.395   # MOVE:1 → 실제 2.53px (X축)
-    SCALE_Y = 0.395   # MOVE:1 → 실제 2.53px (Y축, X와 다를 수 있음)
+    SCALE_X = 0.3923  # 측정값: HID379 / 실제966px
+    SCALE_Y = 0.3901  # 측정값: HID213 / 실제546px
 
     def __init__(self, port: str, baudrate: int = 115200):
         self._port      = port
