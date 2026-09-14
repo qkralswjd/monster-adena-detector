@@ -1,0 +1,44 @@
+{
+    "capture": {
+        "monitor": 1,
+        "_note": "mss 인덱스. monitors[1] = 첫 번째 물리 모니터. 1920x1080 전체 화면."
+    },
+    "detector": {
+        "model": "runs/detect/monster_v1/weights/best.pt",
+        "confidence": 0.4,
+        "iou_threshold": 0.45,
+        "device": "cuda",
+        "img_size": 640,
+        "_note": "detector.py 에 전달되는 값. 좌표 변환 없음."
+    },
+    "controller": {
+        "port": "COM4",
+        "baudrate": 115200,
+        "enabled": true,
+        "scale": 0.395,
+        "_note_scale": "PICO HID 감도. MOVE:1 → 실제 2.53px. 보정값: 1/2.53 = 0.395",
+        "_note_enabled": "false = DummyController (로그만 출력, 실제 입력 없음)"
+    },
+    "attack": {
+        "enabled": true,
+        "cooldown_sec": 0.8,
+        "drag_dy": 30,
+        "drag_dx": 0,
+        "hold_ms": 80,
+        "_note": "drag_dy=30: PRESS 후 아래로 30px 드래그 → 공격 모션"
+    },
+    "target": {
+        "select_mode": "nearest",
+        "iou_thresh": 0.3,
+        "max_dist": 150,
+        "miss_timeout_sec": 1.5
+    },
+    "roi": {
+        "enabled": false,
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "_note": "enabled=false 면 전체 화면 탐지. enabled=true 면 해당 영역만 탐지."
+    }
+}
