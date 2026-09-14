@@ -105,6 +105,12 @@ class MonsterTrackerApp:
         self._cap_fps   = self._cfg["capture"]["fps"]
         self._frame_interval = 1.0 / self._cap_fps
 
+        # ── 모니터 절대좌표 오프셋 (프레임 내 좌표 → Windows 절대좌표 변환용) ──
+        mon = self._capture._monitor   # mss monitor dict: left, top, width, height
+        self._mon_left = mon["left"]
+        self._mon_top  = mon["top"]
+        print(f"[Capture] 모니터 오프셋: left={self._mon_left}, top={self._mon_top}")
+
         # ── ROI ─────────────────────────────────────
         rcfg = self._cfg["roi"]
         if rcfg["width"] > 0 and rcfg["height"] > 0:
@@ -184,7 +190,9 @@ class MonsterTrackerApp:
         if now - self._last_attack_time < self._attack_cooldown:
             return
 
-        x, y = self._target.cx, self._target.cy
+        # 프레임 내 상대좌표 → Windows 절대좌표 변환
+        x = self._target.cx + self._mon_left
+        y = self._target.cy + self._mon_top
         self._controller.click_drag(
             x, y,
             drag_dx = self._drag_dx,
@@ -192,7 +200,7 @@ class MonsterTrackerApp:
             hold_ms = self._drag_hold_ms,
         )
         self._last_attack_time = now
-        print(f"[Attack] 공격: ({x},{y})")
+        print(f"[Attack] 공격: 프레임({self._target.cx},{self._target.cy}) → 절대({x},{y})")
 
     # ─────────────────────────────────────────────
     def run(self):
