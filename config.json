@@ -12,7 +12,7 @@
         "_dpi_warning": "Windows DPI 스케일(125%/150%) 설정 시 mss 캡처 크기가 달라질 수 있음. mss 실제 크기로 맞출 것"
     },
     "controller": {
-        "port": "COM3",
+        "port": "COM4",
         "baudrate": 115200,
         "enabled": true,
         "_note_port": "피코 연결 COM 포트. 장치관리자에서 확인 (예: COM3, COM4)",
