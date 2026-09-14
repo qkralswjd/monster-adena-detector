@@ -178,17 +178,15 @@ def main():
     miss_start      = None
     MISS_TIMEOUT    = cfg["target"].get("death_timeout_sec", 1.5)
     MISS_IOU_THRESH = cfg["target"].get("death_iou_thresh",  0.3)
-    prev_target_id  = None   # 새 타겟 감지용
+    prev_target_id  = None
+    attacked        = False   # 타겟당 1번만 클릭
 
-    # ── 공격 쿨다운 ───────────────────────────────────────────
-    acfg          = cfg["attack"]
-    atk_enabled   = acfg.get("enabled", True)
-    atk_cooldown  = acfg.get("cooldown_sec", 0.5)
-    drag_dy       = acfg.get("drag_dy", 30)
-    drag_dx       = acfg.get("drag_dx", 0)
-    hold_ms       = acfg.get("hold_ms", 80)
-    last_atk_time = 0.0
-    first_attack_done = False   # 새 타겟 첫 클릭 여부
+    # ── 공격 설정 ─────────────────────────────────────────────
+    acfg    = cfg["attack"]
+    atk_enabled = acfg.get("enabled", True)
+    drag_dy = acfg.get("drag_dy", 30)
+    drag_dx = acfg.get("drag_dx", 0)
+    hold_ms = acfg.get("hold_ms", 80)
 
     # ── 화면 중앙 (nearest 기준점) ────────────────────────────
     # 프레임 기준 중앙 (letterbox 포함)
@@ -241,10 +239,10 @@ def main():
                         miss_start = time.time()
                     elif time.time() - miss_start > MISS_TIMEOUT:
                         print(f"[Target] 타겟 소실/사망 → 해제")
-                        current_target    = None
-                        miss_start        = None
-                        prev_target_id    = None
-                        first_attack_done = False
+                        current_target = None
+                        miss_start     = None
+                        prev_target_id = None
+                        attacked       = False
 
             # 타겟 없으면 nearest 자동 선택
             if current_target is None and monsters:
@@ -252,29 +250,22 @@ def main():
                 if current_target:
                     tgt_id = (current_target.x, current_target.y)
                     if tgt_id != prev_target_id:
-                        # ★ 새 타겟 발견 → 즉시 첫 클릭 (쿨다운 무시)
-                        prev_target_id    = tgt_id
-                        first_attack_done = False
-                        print(f"[Target] 새 타겟: 프레임({current_target.cx},{current_target.cy})")
+                        prev_target_id = tgt_id
+                        attacked       = False
+                        print(f"[Target] 새 타겟: 게임내({current_target.cx - lb_x},{current_target.cy})")
 
-            # ── 자동 공격 ─────────────────────────────────────
-            if atk_enabled and current_target is not None and not ctrl.is_attacking:
-                now = time.time()
-                # 새 타겟이면 즉시 공격, 아니면 쿨다운 체크
-                do_attack = (not first_attack_done) or (now - last_atk_time >= atk_cooldown)
+            # ── 자동 공격 - 타겟당 1번만 ──────────────────────
+            if atk_enabled and current_target is not None and not attacked and not ctrl.is_attacking:
+                attacked = True
 
-                if do_attack:
-                    last_atk_time     = now
-                    first_attack_done = True
+                gx, gy = frame_to_game(current_target.cx, current_target.cy)
 
-                    gx, gy = frame_to_game(current_target.cx, current_target.cy)
-
-                    ctrl.drag_attack(gx, gy,
-                                     drag_dx=drag_dx,
-                                     drag_dy=drag_dy,
-                                     hold_ms=hold_ms)
-                    overlay.notify_attack(mon_left + lb_x + gx, mon_top + gy)
-                    print(f"[Attack] 게임내({gx},{gy})  프레임({current_target.cx},{current_target.cy})")
+                ctrl.drag_attack(gx, gy,
+                                 drag_dx=drag_dx,
+                                 drag_dy=drag_dy,
+                                 hold_ms=hold_ms)
+                overlay.notify_attack(mon_left + lb_x + gx, mon_top + gy)
+                print(f"[Attack] 게임내({gx},{gy})")
 
             # ── 오버레이 갱신 ─────────────────────────────────
             miss_elapsed = (time.time() - miss_start
