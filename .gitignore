@@ -36,7 +36,7 @@ logs/
 snapshots/
 
 # YOLO 모델 (용량 큰 파일)
-*.pt
+# *.pt  ← best.pt 는 추적 허용 (runs/detect/monster_v1/weights/best.pt)
 *.onnx
 *.engine
 models/
