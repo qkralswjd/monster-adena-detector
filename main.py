@@ -34,6 +34,10 @@ from target_selector import select_nearest, select_by_click, find_matching
 from death_detector import DeathDetector
 import visualizer
 
+# controller.py는 monster_bot 것을 그대로 사용
+# make_controller는 config dict 기반으로 직접 생성
+from controller import PicoController, DummyController
+
 
 # ─────────────────────────────────────────────
 def load_config(path: str = "config.json") -> dict:
@@ -67,13 +71,35 @@ class MonsterTrackerApp:
             timeout_sec = tcfg["death_timeout_sec"],
             iou_thresh  = tcfg["death_iou_thresh"],
         )
-        self._select_mode  = tcfg["select_mode"]   # "nearest" or "click"
+        self._select_mode  = tcfg["select_mode"]
         self._click_radius = tcfg["click_radius"]
+
+        # ── 컨트롤러 (피코 HID) ─────────────────────
+        ccfg = self._cfg["controller"]
+        if ccfg["enabled"] and ccfg["type"] == "pico":
+            self._controller = PicoController(
+                port=ccfg["port"], baudrate=ccfg["baudrate"])
+            if not self._controller.connect():
+                print("[Controller] 피코 연결 실패 → Dummy 모드")
+                self._controller = DummyController()
+                self._controller.connect()
+        else:
+            self._controller = DummyController()
+            self._controller.connect()
+
+        # ── 공격 설정 ───────────────────────────────
+        acfg = self._cfg["attack"]
+        self._attack_enabled  = acfg["enabled"]
+        self._attack_cooldown = acfg["cooldown_sec"]
+        self._drag_dx         = acfg["drag_dx"]
+        self._drag_dy         = acfg["drag_dy"]
+        self._drag_hold_ms    = acfg["drag_hold_ms"]
+        self._last_attack_time = 0.0
 
         # ── 상태 변수 ───────────────────────────────
         self._target: Optional[Detection] = None
-        self._auto_select = True   # 타겟 없을 때 자동으로 nearest 선택
-        self._pending_click: Optional[tuple] = None  # (x, y)
+        self._auto_select = True
+        self._pending_click: Optional[tuple] = None
 
         # ── FPS 캡처 제한 ────────────────────────────
         self._cap_fps   = self._cfg["capture"]["fps"]
@@ -148,6 +174,27 @@ class MonsterTrackerApp:
                         self._death_detector.reset()
 
     # ─────────────────────────────────────────────
+    def _try_attack(self):
+        """타겟이 있으면 쿨다운 체크 후 공격."""
+        if not self._attack_enabled:
+            return
+        if self._target is None:
+            return
+        now = time.time()
+        if now - self._last_attack_time < self._attack_cooldown:
+            return
+
+        x, y = self._target.cx, self._target.cy
+        self._controller.click_drag(
+            x, y,
+            drag_dx = self._drag_dx,
+            drag_dy = self._drag_dy,
+            hold_ms = self._drag_hold_ms,
+        )
+        self._last_attack_time = now
+        print(f"[Attack] 공격: ({x},{y})")
+
+    # ─────────────────────────────────────────────
     def run(self):
         cv2.namedWindow(self.WIN, cv2.WINDOW_NORMAL)
         cv2.setMouseCallback(self.WIN, self._on_mouse)
@@ -177,6 +224,9 @@ class MonsterTrackerApp:
 
             # ── 타겟 갱신 ─────────────────────────────
             self._update_target(detections)
+
+            # ── 공격 ──────────────────────────────────
+            self._try_attack()
 
             # ── 시각화 ────────────────────────────────
             miss = self._death_detector.miss_elapsed
@@ -214,6 +264,7 @@ class MonsterTrackerApp:
                         print("[Capture] ROI 해제 (전체 화면)")
 
         cv2.destroyAllWindows()
+        self._controller.disconnect()
         print("[MonsterTracker] 종료")
 
 

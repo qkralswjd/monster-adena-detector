@@ -20,6 +20,21 @@
         "click_radius": 60
     },
 
+    "controller": {
+        "enabled": true,
+        "type": "pico",
+        "port": "COM4",
+        "baudrate": 115200
+    },
+
+    "attack": {
+        "enabled": true,
+        "cooldown_sec": 0.5,
+        "drag_dx": 5,
+        "drag_dy": 0,
+        "drag_hold_ms": 80
+    },
+
     "roi": {
         "x": 0,
         "y": 0,
