@@ -1,8 +1,8 @@
 {
     "capture": {
         "fps": 30,
-        "monitor": 2,
-        "_note_monitor": "mss 인덱스: monitors[0]=전체, monitors[1]=모니터2(left=-1920), monitors[2]=모니터1(left=0, 게임)"
+        "monitor": 1,
+        "_note_monitor": "mss 인덱스: monitors[0]=전체, monitors[1]=모니터2(left=-1920, 게임), monitors[2]=모니터1(left=0, 탐지창)"
     },
 
     "game": {
