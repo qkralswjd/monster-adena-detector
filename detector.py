@@ -1,8 +1,14 @@
 """
 detector.py
 -----------
-YOLOv8 기반 몬스터 탐지 모듈.
-커스텀 모델 또는 기본 모델 사용 가능.
+YOLOv8 커스텀 모델 전용 탐지 모듈.
+
+학습된 모델: runs/detect/monster_v1/weights/best.pt
+  class_id=0 → monster
+  class_id=1 → adena
+
+반드시 커스텀 best.pt 만 사용한다.
+COCO 사전학습 클래스는 절대 탐지하지 않는다.
 탐지 결과를 Detection 객체 리스트로 반환.
 """
 
@@ -46,10 +52,16 @@ class Detection:
         return self.w * self.h
 
 
-class YOLODetector:
-    """YOLOv8 기반 탐지기."""
+# 커스텀 모델 클래스 정의 (best.pt 학습 기준 고정)
+CLASS_MONSTER = 0   # monster
+CLASS_ADENA   = 1   # adena
+KNOWN_CLASSES = {CLASS_MONSTER: "monster", CLASS_ADENA: "adena"}
 
-    def __init__(self, model_path: str = "yolov8s.pt",
+
+class YOLODetector:
+    """커스텀 best.pt 전용 탐지기 (monster / adena 2클래스)."""
+
+    def __init__(self, model_path: str = "runs/detect/monster_v1/weights/best.pt",
                  confidence: float = 0.4,
                  iou_threshold: float = 0.45,
                  device: str = "cuda",
@@ -59,8 +71,11 @@ class YOLODetector:
         self._iou = iou_threshold
         self._device = device
         self._img_size = img_size
-        self._classes = classes
+        # classes 파라미터는 무시하고 항상 커스텀 클래스만 사용
+        # (best.pt 자체가 2클래스만 학습되어 있어 자동 제한되지만 명시)
+        self._classes = None   # best.pt 는 전 클래스 = monster+adena 뿐
         self._model = None
+        self._model_class_names: dict = {}
         self._fps_ticks = []
         self._fps = 0.0
         self._load_model(model_path)
@@ -69,10 +84,25 @@ class YOLODetector:
         try:
             from ultralytics import YOLO
             self._model = YOLO(model_path)
+            self._model_class_names = self._model.names  # {0:'monster', 1:'adena'}
+
+            # 로드된 클래스 목록 출력
+            print(f"[Detector] 커스텀 모델 로드: {model_path} @ {self._device}")
+            print(f"[Detector] 탐지 클래스: "
+                  + ", ".join(f"{k}={v}" for k, v in self._model_class_names.items()))
+
+            # 예상 클래스 검증 (monster=0, adena=1)
+            if self._model_class_names.get(0) != "monster":
+                print(f"[Detector] ⚠ class_id=0 이 'monster' 가 아님: "
+                      f"{self._model_class_names.get(0)} → 확인 필요")
+            if self._model_class_names.get(1) != "adena":
+                print(f"[Detector] ⚠ class_id=1 이 'adena' 가 아님: "
+                      f"{self._model_class_names.get(1)} → 확인 필요")
+
             # GPU 워밍업
             dummy = np.zeros((640, 640, 3), dtype=np.uint8)
             self._model(dummy, verbose=False, device=self._device)
-            print(f"[Detector] YOLOv8 로드 완료: {model_path} @ {self._device}")
+            print(f"[Detector] 워밍업 완료 - 준비됨")
         except Exception as e:
             print(f"[Detector] 모델 로드 실패: {e}")
             self._model = None
@@ -96,7 +126,13 @@ class YOLODetector:
                     x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
                     conf = float(box.conf[0])
                     cls_id = int(box.cls[0])
-                    cls_name = self._model.names.get(cls_id, "unknown")
+
+                    # 커스텀 모델 클래스만 허용 (0=monster, 1=adena)
+                    # best.pt 외 다른 모델이 실수로 로드되더라도 필터링
+                    if cls_id not in KNOWN_CLASSES:
+                        continue
+
+                    cls_name = self._model_class_names.get(cls_id, KNOWN_CLASSES.get(cls_id, "unknown"))
                     detections.append(Detection(
                         x=x1, y=y1,
                         w=x2-x1, h=y2-y1,

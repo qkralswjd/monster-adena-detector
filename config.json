@@ -10,7 +10,8 @@
         "iou_threshold": 0.45,
         "device": "cuda",
         "img_size": 640,
-        "classes": null
+        "classes": null,
+        "_note": "classes=null 이어도 best.pt는 monster(0)/adena(1) 2클래스만 탐지"
     },
 
     "target": {
