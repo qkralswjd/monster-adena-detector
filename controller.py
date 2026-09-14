@@ -20,7 +20,13 @@ controller.py
 
 HID 감도 스케일:
   SCALE = 0.395  (측정값: MOVE:1 → 실제 2.53px 이동)
-  원하는 픽셀 P → 전송값 = P * SCALE
+  원하는 픽셀 P → 전송값 = round(P * SCALE)
+
+좌표 일치 조건 (중요!):
+  mss 캡처 해상도 == 게임 렌더링 해상도 == SCREEN_W x SCREEN_H
+  세 값이 모두 같아야 탐지 좌표 = 피코 이동 목표 좌표가 정확히 일치.
+  Windows DPI 스케일(125%/150%) 사용 시 mss 캡처 크기가 달라지므로
+  반드시 실제 mss monitors[idx] 크기를 확인 후 SCREEN_W/H 설정할 것.
 """
 
 import time
@@ -70,6 +76,12 @@ class DummyController(BaseController):
                     drag_dy: int = 0, hold_ms: int = 80):
         print(f"[DummyController] 드래그공격: ({x},{y}) drag=({drag_dx},{drag_dy})")
 
+    def click(self, x: int, y: int, hold_ms: int = 50):
+        print(f"[DummyController] 클릭: ({x},{y})")
+
+    def stop(self):
+        pass
+
     # 하위호환 alias
     def click_drag(self, x: int, y: int, drag_dx: int = 8,
                    drag_dy: int = 0, hold_ms: int = 80):
@@ -86,32 +98,37 @@ class DummyController(BaseController):
 
 class PicoController(BaseController):
 
-    # 게임 화면 해상도
-    SCREEN_W = 1920
-    SCREEN_H = 1080
-
     # HID 감도 보정 스케일
     # 측정 결과: MOVE:1 → 실제 2.53px 이동
     # SCALE = 1 / 2.53 = 0.395
     SCALE_X = 0.395
     SCALE_Y = 0.395
 
-    # 게임 모니터 오프셋 (Windows 가상 데스크탑 기준)
-    # 모니터1(left=0): MON_OFFSET_X = 0  ← 게임이 모니터1에 있음
-    # 모니터2 왼쪽(left=-1920): MON_OFFSET_X = -1920
-    MON_OFFSET_X = 0
-    MON_OFFSET_Y = 0
+    def __init__(self, port: str, baudrate: int = 115200,
+                 screen_w: int = 1920, screen_h: int = 1080):
+        """
+        Args:
+            port      : 시리얼 포트 (예: "COM4")
+            baudrate  : 통신 속도
+            screen_w  : 게임 화면 너비 (mss 캡처 너비와 반드시 동일해야 함)
+            screen_h  : 게임 화면 높이 (mss 캡처 높이와 반드시 동일해야 함)
 
-    def __init__(self, port: str, baudrate: int = 115200):
+        중요: screen_w / screen_h 는 mss monitors[idx].width / height 와 같아야
+              탐지 좌표 (0~screen_w) 와 피코 이동 목표가 정확히 일치합니다.
+        """
         self._port      = port
         self._baudrate  = baudrate
         self._serial    = None
         self._connected = False
         self._lock      = threading.Lock()
 
-        # 피코 커서 추적 위치 (게임 모니터 중앙에서 시작)
-        self._cur_x = self.SCREEN_W // 2   # 게임 화면 내 x
-        self._cur_y = self.SCREEN_H // 2   # 게임 화면 내 y
+        # 게임 화면 해상도 (mss 캡처 크기와 동일해야 함)
+        self.SCREEN_W = screen_w
+        self.SCREEN_H = screen_h
+
+        # 피코 커서 추적 위치 (게임 화면 중앙에서 시작)
+        self._cur_x = self.SCREEN_W // 2
+        self._cur_y = self.SCREEN_H // 2
 
     # ── 연결 ───────────────────────────────────────────────────────
     def connect(self) -> bool:
@@ -121,6 +138,8 @@ class PicoController(BaseController):
             time.sleep(0.5)
             self._connected = True
             print(f"[PicoController] 연결 완료: {self._port} @ {self._baudrate}")
+            print(f"[PicoController] 게임 해상도: {self.SCREEN_W}x{self.SCREEN_H} "
+                  f"(mss 캡처 크기와 반드시 일치해야 좌표 정확)")
             # 커서를 화면 중앙으로 리셋
             self._reset_cursor()
             return True
@@ -147,58 +166,56 @@ class PicoController(BaseController):
     # ── 커서 리셋 ──────────────────────────────────────────────────
     def _reset_cursor(self):
         """
-        커서를 물리적 좌상단(0,0)으로 리셋 후 게임 모니터 중앙으로 이동.
+        커서를 물리적 좌상단(0,0)으로 이동 후 게임 화면 중앙으로 이동.
 
-        모니터 배치:
-          모니터2 왼쪽(left=-1920): 좌상단 리셋 후 오른쪽으로 이동 불필요
-            → 피코 물리 (0,0) = 전체 데스크탑 좌상단 = 모니터2 좌상단
-          게임 중앙 = (SCREEN_W//2, SCREEN_H//2) = (960, 540)
+        ⚠ 전제 조건:
+          MOVE:-9999:-9999 → HID 커서가 물리적 좌상단(0,0)으로 이동
+          이후 MOVE:scaled_cx:scaled_cy → 게임 모니터 중앙
+
+        ⚠ 좌표 정확도 조건:
+          self.SCREEN_W/H == mss monitors[capture_idx].width/height
+          이 둘이 같아야 "프레임 내 cx/cy" == "피코 이동 목표" 가 일치.
         """
         self._send_text("MOVE:-9999:-9999")
         time.sleep(0.6)
 
-        # 피코 물리 좌상단(0,0) → 게임 모니터1 중앙(960,540)으로 이동
-        # 모니터1 left=0 이므로 오프셋 없이 바로 중앙 좌표 전송
-        cx = self.SCREEN_W // 2   # 960
-        cy = self.SCREEN_H // 2   # 540
-        scaled_x = int(cx * self.SCALE_X)
-        scaled_y = int(cy * self.SCALE_Y)
+        # 게임 화면 중앙으로 이동
+        cx = self.SCREEN_W // 2
+        cy = self.SCREEN_H // 2
+        scaled_x = round(cx * self.SCALE_X)
+        scaled_y = round(cy * self.SCALE_Y)
         self._send_text(f"MOVE:{scaled_x}:{scaled_y}")
         time.sleep(0.5)
 
         self._cur_x = cx
         self._cur_y = cy
-        print(f"[PicoController] 커서 리셋 완료: 모니터1 중앙({cx},{cy}) 전송({scaled_x},{scaled_y})")
+        print(f"[PicoController] 커서 리셋: 게임 중앙({cx},{cy}) → 전송({scaled_x},{scaled_y})")
 
     # ── 핵심 공격: 드래그 공격 ────────────────────────────────────
     def drag_attack(self, x: int, y: int,
                     drag_dx: int = 8, drag_dy: int = 0,
                     hold_ms: int = 80):
         """
-        몬스터 좌표(x, y)로 이동 후 PRESS → 옆으로 드래그 → RELEASE.
+        몬스터 좌표(x, y)로 이동 후 PRESS → 드래그 → RELEASE.
 
-        흐름:
-          1. 현재 추적 커서 → 목표(x, y) 로 MOVE
-          2. PRESS (마우스 왼쪽 버튼 누름)
-          3. drag_dx, drag_dy 만큼 드래그 MOVE
-          4. RELEASE (버튼 놓음)
+        x, y : 프레임 내 절대 좌표 (0~SCREEN_W, 0~SCREEN_H)
+               = mss 캡처 픽셀 좌표 = YOLO 탐지 결과 좌표
+               피코 리셋이 (0,0)→중앙 이므로 그대로 사용 가능
 
-        drag_dx/dy: 드래그 방향 (픽셀 단위, 스케일 적용 후 전송)
-                    기본 +8px 오른쪽으로 드래그 → 몬스터 클릭드래그
-        hold_ms: PRESS 후 드래그 전 대기 (ms)
+        ⚠ x,y 가 정확하려면 SCREEN_W/H == mss 캡처 크기 이어야 함.
         """
-        # ── 1. 현재 위치 → 목표로 이동 ──────────────────────────
+        # ── 1. 현재 추적 위치 → 목표로 이동 ────────────────────
         dx = x - self._cur_x
         dy = y - self._cur_y
-        sdx = int(dx * self.SCALE_X)
-        sdy = int(dy * self.SCALE_Y)
+        sdx = round(dx * self.SCALE_X)
+        sdy = round(dy * self.SCALE_Y)
 
         print(f"[Pico] 추적({self._cur_x},{self._cur_y}) → 목표({x},{y}) "
               f"전송MOVE({sdx},{sdy})")
 
         if abs(sdx) > 0 or abs(sdy) > 0:
             self._send_text(f"MOVE:{sdx}:{sdy}")
-            time.sleep(0.05)   # 이동 안착 대기
+            time.sleep(0.05)
 
         # 추적 위치 업데이트
         self._cur_x = max(0, min(self.SCREEN_W, x))
@@ -206,47 +223,44 @@ class PicoController(BaseController):
 
         # ── 2. PRESS ────────────────────────────────────────────
         self._send_text("PRESS")
-        time.sleep(hold_ms / 1000.0)   # 누름 유지 (기본 80ms)
+        time.sleep(hold_ms / 1000.0)
 
         # ── 3. 드래그 MOVE ──────────────────────────────────────
         if abs(drag_dx) > 0 or abs(drag_dy) > 0:
-            drag_sdx = int(drag_dx * self.SCALE_X)
-            drag_sdy = int(drag_dy * self.SCALE_Y)
+            drag_sdx = round(drag_dx * self.SCALE_X)
+            drag_sdy = round(drag_dy * self.SCALE_Y)
             self._send_text(f"MOVE:{drag_sdx}:{drag_sdy}")
             time.sleep(0.03)
-
-            # 드래그 후 추적 위치도 업데이트
             self._cur_x = max(0, min(self.SCREEN_W, self._cur_x + drag_dx))
             self._cur_y = max(0, min(self.SCREEN_H, self._cur_y + drag_dy))
 
         # ── 4. RELEASE ──────────────────────────────────────────
         self._send_text("RELEASE")
-        print(f"[Pico] 드래그공격 완료 @ ({self._cur_x},{self._cur_y})")
+        print(f"[Pico] 드래그공격 완료 @ 추적({self._cur_x},{self._cur_y})")
 
-    # ── 하위호환 alias ─────────────────────────────────────────────
-    def click_drag(self, x: int, y: int,
-                   drag_dx: int = 8, drag_dy: int = 0,
-                   hold_ms: int = 80):
-        """drag_attack 의 alias (main.py 호환용)."""
-        self.drag_attack(x, y, drag_dx, drag_dy, hold_ms)
-
-    # ── 단순 CLICK (필요 시) ───────────────────────────────────────
+    # ── 단순 CLICK ────────────────────────────────────────────────
     def click(self, x: int, y: int, hold_ms: int = 50):
-        """이동 후 단순 CLICK (드래그 없음)."""
+        """이동 후 단순 CLICK (드래그 없음). 아데나 줍기용."""
         dx = x - self._cur_x
         dy = y - self._cur_y
-        sdx = int(dx * self.SCALE_X)
-        sdy = int(dy * self.SCALE_Y)
+        sdx = round(dx * self.SCALE_X)
+        sdy = round(dy * self.SCALE_Y)
         if abs(sdx) > 0 or abs(sdy) > 0:
             self._send_text(f"MOVE:{sdx}:{sdy}")
             time.sleep(0.05)
         self._cur_x = max(0, min(self.SCREEN_W, x))
         self._cur_y = max(0, min(self.SCREEN_H, y))
         self._send_text(f"CLICK:{hold_ms}")
+        print(f"[Pico] 클릭: 목표({x},{y}) 전송MOVE({sdx},{sdy})")
+
+    # ── 하위호환 alias ─────────────────────────────────────────────
+    def click_drag(self, x: int, y: int,
+                   drag_dx: int = 8, drag_dy: int = 0,
+                   hold_ms: int = 80):
+        self.drag_attack(x, y, drag_dx, drag_dy, hold_ms)
 
     # ── 유틸 ──────────────────────────────────────────────────────
     def stop(self):
-        """버튼 강제 해제 (비상 정지용)."""
         self._send_text("RELEASE")
         self._send_text("STOP")
 

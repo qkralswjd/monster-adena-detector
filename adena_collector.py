@@ -65,17 +65,15 @@ class AdenaCollector:
         if not self._enabled:
             return
 
-        # 절대좌표로 변환
-        abs_x = frame_cx + self._mon_left
-        abs_y = frame_cy + self._mon_top
-
-        self._kill_x    = abs_x
-        self._kill_y    = abs_y
+        # 피코 목표 = 프레임 내 좌표 그대로 (mon_left 더하지 않음)
+        # 피코 리셋 후 커서 기준점 = 게임 화면 (0,0)
+        self._kill_x    = frame_cx
+        self._kill_y    = frame_cy
         self._kill_time = time.time()
         self._picks_done = 0
         self._collecting = True
 
-        print(f"[Adena] 사망 위치 기억: 프레임({frame_cx},{frame_cy}) → 절대({abs_x},{abs_y})")
+        print(f"[Adena] 사망 위치 기억: 프레임({frame_cx},{frame_cy}) → 피코목표({frame_cx},{frame_cy})")
         print(f"[Adena] 반경 {self._search_radius}px 내 아데나 탐색 시작 "
               f"(최대 {self._collect_timeout}초)")
 
@@ -108,8 +106,9 @@ class AdenaCollector:
             return False
 
         # ── 사망 위치 반경 내 아데나만 후보 ──────────────────
-        kill_frame_x = self._kill_x - self._mon_left
-        kill_frame_y = self._kill_y - self._mon_top
+        # _kill_x/y 는 이미 프레임 내 좌표 (mon_left 더하기 전)
+        kill_frame_x = self._kill_x
+        kill_frame_y = self._kill_y
 
         nearby = [
             d for d in adenas
@@ -124,13 +123,14 @@ class AdenaCollector:
         target_adena = min(nearby,
                            key=lambda d: _dist(d.cx, d.cy, kill_frame_x, kill_frame_y))
 
-        abs_x = target_adena.cx + self._mon_left
-        abs_y = target_adena.cy + self._mon_top
+        # 피코 목표 = 프레임 내 좌표 그대로 (mon_left 더하지 않음)
+        pico_x = target_adena.cx
+        pico_y = target_adena.cy
 
         print(f"[Adena] 아데나 발견! 프레임({target_adena.cx},{target_adena.cy}) "
-              f"→ 절대({abs_x},{abs_y})  conf={target_adena.confidence:.2f}")
+              f"→ 피코목표({pico_x},{pico_y})  conf={target_adena.confidence:.2f}")
 
-        ctrl.click(abs_x, abs_y, hold_ms=self._click_hold_ms)
+        ctrl.click(pico_x, pico_y, hold_ms=self._click_hold_ms)
         self._picks_done += 1
 
         print(f"[Adena] 줍기 완료! ({self._picks_done}/{self._max_picks})")

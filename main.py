@@ -80,10 +80,42 @@ class MonsterTrackerApp:
             iou_thresh  = tcfg["death_iou_thresh"],
         )
 
+        # ── mss 실제 캡처 크기 확인 ─────────────────
+        # ⚠ 핵심: mss 캡처 크기 == YOLO 탐지 좌표 범위 == 피코 이동 목표 범위
+        # 이 세 값이 일치해야 탐지된 cx/cy 로 정확히 클릭 가능
+        mon = self._capture._monitor
+        mss_w = mon["width"]
+        mss_h = mon["height"]
+        self._mon_left = mon["left"]
+        self._mon_top  = mon["top"]
+        print(f"[Capture] 게임모니터: left={self._mon_left}, top={self._mon_top} "
+              f"| mss 캡처 크기: {mss_w}x{mss_h}")
+
+        # config.json game.width/height 와 mss 실제 크기 불일치 경고
+        gcfg = self._cfg.get("game", {})
+        cfg_w = gcfg.get("width", mss_w)
+        cfg_h = gcfg.get("height", mss_h)
+        if cfg_w != mss_w or cfg_h != mss_h:
+            print(f"[⚠ 경고] config game 해상도({cfg_w}x{cfg_h}) != "
+                  f"mss 캡처 크기({mss_w}x{mss_h})")
+            print(f"[⚠ 경고] 좌표 불일치 발생! config.json game.width/height를 "
+                  f"{mss_w}x{mss_h}로 수정하거나 DPI 스케일 확인 필요")
+        else:
+            print(f"[Capture] ✅ mss 캡처 크기 == 게임 해상도 ({mss_w}x{mss_h}) → 좌표 일치")
+
+        # 피코 컨트롤러에 mss 실제 크기 전달 (SCREEN_W/H 기준으로 리셋/이동)
+        screen_w = mss_w
+        screen_h = mss_h
+
         # ── 컨트롤러 (피코 HID) ─────────────────────
         ccfg = self._cfg["controller"]
         if ccfg["enabled"] and ccfg["type"] == "pico":
-            self._ctrl = PicoController(port=ccfg["port"], baudrate=ccfg["baudrate"])
+            self._ctrl = PicoController(
+                port      = ccfg["port"],
+                baudrate  = ccfg["baudrate"],
+                screen_w  = screen_w,   # ← mss 실제 캡처 너비
+                screen_h  = screen_h,   # ← mss 실제 캡처 높이
+            )
             if not self._ctrl.connect():
                 print("[Controller] 피코 연결 실패 → Dummy 모드")
                 self._ctrl = DummyController()
@@ -91,17 +123,6 @@ class MonsterTrackerApp:
         else:
             self._ctrl = DummyController()
             self._ctrl.connect()
-
-        # ── 모니터 절대좌표 오프셋 ──────────────────
-        # 프레임 내 좌표(0~1920) → 피코 이동 목표좌표 변환 시 오프셋 불필요
-        # 피코는 MOVE:-9999:-9999 로 물리 좌상단 리셋 후 게임 모니터 중앙으로 이동
-        # 게임이 모니터2(left=-1920)이든 모니터1(left=0)이든
-        # 리셋 후 게임화면 내 상대좌표(0~1920, 0~1080)로만 이동하면 됨
-        # → mon_left/top 은 항상 0 (프레임 내 좌표 = 피코 이동 좌표)
-        mon = self._capture._monitor
-        self._mon_left = mon["left"]
-        self._mon_top  = mon["top"]
-        print(f"[Capture] 게임모니터: left={self._mon_left}, top={self._mon_top}")
 
         # ── 공격 설정 ───────────────────────────────
         acfg = self._cfg["attack"]
@@ -212,11 +233,14 @@ class MonsterTrackerApp:
         if now - self._last_attack_time < self._attack_cooldown:
             return
 
-        x = self._target.cx + self._mon_left
-        y = self._target.cy + self._mon_top + self._aim_offset_y
+        # 피코 이동 목표 = 프레임 내 좌표 그대로
+        # (피코 리셋 후 커서 기준점 = 게임 화면 좌상단(0,0))
+        # mon_left/top 은 더하지 않음 — 피코는 게임 화면 내 상대좌표로 동작
+        x = self._target.cx
+        y = self._target.cy + self._aim_offset_y
 
         print(f"[Attack] 드래그공격: 프레임({self._target.cx},{self._target.cy}) "
-              f"→ 절대({x},{y})")
+              f"→ 피코목표({x},{y})")
 
         self._ctrl.drag_attack(
             x       = x,
