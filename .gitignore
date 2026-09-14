@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# 가상환경
+venv/
+env/
+.venv/
+.env/
+
+# 환경변수
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 데이터/로그
+logs/
+*.csv
+*.log
+snapshots/
+
+# YOLO 모델 (용량 큰 파일)
+*.pt
+*.onnx
+*.engine
+models/
+
+# 임시 파일
+*.tmp
+*.bak
