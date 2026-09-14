@@ -133,7 +133,7 @@ class PicoController:
 
             # RELEASE
             self._send("RELEASE")
-            print(f"[Pico] 공격완료: 전체화면({sc_x},{sc_y})  이동({sdx},{sdy})")
+
 
         except Exception as e:
             print(f"[Pico] 오류: {e}")

@@ -295,8 +295,7 @@ class App:
         fy = self._target.cy + self._aim_y + self._offset_y
         sc_x, sc_y = self._to_screen(fx, fy)
 
-        print(f"[Attack #{self._target_no}] "
-              f"프레임({fx},{fy})  전체화면({sc_x},{sc_y})")
+
 
         self._ctrl.drag_attack(
             sc_x    = sc_x,
