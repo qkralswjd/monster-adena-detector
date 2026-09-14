@@ -42,8 +42,8 @@ def _get_cursor_pos():
 
 class PicoController:
 
-    SCALE_X = 0.3955  # 측정값 (3지점 평균)
-    SCALE_Y = 0.3899  # 측정값 (3지점 평균)
+    SCALE_X = 0.4968  # 측정값 (GetCursorPos 기반 3지점 평균)
+    SCALE_Y = 0.4948  # 측정값 (GetCursorPos 기반 3지점 평균)
 
     def __init__(self, port: str, baudrate: int = 115200):
         self._port      = port
