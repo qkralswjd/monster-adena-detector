@@ -94,10 +94,12 @@ class MonsterTrackerApp:
         self._drag_dx         = acfg["drag_dx"]
         self._drag_dy         = acfg["drag_dy"]
         self._drag_hold_ms    = acfg["drag_hold_ms"]
+        self._aim_offset_y    = acfg.get("aim_offset_y", -20)  # 클릭 Y 오프셋 (위쪽)
         self._last_attack_time = 0.0
 
         # ── 상태 변수 ───────────────────────────────
         self._target: Optional[Detection] = None
+        self._target_locked = False   # True = 타겟 고정 중 (사망 전까지 교체 안 함)
         self._auto_select = True
         self._pending_click: Optional[tuple] = None
 
@@ -141,43 +143,54 @@ class MonsterTrackerApp:
     def _update_target(self, detections: list):
         """매 프레임 타겟 갱신."""
 
+        # monster 클래스만 필터링 (adena 제외)
+        monsters = [d for d in detections if d.class_id == 0]
+
         # 1) 클릭 처리
         if self._pending_click is not None:
             cx, cy = self._pending_click
             self._pending_click = None
             self._auto_select = False
-            self._target = self._handle_click(cx, cy, detections)
+            self._target = self._handle_click(cx, cy, monsters)
+            if self._target:
+                self._target_locked = True
             return
 
-        # 2) 타겟 없음 → 자동 선택
+        # 2) 타겟 없음 → 자동 선택 (최초 1회, 이후 사망 확정 시에만)
         if self._target is None:
-            if self._auto_select and detections:
+            self._target_locked = False
+            if self._auto_select and monsters:
                 frame_h, frame_w = self._last_frame_size
                 self._target = select_nearest(
-                    detections, frame_w // 2, frame_h // 2)
+                    monsters, frame_w // 2, frame_h // 2)
                 if self._target:
+                    self._target_locked = True
                     self._death_detector.reset()
+                    print(f"[Target] 자동선택: ({self._target.cx},{self._target.cy})")
             return
 
-        # 3) 타겟 있음 → IoU 매칭으로 동일 몬스터 추적
-        matched = find_matching(detections, self._target,
+        # 3) 타겟 고정 중 → IoU 매칭으로 동일 몬스터만 추적
+        matched = find_matching(monsters, self._target,
                                 self._cfg["target"]["death_iou_thresh"])
         if matched:
-            self._target = matched  # 최신 박스로 업데이트
+            self._target = matched  # 최신 박스로 업데이트 (같은 몬스터)
             self._death_detector.reset()
         else:
-            # 소실 중 → DeathDetector 판정
-            dead = self._death_detector.update(detections, self._target)
+            # 소실 중 → DeathDetector 판정 (다른 몬스터로 절대 교체 안 함)
+            dead = self._death_detector.update(monsters, self._target)
             if dead:
-                print("[Target] 사망/소실 확정 → 새 타겟 탐색")
+                print("[Target] 사망/소실 확정 → 다음 타겟 탐색")
                 self._target = None
-                # 바로 다음 nearest 선택
-                if self._auto_select and detections:
+                self._target_locked = False
+                # 사망 확정 후에만 다음 nearest 선택
+                if self._auto_select and monsters:
                     frame_h, frame_w = self._last_frame_size
                     self._target = select_nearest(
-                        detections, frame_w // 2, frame_h // 2)
+                        monsters, frame_w // 2, frame_h // 2)
                     if self._target:
+                        self._target_locked = True
                         self._death_detector.reset()
+                        print(f"[Target] 다음 타겟: ({self._target.cx},{self._target.cy})")
 
     # ─────────────────────────────────────────────
     def _try_attack(self):
@@ -191,8 +204,9 @@ class MonsterTrackerApp:
             return
 
         # 프레임 내 상대좌표 → Windows 절대좌표 변환
+        # aim_offset_y: 몬스터 중앙보다 위쪽(상체)을 노림 (기본 -20px)
         x = self._target.cx + self._mon_left
-        y = self._target.cy + self._mon_top
+        y = self._target.cy + self._mon_top + self._aim_offset_y
         self._controller.click_drag(
             x, y,
             drag_dx = self._drag_dx,
