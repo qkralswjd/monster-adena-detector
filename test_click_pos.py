@@ -107,17 +107,16 @@ def main():
             if click_queue:
                 fx, fy, sc_x, sc_y = click_queue.pop(0)
 
-                # 매번 리셋 후 프레임 좌표(양수)로 이동
-                # ★ fx/fy (프레임 좌표, 양수) 사용! sc_x/sc_y (음수) 아님!
-                #   MOVE:-9999:-9999 후 피코(0,0) = 전체화면(0,0) 기준
-                #   게임이 left=-1920이면 프레임x = 피코 이동 거리 (양수)
+                # 매번 리셋 후 전체화면 좌표(음수)로 이동
+                # 피코 MOVE:-9999:-9999 → Windows(0,0) = 전체화면(0,0) 기준
+                # 게임이 left=-1920 → sc_x 음수 → MOVE:음수 → 왼쪽으로 이동 → 게임 도달
                 ctypes.windll.user32.SetCursorPos(0, 0)
                 time.sleep(0.05)
                 send(ser, "MOVE:-9999:-9999")
                 time.sleep(0.5)
 
-                sdx = round(fx * scale_x)   # ★ fx (프레임 좌표, 양수)
-                sdy = round(fy * scale_y)   # ★ fy (프레임 좌표, 양수)
+                sdx = round(sc_x * scale_x)   # sc_x = 전체화면 좌표 (음수)
+                sdy = round(sc_y * scale_y)   # sc_y = 전체화면 좌표
                 send(ser, f"MOVE:{sdx}:{sdy}")
                 time.sleep(0.08)
                 send(ser, "CLICK:80")

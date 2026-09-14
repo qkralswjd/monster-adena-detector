@@ -245,19 +245,19 @@ class MonsterTrackerApp:
         if hasattr(self._ctrl, 'is_attacking') and self._ctrl.is_attacking:
             return
 
-        # ★ 프레임 좌표 (양수) 사용 - 전체화면좌표(음수) 아님!
+        # 전체화면 좌표 (음수) → 피코에 전달
+        # 피코 리셋(0,0) = Windows(0,0) = 전체화면(0,0) 기준
+        # 게임이 left=-1920 → sc_x 음수 → MOVE:음수 → 왼쪽 이동 → 게임 화면 도달
         frame_x = self._target.cx + self._click_offset_x
         frame_y = self._target.cy + self._aim_offset_y + self._click_offset_y
-
-        # 로그용 전체화면좌표 (확인용만)
         sc_x, sc_y = self._to_screen(frame_x, frame_y)
 
         print(f"[Attack #{self._target_no}] 공격! "
               f"프레임({frame_x},{frame_y})  전체화면({sc_x},{sc_y})  drag_dy={self._drag_dy}")
 
         self._ctrl.drag_attack(
-            x       = frame_x,   # ★ 프레임 좌표 (양수) - controller.py에서 SCALE 곱해 MOVE 전송
-            y       = frame_y,   # ★ 프레임 좌표 (양수)
+            x       = sc_x,   # 전체화면 좌표 (음수) - SCALE 곱해 MOVE 전송
+            y       = sc_y,
             drag_dx = self._drag_dx,
             drag_dy = self._drag_dy,
             hold_ms = self._hold_ms,
