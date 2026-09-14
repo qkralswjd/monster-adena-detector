@@ -113,10 +113,8 @@ class MonsterTrackerApp:
             self._ctrl = PicoController(
                 port      = ccfg["port"],
                 baudrate  = ccfg["baudrate"],
-                screen_w  = screen_w,        # ← mss 실제 캡처 너비
-                screen_h  = screen_h,        # ← mss 실제 캡처 높이
-                mon_left  = self._mon_left,  # ← 게임 모니터 절대 X (예: -1920)
-                mon_top   = self._mon_top,   # ← 게임 모니터 절대 Y
+                screen_w  = screen_w,
+                screen_h  = screen_h,
             )
             if not self._ctrl.connect():
                 print("[Controller] 피코 연결 실패 → Dummy 모드")
