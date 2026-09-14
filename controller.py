@@ -94,10 +94,10 @@ class PicoController:
         1920px 이동 시 1920/127 = 15스텝 * 0.008s = 0.12s
         여유있게 3회 전송 + 충분한 대기.
         """
-        for _ in range(3):
-            self._send("MOVE:-9999:-9999")
-            time.sleep(0.5)
-        time.sleep(1.0)   # 마지막 이동 완료 대기
+        for i in range(3):
+            self._send("MOVE:-9999:-9999", wait_ok=True)  # OK:MOVE 올 때까지 대기
+            time.sleep(0.1)
+        time.sleep(0.3)   # 마지막 여유
         self._cur_x = 0
         self._cur_y = 0
         print(f"[Pico] 리셋 완료 → 커서 (0,0)")
@@ -122,8 +122,7 @@ class PicoController:
               f"  Δ({dx},{dy})  HID({sdx},{sdy})")
 
         if sdx != 0 or sdy != 0:
-            self._send(f"MOVE:{sdx}:{sdy}")
-            time.sleep(0.05)
+            self._send(f"MOVE:{sdx}:{sdy}", wait_ok=True)  # 이동 완료 대기
 
         self._cur_x = x
         self._cur_y = y
@@ -191,13 +190,26 @@ class PicoController:
         print(f"[Pico] 클릭: ({x},{y})")
 
     # ── 전송 ──────────────────────────────────────────────────
-    def _send(self, text: str):
+    def _send(self, text: str, wait_ok: bool = False, timeout: float = 5.0):
+        """
+        PICO 로 명령 전송.
+        wait_ok=True: OK:XXX 응답 받을 때까지 대기 (이동 완료 보장)
+        """
         if not self._connected or self._ser is None:
             return
         try:
             with self._lock:
                 self._ser.write((text + "\n").encode())
                 self._ser.flush()
+
+                if wait_ok:
+                    deadline = time.time() + timeout
+                    while time.time() < deadline:
+                        if self._ser.in_waiting > 0:
+                            resp = self._ser.readline().decode("utf-8", "ignore").strip()
+                            if resp.startswith("OK:") or resp.startswith("ERR:"):
+                                return
+                        time.sleep(0.001)
         except Exception as e:
             print(f"[Pico] 전송 실패: {e}")
             self._connected = False
