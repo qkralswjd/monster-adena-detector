@@ -125,9 +125,6 @@ class PicoController(BaseController):
         self._serial   = None
         self._connected = False
         self._lock     = threading.Lock()
-        # 현재 커서 위치 추적 (절대→상대 변환용)
-        self._cur_x = 0
-        self._cur_y = 0
 
     def connect(self) -> bool:
         try:
@@ -136,16 +133,6 @@ class PicoController(BaseController):
                 self._port, self._baudrate, timeout=1.0)
             time.sleep(0.5)
             self._connected = True
-            # 현재 커서 위치 초기화
-            try:
-                import ctypes
-                pt = ctypes.wintypes.POINT()
-                ctypes.windll.user32.GetCursorPos(ctypes.byref(pt))
-                self._cur_x = pt.x
-                self._cur_y = pt.y
-            except Exception:
-                self._cur_x = 0
-                self._cur_y = 0
             print(f"[PicoController] 연결 완료: {self._port} @ {self._baudrate}")
             return True
         except Exception as e:
@@ -166,53 +153,43 @@ class PicoController(BaseController):
         """현재 실제 커서 위치 가져오기."""
         try:
             import ctypes
+            import ctypes.wintypes
             pt = ctypes.wintypes.POINT()
             ctypes.windll.user32.GetCursorPos(ctypes.byref(pt))
             return pt.x, pt.y
         except Exception:
-            return self._cur_x, self._cur_y
-
-    def _move_to(self, abs_x: int, abs_y: int, tolerance: int = 5, max_attempts: int = 5):
-        """
-        절대 좌표로 커서 이동.
-        - 매 시도마다 GetCursorPos로 실제 위치 읽음
-        - 목표 도달할 때까지 최대 max_attempts번 보정
-        - tolerance px 이내면 도달로 판정
-        """
-        for _ in range(max_attempts):
-            cx, cy = self._get_cursor()
-            dx = abs_x - cx
-            dy = abs_y - cy
-            if abs(dx) <= tolerance and abs(dy) <= tolerance:
-                break  # 목표 도달
-            self._send_text(f"MOVE:{dx}:{dy}")
-            time.sleep(0.05)  # 피코 이동 완료 대기
-        self._cur_x = abs_x
-        self._cur_y = abs_y
+            return 0, 0
 
     def attack(self, x: int, y: int):
         """절대 좌표로 이동 후 클릭."""
-        self._move_to(x, y)
+        cx, cy = self._get_cursor()
+        dx = x - cx
+        dy = y - cy
+        self._send_text(f"MOVE:{dx}:{dy}")
+        time.sleep(0.05)
         self._send_text("CLICK:50")
 
     def click_drag(self, x: int, y: int, drag_dx: int = 5,
                    drag_dy: int = 0, hold_ms: int = 80):
-        """
-        절대 좌표로 이동 → CLICK.
-        이동 후 실제 커서 위치 확인하며 보정, 그 다음 클릭.
-        """
-        self._move_to(x, y)
+        """몬스터 위치로 이동 후 클릭 한 번."""
+        cx, cy = self._get_cursor()
+        dx = x - cx
+        dy = y - cy
+        self._send_text(f"MOVE:{dx}:{dy}")
+        time.sleep(0.05)
         self._send_text(f"CLICK:{hold_ms}")
 
     def click_move(self, x: int, y: int):
         """절대 좌표로 이동 후 단순 클릭 (바닥 이동용)."""
-        self._move_to(x, y)
-        time.sleep(0.02)
+        cx, cy = self._get_cursor()
+        self._send_text(f"MOVE:{x-cx}:{y-cy}")
+        time.sleep(0.05)
         self._send_text("CLICK:20")
 
     def move(self, x: int, y: int):
         """절대 좌표로 커서만 이동 (클릭 없음)."""
-        self._move_to(x, y)
+        cx, cy = self._get_cursor()
+        self._send_text(f"MOVE:{x-cx}:{y-cy}")
 
     def key_press(self, key: str):
         """
