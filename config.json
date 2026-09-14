@@ -53,11 +53,10 @@
         "max_picks": 5
     },
     "roi": {
-        "x": 0,
-        "y": 0,
-        "width": 0,
-        "height": 0,
-        "_note": "width=0, height=0 이면 ROI 없이 전체 화면 탐지"
+        "x": 522,
+        "y": 234,
+        "width": 912,
+        "height": 432
     },
     "display": {
         "show_window": true
