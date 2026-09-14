@@ -410,102 +410,117 @@ class MonsterTrackerApp:
 
 def set_roi_interactive():
     """
-    게임 화면을 캡처해서 마우스 드래그로 ROI 선택 → config.json 저장.
+    실시간 캡처 화면에서 마우스 드래그로 ROI 선택 → config.json 저장.
     python main.py --set-roi 로 실행.
     """
-    import mss, numpy as np
+    import mss
+    import cv2
+    import numpy as np
 
     cfg_path = os.path.join(os.path.dirname(__file__), "config.json")
     cfg = load_config(cfg_path)
 
     mon_idx = cfg["capture"]["monitor"]
-    with mss.mss() as sct:
-        mon = sct.monitors[mon_idx]
-        shot = sct.grab(mon)
-        frame = np.array(shot)
-        frame = __import__('cv2').cvtColor(frame, __import__('cv2').COLOR_BGRA2BGR)
-
-    import cv2
-    # 절반 크기로 표시
+    sct = mss.mss()
+    mon = sct.monitors[mon_idx]
     cap_w, cap_h = mon["width"], mon["height"]
     disp_w, disp_h = cap_w // 2, cap_h // 2
-    disp = cv2.resize(frame, (disp_w, disp_h))
 
-    roi_data = {"start": None, "end": None, "done": False}
+    roi_data = {"start": None, "end": None, "dragging": False}
 
     def mouse_cb(event, x, y, flags, param):
         if event == cv2.EVENT_LBUTTONDOWN:
-            roi_data["start"] = (x, y)
-            roi_data["end"]   = (x, y)
-            roi_data["done"]  = False
-        elif event == cv2.EVENT_MOUSEMOVE and roi_data["start"]:
+            roi_data["start"]    = (x, y)
+            roi_data["end"]      = (x, y)
+            roi_data["dragging"] = True
+        elif event == cv2.EVENT_MOUSEMOVE and roi_data["dragging"]:
             roi_data["end"] = (x, y)
         elif event == cv2.EVENT_LBUTTONUP:
-            roi_data["end"]  = (x, y)
-            roi_data["done"] = True
+            roi_data["end"]      = (x, y)
+            roi_data["dragging"] = False
 
-    WIN = "ROI 설정 - 드래그 후 Enter(저장) / ESC(취소)"
+    WIN = "ROI 설정 (드래그 → Enter저장 / R초기화 / ESC취소)"
     cv2.namedWindow(WIN, cv2.WINDOW_NORMAL)
     cv2.resizeWindow(WIN, disp_w, disp_h)
     cv2.setMouseCallback(WIN, mouse_cb)
 
-    print("\n[ROI 설정] 게임 화면에서 탐지 영역을 드래그하세요.")
-    print("  Enter = 저장 / ESC = 취소\n")
+    print("\n[ROI 설정] 실시간 캡처 화면에서 탐지 영역을 드래그하세요.")
+    print("  드래그 = ROI 선택")
+    print("  Enter  = 저장")
+    print("  R      = 선택 초기화")
+    print("  ESC    = 취소\n")
 
     while True:
-        img = disp.copy()
+        # 실시간 캡처
+        shot  = sct.grab(mon)
+        frame = np.array(shot)
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
+        img   = cv2.resize(frame, (disp_w, disp_h))
 
-        # 현재 ROI 표시
+        # 기존 ROI 표시 (노란색)
         rcfg = cfg["roi"]
         if rcfg["width"] > 0:
-            rx, ry, rw, rh = rcfg["x"]//2, rcfg["y"]//2, rcfg["width"]//2, rcfg["height"]//2
+            rx = rcfg["x"] // 2
+            ry = rcfg["y"] // 2
+            rw = rcfg["width"] // 2
+            rh = rcfg["height"] // 2
             cv2.rectangle(img, (rx, ry), (rx+rw, ry+rh), (0, 255, 255), 1)
-            cv2.putText(img, "현재 ROI", (rx+4, ry+16),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 1)
+            cv2.putText(img, f"현재ROI ({rcfg['x']},{rcfg['y']}) {rcfg['width']}x{rcfg['height']}",
+                        (rx+4, ry+16), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 255, 255), 1)
 
-        # 드래그 중 표시
+        # 드래그 선택 영역 표시 (초록색)
         if roi_data["start"] and roi_data["end"]:
             s, e = roi_data["start"], roi_data["end"]
             cv2.rectangle(img, s, e, (0, 255, 0), 2)
-            # 실제 프레임 좌표 계산
             fx = min(s[0], e[0]) * 2
             fy = min(s[1], e[1]) * 2
             fw = abs(e[0] - s[0]) * 2
             fh = abs(e[1] - s[1]) * 2
-            cv2.putText(img, f"({fx},{fy}) {fw}x{fh}",
-                        (min(s[0],e[0])+4, min(s[1],e[1])+18),
+            label = f"({fx},{fy}) {fw}x{fh}"
+            cv2.putText(img, label,
+                        (min(s[0], e[0]) + 4, min(s[1], e[1]) + 18),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
 
-        cv2.putText(img, "드래그: ROI 설정  |  Enter: 저장  |  ESC: 취소",
-                    (5, disp_h - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (200, 200, 0), 1)
+        # 안내 텍스트
+        cv2.putText(img, "드래그:선택  Enter:저장  R:초기화  ESC:취소",
+                    (5, disp_h - 8), cv2.FONT_HERSHEY_SIMPLEX, 0.42, (200, 200, 0), 1)
+
         cv2.imshow(WIN, img)
         key = cv2.waitKey(30) & 0xFF
 
-        if key == 27:  # ESC
+        if key == 27:  # ESC - 취소
             print("[ROI] 취소")
             break
 
-        if key in (13, 32) and roi_data["done"]:  # Enter / Space
-            s, e = roi_data["start"], roi_data["end"]
-            fx = min(s[0], e[0]) * 2
-            fy = min(s[1], e[1]) * 2
-            fw = abs(e[0] - s[0]) * 2
-            fh = abs(e[1] - s[1]) * 2
-            if fw > 10 and fh > 10:
-                cfg["roi"]["x"]      = fx
-                cfg["roi"]["y"]      = fy
-                cfg["roi"]["width"]  = fw
-                cfg["roi"]["height"] = fh
-                with open(cfg_path, "w", encoding="utf-8") as f:
-                    json.dump(cfg, f, indent=4, ensure_ascii=False)
-                print(f"[ROI] 저장 완료: 프레임({fx},{fy}) 크기 {fw}x{fh}")
-                print(f"  → config.json 업데이트됨")
-            else:
-                print("[ROI] 너무 작습니다. 다시 드래그하세요.")
-                roi_data["done"] = False
-                continue
-            break
+        elif key == ord('r') or key == ord('R'):  # R - 초기화
+            roi_data["start"]    = None
+            roi_data["end"]      = None
+            roi_data["dragging"] = False
+            print("[ROI] 선택 초기화")
 
+        elif key in (13, 32):  # Enter / Space - 저장
+            if roi_data["start"] and roi_data["end"]:
+                s, e = roi_data["start"], roi_data["end"]
+                fx = min(s[0], e[0]) * 2
+                fy = min(s[1], e[1]) * 2
+                fw = abs(e[0] - s[0]) * 2
+                fh = abs(e[1] - s[1]) * 2
+                if fw > 20 and fh > 20:
+                    cfg["roi"]["x"]      = fx
+                    cfg["roi"]["y"]      = fy
+                    cfg["roi"]["width"]  = fw
+                    cfg["roi"]["height"] = fh
+                    with open(cfg_path, "w", encoding="utf-8") as f:
+                        json.dump(cfg, f, indent=4, ensure_ascii=False)
+                    print(f"[ROI] 저장 완료: 프레임({fx},{fy}) 크기 {fw}x{fh}")
+                    print(f"  config.json 업데이트 완료")
+                    break
+                else:
+                    print("[ROI] 너무 작습니다. 다시 드래그하세요.")
+            else:
+                print("[ROI] 먼저 드래그로 영역을 선택하세요.")
+
+    sct.close()
     cv2.destroyAllWindows()
 
 
