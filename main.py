@@ -241,9 +241,8 @@ class MonsterTrackerApp:
             self._target.cx + self._click_offset_x,
             self._target.cy + self._aim_offset_y + self._click_offset_y)
 
-        # 공격 중이면 최신 좌표만 갱신
+        # 공격 중이면 스킵
         if hasattr(self._ctrl, 'is_attacking') and self._ctrl.is_attacking:
-            self._ctrl.update_target(sc_x, sc_y)
             return
 
         print(f"[Attack #{self._target_no}] 공격! "

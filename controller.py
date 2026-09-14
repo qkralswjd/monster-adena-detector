@@ -214,23 +214,11 @@ class PicoController(BaseController):
                     drag_dx: int = 0, drag_dy: int = 30,
                     hold_ms: int = 80):
         """
-        [비동기] 별도 스레드로 드래그 공격 실행.
-        메인 루프를 블로킹하지 않음 → 공격 중에도 탐지/추적 계속.
-
-        공격 시퀀스:
-          1. MOVE → 최신 몬스터 위치
-          2. PRESS (버튼 누름)
-          3. hold_ms 동안 update_target()으로 커서 추적
-          4. MOVE:0:drag_dy (아래로 드래그 = 공격 모션)
-          5. RELEASE
+        몬스터 좌표로 이동 → PRESS → 드래그 → RELEASE
+        공격 중이면 무시 (새 공격 시작 안 함)
         """
-        # 이미 공격 중이면 좌표만 갱신
         if self._attacking:
-            self.update_target(x, y)
             return
-
-        self._target_x = x
-        self._target_y = y
 
         t = threading.Thread(
             target=self._drag_attack_thread,
@@ -242,33 +230,25 @@ class PicoController(BaseController):
 
     def _drag_attack_thread(self, x: int, y: int,
                              drag_dx: int, drag_dy: int, hold_ms: int):
-        """실제 드래그 공격 시퀀스 (별도 스레드)"""
+        """단순 클릭드래그: MOVE → PRESS → 드래그 → RELEASE"""
         self._attacking = True
         try:
-            # 1. 현재 위치 → 몬스터 위치로 이동
+            # 1. 몬스터 위치로 이동
             dx = x - self._cur_x
             dy = y - self._cur_y
             sdx = round(dx * self.SCALE_X)
             sdy = round(dy * self.SCALE_Y)
-
-            print(f"[Pico] ({self._cur_x},{self._cur_y})→({x},{y}) "
-                  f"이동({dx},{dy}) 전송MOVE({sdx},{sdy})")
-
             if sdx != 0 or sdy != 0:
                 self._send(f"MOVE:{sdx}:{sdy}")
-                time.sleep(0.04)
-
+                time.sleep(0.05)
             self._cur_x = x
             self._cur_y = y
 
-            # 2. PRESS
+            # 2. 클릭
             self._send("PRESS")
-
-            # 3. hold_ms 동안 최신 좌표로 커서 추적
-            #    update_target()이 외부에서 호출되면 자동으로 MOVE 전송됨
             time.sleep(hold_ms / 1000.0)
 
-            # 4. 드래그 (아래로)
+            # 3. 드래그 (아래로)
             if drag_dx != 0 or drag_dy != 0:
                 dsdx = round(drag_dx * self.SCALE_X)
                 dsdy = round(drag_dy * self.SCALE_Y)
@@ -277,12 +257,12 @@ class PicoController(BaseController):
                 self._cur_x += drag_dx
                 self._cur_y += drag_dy
 
-            # 5. RELEASE
+            # 4. 릴리즈
             self._send("RELEASE")
-            print(f"[Pico] 공격완료 @ ({self._cur_x},{self._cur_y})")
+            print(f"[Pico] 클릭완료: ({x},{y})")
 
         except Exception as e:
-            print(f"[PicoController] drag_attack 오류: {e}")
+            print(f"[PicoController] 오류: {e}")
             try:
                 self._send("RELEASE")
             except Exception:
