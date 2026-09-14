@@ -189,15 +189,16 @@ class PicoController(BaseController):
         1. ctypes로 Windows 실제 커서를 (0,0)으로 강제 이동
         2. 피코도 MOVE:-9999:-9999 로 (0,0) 리셋
         → 피코 커서 = Windows 커서 = (0,0) 완전 동기화
-        → 이후 전체화면 절대좌표로 dx 계산하면 정확히 맞음
+        → 이후 _cur_x/_cur_y 기준 상대이동으로 정확한 좌표 이동
+        ※ 이 리셋은 connect() 시 한 번만 호출됨 (매 클릭마다 호출 안 함)
         """
         # Windows 커서를 (0,0)으로 강제 이동
         ctypes.windll.user32.SetCursorPos(0, 0)
         time.sleep(0.1)
 
-        # 피코도 (0,0)으로 리셋
+        # 피코도 (0,0)으로 리셋 - 충분한 대기시간 확보
         self._send("MOVE:-9999:-9999")
-        time.sleep(0.8)
+        time.sleep(1.5)  # 0.8 → 1.5: 리셋 완료 보장
 
         self._cur_x = 0
         self._cur_y = 0
@@ -229,40 +230,41 @@ class PicoController(BaseController):
     def _drag_attack_thread(self, x: int, y: int,
                              drag_dx: int, drag_dy: int, hold_ms: int):
         """
-        매번 리셋 후 전체화면 좌표로 이동 → PRESS → 드래그 → RELEASE
+        현재 _cur_x/_cur_y 기준 상대이동 → PRESS → 드래그 → RELEASE
 
         x, y = 전체화면 좌표 (게임이 left=-1920이면 음수)
-        MOVE:-9999:-9999 + SetCursorPos(0,0) → 피코(0,0) = Windows(0,0) = 전체화면(0,0)
-        sc_x 음수 → MOVE:음수 → 왼쪽으로 이동 → 게임 화면 도달
+        매번 리셋하지 않고 _cur_x/_cur_y 추적으로 상대이동 → 정확하고 빠름
+        리셋은 connect() 시 한 번만 수행
         """
         self._attacking = True
         try:
-            # 1. Windows + 피코 커서 (0,0) 동기화
-            ctypes.windll.user32.SetCursorPos(0, 0)
-            time.sleep(0.05)
-            self._send("MOVE:-9999:-9999")
-            time.sleep(0.5)
+            # 1. 현재 위치 → 목표 위치로 상대이동
+            dx = x - self._cur_x
+            dy = y - self._cur_y
+            sdx = round(dx * self.SCALE_X)
+            sdy = round(dy * self.SCALE_Y)
+            if sdx != 0 or sdy != 0:
+                self._send(f"MOVE:{sdx}:{sdy}")
+                time.sleep(0.05)
+            self._cur_x = x
+            self._cur_y = y
 
-            # 2. 전체화면 좌표로 절대이동 (x=음수 정상)
-            sdx = round(x * self.SCALE_X)
-            sdy = round(y * self.SCALE_Y)
-            self._send(f"MOVE:{sdx}:{sdy}")
-            time.sleep(0.08)
-
-            # 3. PRESS
+            # 2. PRESS
             self._send("PRESS")
             time.sleep(hold_ms / 1000.0)
 
-            # 4. 드래그 (아래로)
+            # 3. 드래그 (아래로)
             if drag_dx != 0 or drag_dy != 0:
                 dsdx = round(drag_dx * self.SCALE_X)
                 dsdy = round(drag_dy * self.SCALE_Y)
                 self._send(f"MOVE:{dsdx}:{dsdy}")
+                self._cur_x += drag_dx
+                self._cur_y += drag_dy
                 time.sleep(0.03)
 
-            # 5. RELEASE
+            # 4. RELEASE
             self._send("RELEASE")
-            print(f"[Pico] 클릭완료: 전체화면({x},{y})  전송MOVE({sdx},{sdy})")
+            print(f"[Pico] 클릭완료: 전체화면({x},{y})  상대이동({sdx},{sdy})")
 
         except Exception as e:
             print(f"[PicoController] 오류: {e}")
@@ -275,31 +277,33 @@ class PicoController(BaseController):
 
     # ── 공격 클릭 (단순) ──────────────────────────────────────────
     def attack_click(self, x: int, y: int, hold_ms: int = 80):
-        """리셋 → 전체화면 좌표로 CLICK  (x,y = 전체화면 좌표)"""
-        ctypes.windll.user32.SetCursorPos(0, 0)
-        time.sleep(0.05)
-        self._send("MOVE:-9999:-9999")
-        time.sleep(0.5)
-        sdx = round(x * self.SCALE_X)
-        sdy = round(y * self.SCALE_Y)
-        self._send(f"MOVE:{sdx}:{sdy}")
-        time.sleep(0.08)
+        """현재 위치 기준 상대이동 → CLICK  (x,y = 전체화면 좌표)"""
+        dx = x - self._cur_x
+        dy = y - self._cur_y
+        sdx = round(dx * self.SCALE_X)
+        sdy = round(dy * self.SCALE_Y)
+        if sdx != 0 or sdy != 0:
+            self._send(f"MOVE:{sdx}:{sdy}")
+            time.sleep(0.05)
+        self._cur_x = x
+        self._cur_y = y
         self._send(f"CLICK:{hold_ms}")
-        print(f"[Pico] 공격클릭: 전체화면({x},{y})  전송MOVE({sdx},{sdy})")
+        print(f"[Pico] 공격클릭: 전체화면({x},{y})  상대이동({sdx},{sdy})")
 
     # ── 단순 클릭 (아데나 줍기용) ─────────────────────────────────
     def click(self, x: int, y: int, hold_ms: int = 50):
-        """리셋 → 전체화면 좌표로 CLICK  (x,y = 전체화면 좌표)"""
-        ctypes.windll.user32.SetCursorPos(0, 0)
-        time.sleep(0.05)
-        self._send("MOVE:-9999:-9999")
-        time.sleep(0.5)
-        sdx = round(x * self.SCALE_X)
-        sdy = round(y * self.SCALE_Y)
-        self._send(f"MOVE:{sdx}:{sdy}")
-        time.sleep(0.08)
+        """현재 위치 기준 상대이동 → CLICK  (x,y = 전체화면 좌표)"""
+        dx = x - self._cur_x
+        dy = y - self._cur_y
+        sdx = round(dx * self.SCALE_X)
+        sdy = round(dy * self.SCALE_Y)
+        if sdx != 0 or sdy != 0:
+            self._send(f"MOVE:{sdx}:{sdy}")
+            time.sleep(0.05)
+        self._cur_x = x
+        self._cur_y = y
         self._send(f"CLICK:{hold_ms}")
-        print(f"[Pico] 클릭: 전체화면({x},{y})  전송MOVE({sdx},{sdy})")
+        print(f"[Pico] 클릭: 전체화면({x},{y})  상대이동({sdx},{sdy})")
 
     # ── 유틸 ──────────────────────────────────────────────────────
     def stop(self):

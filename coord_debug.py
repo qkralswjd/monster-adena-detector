@@ -296,30 +296,45 @@ def mode_dot_or_click(cfg, do_click: bool):
     hold_ms  = atk.get("hold_ms", 80)
 
     import threading
-    _attacking = [False]  # 공격 중 플래그 (리스트로 클로저 공유)
+    _attacking = [False]  # 공격 중 플래그
+    # 피코 현재 커서 위치 추적 (리셋 후 0,0 기준)
+    _cur = [0, 0]  # [cur_x, cur_y] - 전체화면 좌표
 
     def _pico_click_thread(D_x, D_y):
-        """별도 스레드에서 실행 - 메인루프 블로킹 방지"""
+        """
+        별도 스레드 - 메인루프 블로킹 방지
+        매번 리셋 없이 _cur 기준 상대이동 → 정확하고 빠름
+        """
         _attacking[0] = True
         try:
-            E_x  = round(D_x * scale_x)
-            E_y  = round(D_y * scale_y)
             dE_x = round(drag_dx * scale_x)
             dE_y = round(drag_dy * scale_y)
 
-            ctypes.windll.user32.SetCursorPos(0, 0)
-            time.sleep(0.05)
-            ser.write(b"MOVE:-9999:-9999\n"); ser.flush()
-            time.sleep(0.5)
-            ser.write(f"MOVE:{E_x}:{E_y}\n".encode()); ser.flush()
-            time.sleep(0.08)
+            # 1. 현재 위치 → 목표 위치 상대이동
+            dx = D_x - _cur[0]
+            dy = D_y - _cur[1]
+            sdx = round(dx * scale_x)
+            sdy = round(dy * scale_y)
+            if sdx != 0 or sdy != 0:
+                ser.write(f"MOVE:{sdx}:{sdy}\n".encode()); ser.flush()
+                time.sleep(0.05)
+            _cur[0] = D_x
+            _cur[1] = D_y
+
+            # 2. PRESS
             ser.write(b"PRESS\n"); ser.flush()
             time.sleep(hold_ms / 1000.0)
+
+            # 3. 드래그
             if drag_dx != 0 or drag_dy != 0:
                 ser.write(f"MOVE:{dE_x}:{dE_y}\n".encode()); ser.flush()
+                _cur[0] += drag_dx
+                _cur[1] += drag_dy
                 time.sleep(0.03)
+
+            # 4. RELEASE
             ser.write(b"RELEASE\n"); ser.flush()
-            print(f"[피코드래그] 전체화면({D_x},{D_y}) → HID_MOVE({E_x},{E_y})"
+            print(f"[피코드래그] 전체화면({D_x},{D_y})  상대이동({sdx},{sdy})"
                   f"  drag({dE_x},{dE_y})  hold={hold_ms}ms")
         except Exception as e:
             print(f"[피코오류] {e}")
@@ -327,7 +342,7 @@ def mode_dot_or_click(cfg, do_click: bool):
             _attacking[0] = False
 
     def pico_click(D_x, D_y):
-        """피코 드래그 공격 - 별도 스레드로 실행해서 메인루프 안 막음"""
+        """피코 드래그 공격 - 별도 스레드로 실행"""
         if ser is None:
             return
         if _attacking[0]:
@@ -486,6 +501,8 @@ def mode_manual_click(cfg):
 
     port = cfg["controller"]["port"]
     ser = None
+    # 피코 현재 커서 위치 추적 (전체화면 좌표, 리셋 후 0,0 기준)
+    pico_cur = [0, 0]
     try:
         ser = _serial.Serial(port, 115200, timeout=1)
         time.sleep(0.5)
@@ -493,8 +510,10 @@ def mode_manual_click(cfg):
         ctypes.windll.user32.SetCursorPos(0, 0)
         time.sleep(0.1)
         ser.write(b"MOVE:-9999:-9999\n"); ser.flush()
-        time.sleep(1.0)
-        print("[피코] 커서 리셋 완료")
+        time.sleep(1.5)  # 리셋 완료 충분히 대기
+        pico_cur[0] = 0
+        pico_cur[1] = 0
+        print("[피코] 커서 리셋 완료 → pico(0,0) = Windows(0,0)")
     except Exception as e:
         print(f"[피코] 연결 실패: {e}  → 좌표 계산만 출력")
 
@@ -570,16 +589,17 @@ def mode_manual_click(cfg):
                           f"[D]전체화면({D_x:6d},{D_y:4d})  "
                           f"[E]HID({E_x:5d},{E_y:4d})")
 
-                    # 피코 클릭
+                    # 피코 클릭 - 상대이동 방식
                     if ser:
-                        ctypes.windll.user32.SetCursorPos(0, 0)
-                        time.sleep(0.05)
-                        ser.write(b"MOVE:-9999:-9999\n"); ser.flush()
-                        time.sleep(0.5)
-                        ser.write(f"MOVE:{E_x}:{E_y}\n".encode()); ser.flush()
-                        time.sleep(0.08)
+                        rdx = round((D_x - pico_cur[0]) * scale_x)
+                        rdy = round((D_y - pico_cur[1]) * scale_y)
+                        if rdx != 0 or rdy != 0:
+                            ser.write(f"MOVE:{rdx}:{rdy}\n".encode()); ser.flush()
+                            time.sleep(0.05)
+                        pico_cur[0] = D_x
+                        pico_cur[1] = D_y
                         ser.write(b"CLICK:80\n"); ser.flush()
-                        print(f"  → 피코 클릭 완료: MOVE:{E_x}:{E_y}")
+                        print(f"  → 피코 클릭: 상대이동({rdx},{rdy})  목표전체화면({D_x},{D_y})")
 
                     last_dot = (mx, my, D_x, D_y)
 
