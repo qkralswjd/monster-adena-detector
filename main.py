@@ -228,31 +228,34 @@ class MonsterTrackerApp:
     #  공격
     # ══════════════════════════════════════════════
     def _try_attack(self):
-        """타겟이 있고 쿨다운 지났으면 드래그 공격."""
+        """
+        타겟이 있으면 매 프레임 공격.
+        - 공격 중(is_attacking)이면 update_target()으로 최신 좌표만 갱신
+          → 피코가 PRESS 상태에서 몬스터를 계속 추적
+        - 공격 완료(not is_attacking)이면 새 drag_attack() 실행
+          → MOVE → PRESS → 드래그 → RELEASE
+        """
         if not self._attack_enabled:
             return
         if self._target is None:
             return
 
+        x = self._target.cx
+        y = self._target.cy + self._aim_offset_y
+
+        # 공격 중이면 최신 좌표 갱신만 (쿨다운 무시 - 추적 우선)
+        if hasattr(self._ctrl, 'is_attacking') and self._ctrl.is_attacking:
+            self._ctrl.update_target(x, y)
+            return
+
+        # 쿨다운 체크 (새 공격 시작 시에만)
         now = time.time()
         if now - self._last_attack_time < self._attack_cooldown:
             return
 
-        x = self._target.cx
-        y = self._target.cy + self._aim_offset_y
+        print(f"[공격] 몬스터→({x},{y}) drag_dy={self._drag_dy}")
 
-        # 화면 비율로 위치 표현 (0.0~1.0)
-        fw, fh = self._last_frame_size[1], self._last_frame_size[0]
-        rx = x / fw
-        ry = y / fh
-
-        print(f"[좌표확인] 탐지: 프레임({self._target.cx},{self._target.cy}) "
-              f"bbox=({self._target.x},{self._target.y},{self._target.w},{self._target.h}) "
-              f"conf={self._target.confidence:.2f} "
-              f"화면비율=({rx:.3f},{ry:.3f}) "
-              f"피코목표=({x},{y})")
-
-        # 공격: 몬스터 위치로 이동 → PRESS → 아래로 드래그(공격모션) → RELEASE
+        # 비동기 드래그 공격: 별도 스레드로 실행 → 메인루프 블로킹 없음
         self._ctrl.drag_attack(
             x       = x,
             y       = y,
