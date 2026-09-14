@@ -29,6 +29,7 @@ HID 감도 스케일:
 
 import time
 import threading
+import ctypes
 from abc import ABC, abstractmethod
 
 
@@ -185,29 +186,22 @@ class PicoController(BaseController):
     # ── 커서 리셋 ─────────────────────────────────────────────────
     def _reset_cursor(self):
         """
-        피코 커서를 전체 좌상단으로 보낸 뒤 게임 화면 중앙으로 이동.
-
-        리셋 후 피코(0,0) = 전체화면(0,0) = Windows 전체 좌상단
-        → 게임모니터 좌상단까지 이동량 = |MON_LEFT|, |MON_TOP|
-        → 이후 _cur_x/y 는 전체화면 절대좌표 기준
+        1. ctypes로 Windows 실제 커서를 (0,0)으로 강제 이동
+        2. 피코도 MOVE:-9999:-9999 로 (0,0) 리셋
+        → 피코 커서 = Windows 커서 = (0,0) 완전 동기화
+        → 이후 전체화면 절대좌표로 dx 계산하면 정확히 맞음
         """
+        # Windows 커서를 (0,0)으로 강제 이동
+        ctypes.windll.user32.SetCursorPos(0, 0)
+        time.sleep(0.1)
+
+        # 피코도 (0,0)으로 리셋
         self._send("MOVE:-9999:-9999")
         time.sleep(0.8)
 
-        # 게임모니터 중앙 = 전체화면 기준
-        cx = self.MON_LEFT + self.SCREEN_W // 2   # 예: -1920 + 960 = -960
-        cy = self.MON_TOP  + self.SCREEN_H // 2   # 예: 0 + 540 = 540
-
-        # 피코(0,0)=전체화면(0,0) → 목표(cx,cy)로 이동
-        sx = round(cx * self.SCALE_X)
-        sy = round(cy * self.SCALE_Y)
-        self._send(f"MOVE:{sx}:{sy}")
-        time.sleep(0.5)
-
-        self._cur_x = cx
-        self._cur_y = cy
-        print(f"[PicoController] 커서 리셋 완료: "
-              f"전체화면중앙({cx},{cy}) 전송MOVE({sx},{sy})")
+        self._cur_x = 0
+        self._cur_y = 0
+        print(f"[PicoController] 커서 리셋 완료: Windows+피코 모두 (0,0) 동기화")
 
     # ── 드래그 공격 (비동기 스레드) ──────────────────────────────
     def drag_attack(self, x: int, y: int,

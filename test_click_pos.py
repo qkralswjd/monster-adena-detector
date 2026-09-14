@@ -14,6 +14,7 @@ import cv2
 import numpy as np
 import mss
 import threading
+import ctypes
 
 
 def send(ser, text):
@@ -59,16 +60,14 @@ def main():
         screen_w = mon["width"]
         screen_h = mon["height"]
 
-    # 커서 리셋
+    # 커서 리셋 - Windows + 피코 동시 (0,0) 동기화
     print("커서 리셋 중...")
-    send(ser, "MOVE:-9999:-9999")
+    ctypes.windll.user32.SetCursorPos(0, 0)  # Windows 커서 (0,0)
+    time.sleep(0.1)
+    send(ser, "MOVE:-9999:-9999")             # 피코 커서 (0,0)
     time.sleep(1.0)
-    cx = mon_left + screen_w // 2
-    cy = mon_top  + screen_h // 2
-    send(ser, f"MOVE:{round(cx * scale_x)}:{round(cy * scale_y)}")
-    time.sleep(0.5)
-    cur_x, cur_y = cx, cy
-    print(f"리셋 완료 → 전체화면 중앙({cx},{cy})")
+    cur_x, cur_y = 0, 0
+    print(f"리셋 완료 → Windows + 피코 모두 (0,0) 동기화")
     print()
 
     # 클릭 이벤트 처리 (별도 스레드)
