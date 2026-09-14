@@ -20,6 +20,7 @@ test_coords.py
 import sys
 import time
 import ctypes
+import ctypes.wintypes
 
 # ── Win32 래퍼 ──────────────────────────────────────────────
 user32 = ctypes.windll.user32
