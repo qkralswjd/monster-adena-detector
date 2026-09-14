@@ -192,6 +192,7 @@ class MonsterTrackerApp:
             if monsters:
                 self._target = monsters[0]
                 self._target_no += 1
+                self._attacked_target_no = -1  # 새 타겟 선택 시 초기화 → 반드시 공격
                 self._death_detector.reset()
                 sc_x, sc_y = self._to_screen(self._target.cx, self._target.cy)
                 print(f"[Target #{self._target_no}] 선택: "
