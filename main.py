@@ -235,14 +235,19 @@ class MonsterTrackerApp:
         if now - self._last_attack_time < self._attack_cooldown:
             return
 
-        # 피코 이동 목표 = 프레임 내 좌표 그대로
-        # (피코 리셋 후 커서 기준점 = 게임 화면 좌상단(0,0))
-        # mon_left/top 은 더하지 않음 — 피코는 게임 화면 내 상대좌표로 동작
         x = self._target.cx
         y = self._target.cy + self._aim_offset_y
 
-        print(f"[Attack] 드래그공격: 프레임({self._target.cx},{self._target.cy}) "
-              f"→ 피코목표({x},{y})")
+        # 화면 비율로 위치 표현 (0.0~1.0)
+        fw, fh = self._last_frame_size[1], self._last_frame_size[0]
+        rx = x / fw
+        ry = y / fh
+
+        print(f"[좌표확인] 탐지: 프레임({self._target.cx},{self._target.cy}) "
+              f"bbox=({self._target.x},{self._target.y},{self._target.w},{self._target.h}) "
+              f"conf={self._target.confidence:.2f} "
+              f"화면비율=({rx:.3f},{ry:.3f}) "
+              f"피코목표=({x},{y})")
 
         self._ctrl.drag_attack(
             x       = x,
