@@ -33,7 +33,8 @@ import threading
 
 class PicoController:
 
-    SCALE = 0.395   # MOVE:1 → 실제 2.53px. 역수 = 0.395
+    SCALE_X = 0.395   # MOVE:1 → 실제 2.53px (X축)
+    SCALE_Y = 0.395   # MOVE:1 → 실제 2.53px (Y축, X와 다를 수 있음)
 
     def __init__(self, port: str, baudrate: int = 115200):
         self._port      = port
@@ -89,8 +90,11 @@ class PicoController:
         PICO 커서를 화면 (0,0) 으로 이동.
         이후 _cur_x=0, _cur_y=0 기준으로 추적 시작.
         """
+        # 2번 전송 + 충분한 대기 (1회로 안 될 수 있음)
         self._send("MOVE:-9999:-9999")
-        time.sleep(1.5)   # 리셋 완료 대기
+        time.sleep(1.0)
+        self._send("MOVE:-9999:-9999")
+        time.sleep(1.5)
         self._cur_x = 0
         self._cur_y = 0
         print(f"[Pico] 리셋 완료 → 커서 (0,0)")
@@ -108,8 +112,8 @@ class PicoController:
         """
         dx = x - self._cur_x
         dy = y - self._cur_y
-        sdx = round(dx * self.SCALE)
-        sdy = round(dy * self.SCALE)
+        sdx = round(dx * self.SCALE_X)
+        sdy = round(dy * self.SCALE_Y)
 
         print(f"[Pico] 이동: ({self._cur_x},{self._cur_y}) → ({x},{y})"
               f"  Δ({dx},{dy})  HID({sdx},{sdy})")
@@ -151,8 +155,8 @@ class PicoController:
 
             # 3. 드래그
             if drag_dx != 0 or drag_dy != 0:
-                sdx = round(drag_dx * self.SCALE)
-                sdy = round(drag_dy * self.SCALE)
+                sdx = round(drag_dx * self.SCALE_X)
+                sdy = round(drag_dy * self.SCALE_Y)
                 self._send(f"MOVE:{sdx}:{sdy}")
                 self._cur_x += drag_dx
                 self._cur_y += drag_dy
