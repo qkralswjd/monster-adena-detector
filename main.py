@@ -31,7 +31,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 from screen_capture import ScreenCapture
 from detector import YOLODetector
-from target_selector import select_by_confidence
+from target_selector import TargetTracker
 from controller import PicoController, DummyController
 from overlay_window import OverlayWindow
 
@@ -99,9 +99,15 @@ def main():
     print(f"        쿨다운={cooldown}s  drag_dy={drag_dy}px  hold={hold_ms}ms")
     print()
 
-    # ── miss_timeout 버퍼 ────────────────────────────────────
+    # ── 타겟 추적기 ───────────────────────────────────────────
+    tracker = TargetTracker(
+        miss_timeout = miss_timeout,
+        iou_thresh   = tcfg.get("iou_thresh", 0.3),
+        max_dist     = tcfg.get("max_dist", 200),
+    )
+
+    # ── miss_timeout 버퍼 (오버레이용) ───────────────────────
     last_detections = []
-    last_target     = None
     last_det_time   = 0.0
 
     # ── 공격 타이머 ───────────────────────────────────────────
@@ -126,16 +132,16 @@ def main():
             monsters = [d for d in detections if d.class_id == 0]
             adenas   = [d for d in detections if d.class_id == 1]
 
+            # ── 타겟 추적 ─────────────────────────────────────
+            last_target  = tracker.update(detections)
+            miss_elapsed = tracker.miss_elapsed
+
             if detections:
                 last_detections = detections
-                last_target     = select_by_confidence(detections)
                 last_det_time   = now
-                miss_elapsed    = 0.0
             else:
-                miss_elapsed = now - last_det_time
-                if miss_elapsed > miss_timeout:
+                if now - last_det_time > miss_timeout:
                     last_detections = []
-                    last_target     = None
 
             # ── PICO 공격 ─────────────────────────────────────
             # 조건:
@@ -144,8 +150,9 @@ def main():
             #   3. 타겟 cy >= min_cy (UI 영역 제외)
             #   4. 쿨다운 지남
             #   5. 공격 중 아님
-            if (detections                                        # 1. 실제 탐지
-                    and last_target is not None
+            if (last_target is not None
+                    and miss_elapsed == 0.0                       # 1. 현재 추적 중
+                    and detections                                # 2. 실제 탐지됨
                     and last_target.confidence >= min_conf        # 2. conf 필터
                     and last_target.cy >= min_cy                  # 3. UI 필터
                     and now - last_attack_t >= cooldown           # 4. 쿨다운
@@ -172,10 +179,12 @@ def main():
             if now - prev_log_t >= LOG_INTERVAL:
                 prev_log_t = now
                 if monsters or adenas:
+                    tgt_str = (f"TARGET cx={last_target.cx} cy={last_target.cy}"
+                               if last_target else "TARGET none")
                     print(f"── 탐지 {len(monsters)}마리  아데나 {len(adenas)}  "
-                          f"DET {det.fps:.1f}fps ──")
+                          f"DET {det.fps:.1f}fps  {tgt_str} ──")
                     for d in monsters:
-                        mark = " ← TARGET" if (
+                        mark = " ← 추적중" if (
                             last_target and
                             d.cx == last_target.cx and d.cy == last_target.cy
                         ) else ""
@@ -185,8 +194,8 @@ def main():
                         print(f"  [adena]   cx={d.cx} cy={d.cy}  "
                               f"conf={d.confidence:.2f}")
                 else:
-                    if last_detections:
-                        print(f"  탐지 없음 (유지 중 {now - last_det_time:.1f}s)  "
+                    if miss_elapsed > 0:
+                        print(f"  타겟 추적 중 (miss {miss_elapsed:.1f}s)  "
                               f"DET {det.fps:.1f}fps")
                     else:
                         print(f"  탐지 없음  DET {det.fps:.1f}fps")
