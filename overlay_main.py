@@ -260,6 +260,7 @@ def main():
                 miss_elapsed = miss_elapsed,
                 det_fps      = det.fps,
                 cap_fps      = cap.fps,
+                roi          = roi,
             )
 
             time.sleep(1 / cfg["capture"]["fps"])

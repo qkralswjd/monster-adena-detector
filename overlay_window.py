@@ -78,6 +78,7 @@ class OverlayWindow:
         self._miss_t     = 0.0
         self._det_fps    = 0.0
         self._cap_fps    = 0.0
+        self._roi        = None   # (rx, ry, rw, rh) 프레임 기준
 
         self._running    = False
         self._root       = None
@@ -93,7 +94,7 @@ class OverlayWindow:
     # ─────────────────────────────────────────────────────────
 
     def update(self, detections, target=None, miss_elapsed=0.0,
-               det_fps=0.0, cap_fps=0.0):
+               det_fps=0.0, cap_fps=0.0, roi=None):
         """메인루프에서 매 프레임 호출. 탐지 결과 갱신."""
         with self._lock:
             self._detections = list(detections)
@@ -101,6 +102,7 @@ class OverlayWindow:
             self._miss_t     = miss_elapsed
             self._det_fps    = det_fps
             self._cap_fps    = cap_fps
+            self._roi        = roi  # (rx, ry, rw, rh) or None
 
     def start(self):
         """별도 스레드에서 tkinter 루프 시작."""
@@ -204,6 +206,35 @@ class OverlayWindow:
             miss_t  = self._miss_t
             det_fps = self._det_fps
             cap_fps = self._cap_fps
+            roi     = self._roi
+
+        # ── ROI 존 표시 ───────────────────────────────────────
+        if roi:
+            rx, ry, rw, rh = roi
+            # 프레임 좌표 → 오버레이 좌표 (lb_x 빼기)
+            orx  = rx  - self._lb_x
+            ory  = ry
+            orx2 = rx + rw - self._lb_x
+            ory2 = ry + rh
+            # 반투명 배경 (stipple)
+            c.create_rectangle(orx, ory, orx2, ory2,
+                               fill="#00FFFF", outline="", stipple="gray12")
+            # 테두리
+            c.create_rectangle(orx, ory, orx2, ory2,
+                               outline="#00FFFF", width=2)
+            # 코너 강조
+            cs = 20
+            for px, py, dx, dy in [
+                (orx,  ory,   cs,  cs),
+                (orx2, ory,  -cs,  cs),
+                (orx,  ory2,  cs, -cs),
+                (orx2, ory2, -cs, -cs),
+            ]:
+                c.create_line(px, py, px+dx, py,   fill="#00FFFF", width=3)
+                c.create_line(px, py, px,    py+dy, fill="#00FFFF", width=3)
+            # 라벨
+            self._text(c, f"DETECT ZONE  {rw}x{rh}",
+                       orx + 6, ory + 18, "#00FFFF", size=9)
 
         # ── 탐지 박스 ─────────────────────────────────────────
         for d in dets:
