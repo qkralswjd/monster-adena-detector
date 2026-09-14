@@ -218,8 +218,17 @@ class MonsterTrackerApp:
 
     # ─────────────────────────────────────────────
     def run(self):
-        cv2.namedWindow(self.WIN, cv2.WINDOW_NORMAL)
-        cv2.setMouseCallback(self.WIN, self._on_mouse)
+        dcfg = self._cfg.get("display", {})
+        show_window = dcfg.get("show_window", True)
+        win_x = dcfg.get("window_x", -1920)  # 기본: 왼쪽 모니터
+        win_y = dcfg.get("window_y", 0)
+
+        if show_window:
+            cv2.namedWindow(self.WIN, cv2.WINDOW_NORMAL)
+            cv2.setMouseCallback(self.WIN, self._on_mouse)
+            # 게임 모니터(오른쪽) 포커스 안 빼앗도록 왼쪽 모니터에 창 배치
+            cv2.moveWindow(self.WIN, win_x, win_y)
+            cv2.resizeWindow(self.WIN, 960, 540)
 
         self._last_frame_size = (720, 1280)  # 기본값, 첫 프레임에서 갱신
 
@@ -260,7 +269,8 @@ class MonsterTrackerApp:
                 detector_fps= self._detector.fps,
                 capture_fps = self._capture.fps,
             )
-            cv2.imshow(self.WIN, out)
+            if show_window:
+                cv2.imshow(self.WIN, out)
 
             # ── 키 입력 ───────────────────────────────
             key = cv2.waitKey(1) & 0xFF
