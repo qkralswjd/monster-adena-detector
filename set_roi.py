@@ -1,187 +1,176 @@
 """
 set_roi.py
 ----------
-마우스 드래그로 ROI(탐지 영역)를 직접 설정하는 도구.
+게임 화면을 캡처한 뒤 마우스로 드래그해서 ROI(탐지 영역)를 설정.
+설정된 ROI는 config.json에 자동 저장됨.
 
-사용법:
-  python set_roi.py
+실행:
+    python set_roi.py
 
-  1. 화면 캡처가 뜸
-  2. 마우스로 탐지할 영역을 드래그
-  3. 엔터 or S키 → config.json에 자동 저장
-  4. R키 → 다시 그리기
-  5. Q/ESC → 취소
+조작:
+    마우스 드래그 : ROI 영역 선택
+    Enter / Space : 확정 저장
+    R             : 다시 그리기
+    ESC           : 취소 (저장 안 함)
 """
 
 import cv2
+import mss
+import numpy as np
 import json
 import os
-import sys
-import numpy as np
-
-sys.path.insert(0, os.path.dirname(__file__))
-from screen_capture import ScreenCapture
 
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.json")
 
-# ── 전역 상태 ──────────────────────────────────
-drawing   = False
-ix, iy    = -1, -1
-ex, ey    = -1, -1
-rect_done = False
-frame_orig = None
 
-
-def mouse_cb(event, x, y, flags, param):
-    global drawing, ix, iy, ex, ey, rect_done
-
-    if event == cv2.EVENT_LBUTTONDOWN:
-        drawing   = True
-        rect_done = False
-        ix, iy = x, y
-        ex, ey = x, y
-
-    elif event == cv2.EVENT_MOUSEMOVE:
-        if drawing:
-            ex, ey = x, y
-
-    elif event == cv2.EVENT_LBUTTONUP:
-        drawing   = False
-        rect_done = True
-        ex, ey = x, y
-
-
-def get_roi_rect():
-    """드래그 좌표 → (x, y, w, h) 정규화."""
-    x1 = min(ix, ex)
-    y1 = min(iy, ey)
-    x2 = max(ix, ex)
-    y2 = max(iy, ey)
-    return x1, y1, x2 - x1, y2 - y1
+def load_config():
+    with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+        return json.load(f)
 
 
 def save_roi(x, y, w, h):
-    with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-        cfg = json.load(f)
-    cfg["roi"] = {"x": x, "y": y, "width": w, "height": h}
+    cfg = load_config()
+    cfg["roi"]["x"] = x
+    cfg["roi"]["y"] = y
+    cfg["roi"]["width"] = w
+    cfg["roi"]["height"] = h
     with open(CONFIG_PATH, "w", encoding="utf-8") as f:
         json.dump(cfg, f, indent=4, ensure_ascii=False)
-    print(f"[ROI] 저장 완료: x={x}, y={y}, w={w}, h={h}")
+    print(f"[ROI] config.json 저장 완료: x={x}, y={y}, w={w}, h={h}")
+
+
+def capture_screen(monitor_idx):
+    with mss.MSS() as sct:
+        mon = sct.monitors[monitor_idx]
+        shot = sct.grab(mon)
+        frame = np.array(shot)
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
+        return frame, mon
 
 
 def main():
-    global frame_orig
+    cfg = load_config()
+    monitor_idx = cfg["capture"]["monitor"]
+    current_roi = cfg["roi"]
 
-    # 현재 화면 캡처
-    cap = ScreenCapture(1)
-    frame_orig = cap.capture()
-    if frame_orig is None:
-        print("[ROI] 캡처 실패")
-        return
+    print(f"[ROI] 게임 모니터 인덱스: {monitor_idx}")
+    print(f"[ROI] 현재 ROI: x={current_roi['x']}, y={current_roi['y']}, "
+          f"w={current_roi['width']}, h={current_roi['height']}")
+    print()
+    print("[ROI] 조작법:")
+    print("  마우스 드래그 : ROI 영역 선택")
+    print("  Enter / Space : 확정 저장")
+    print("  R             : 다시 그리기")
+    print("  ESC           : 취소")
+    print()
 
-    # 현재 config ROI 읽기
-    with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-        cfg = json.load(f)
-    cur = cfg.get("roi", {})
-    cur_x, cur_y = cur.get("x", 0), cur.get("y", 0)
-    cur_w, cur_h = cur.get("width", 0), cur.get("height", 0)
+    # 게임 화면 캡처
+    print("[ROI] 화면 캡처 중...")
+    frame, mon = capture_screen(monitor_idx)
+    h, w = frame.shape[:2]
+    print(f"[ROI] 캡처 크기: {w}x{h}")
 
-    # 표시용으로 절반 크기로 리사이즈 (1920x1080 → 960x540)
-    SCALE = 0.5
-    display = cv2.resize(frame_orig, (0, 0), fx=SCALE, fy=SCALE)
-    h_d, w_d = display.shape[:2]
+    # 표시용 축소 (너무 크면 화면에 안 맞음)
+    MAX_W, MAX_H = 1280, 720
+    scale = min(MAX_W / w, MAX_H / h, 1.0)
+    disp_w = int(w * scale)
+    disp_h = int(h * scale)
+    display = cv2.resize(frame, (disp_w, disp_h))
 
-    WIN = "ROI 설정 - 드래그로 탐지영역 선택 | S=저장  R=초기화  Q=취소"
+    # 기존 ROI 표시
+    if current_roi["width"] > 0 and current_roi["height"] > 0:
+        rx = int(current_roi["x"] * scale)
+        ry = int(current_roi["y"] * scale)
+        rw = int(current_roi["width"] * scale)
+        rh = int(current_roi["height"] * scale)
+        cv2.rectangle(display, (rx, ry), (rx + rw, ry + rh), (0, 255, 0), 2)
+        cv2.putText(display, "현재 ROI", (rx, ry - 8),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+
+    WIN = "ROI 설정 (드래그→Enter저장 / R재시도 / ESC취소)"
     cv2.namedWindow(WIN, cv2.WINDOW_NORMAL)
-    cv2.resizeWindow(WIN, w_d, h_d)
+    cv2.resizeWindow(WIN, disp_w, disp_h)
+
+    roi_data = {"start": None, "end": None, "drawing": False, "done": False}
+    base = display.copy()
+
+    def mouse_cb(event, mx, my, flags, param):
+        if event == cv2.EVENT_LBUTTONDOWN:
+            roi_data["start"] = (mx, my)
+            roi_data["end"]   = (mx, my)
+            roi_data["drawing"] = True
+            roi_data["done"]  = False
+        elif event == cv2.EVENT_MOUSEMOVE and roi_data["drawing"]:
+            roi_data["end"] = (mx, my)
+        elif event == cv2.EVENT_LBUTTONUP:
+            roi_data["end"] = (mx, my)
+            roi_data["drawing"] = False
+            roi_data["done"] = True
+
     cv2.setMouseCallback(WIN, mouse_cb)
 
-    print("=" * 55)
-    print(" ROI 설정 도구")
-    print("=" * 55)
-    print(" 마우스 드래그로 탐지할 영역을 선택하세요")
-    print(" S / Enter : 저장")
-    print(" R         : 다시 그리기")
-    print(" Q / ESC   : 취소")
-    print()
-    if cur_w > 0:
-        print(f" 현재 ROI: x={cur_x} y={cur_y} w={cur_w} h={cur_h}")
-    else:
-        print(" 현재 ROI: 없음 (전체화면 탐지 중)")
-    print()
-
     while True:
-        img = display.copy()
+        img = base.copy()
 
-        # 현재 ROI 표시 (초록 점선)
-        if cur_w > 0:
-            x1s = int(cur_x * SCALE)
-            y1s = int(cur_y * SCALE)
-            x2s = int((cur_x + cur_w) * SCALE)
-            y2s = int((cur_y + cur_h) * SCALE)
-            # 점선 효과 (10px 간격)
-            for i in range(x1s, x2s, 20):
-                cv2.line(img, (i, y1s), (min(i+10, x2s), y1s), (0, 255, 0), 1)
-                cv2.line(img, (i, y2s), (min(i+10, x2s), y2s), (0, 255, 0), 1)
-            for i in range(y1s, y2s, 20):
-                cv2.line(img, (x1s, i), (x1s, min(i+10, y2s)), (0, 255, 0), 1)
-                cv2.line(img, (x2s, i), (x2s, min(i+10, y2s)), (0, 255, 0), 1)
-            cv2.putText(img, f"현재ROI({cur_x},{cur_y} {cur_w}x{cur_h})",
-                        (x1s+4, y1s+18), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0), 1)
+        # 드래그 중 / 완료 사각형 표시
+        if roi_data["start"] and roi_data["end"]:
+            sx, sy = roi_data["start"]
+            ex, ey = roi_data["end"]
+            x1, y1 = min(sx, ex), min(sy, ey)
+            x2, y2 = max(sx, ex), max(sy, ey)
+            color = (0, 200, 255) if roi_data["drawing"] else (0, 80, 255)
+            cv2.rectangle(img, (x1, y1), (x2, y2), color, 2)
 
-        # 드래그 중인 사각형 (파란색)
-        if ix >= 0 and iy >= 0:
-            cv2.rectangle(img, (ix, iy), (ex, ey), (255, 100, 0), 2)
+            # 실제 픽셀 좌표 표시
+            real_x1 = int(x1 / scale)
+            real_y1 = int(y1 / scale)
+            real_w  = int((x2 - x1) / scale)
+            real_h  = int((y2 - y1) / scale)
+            label = f"x={real_x1} y={real_y1} w={real_w} h={real_h}"
+            cv2.putText(img, label, (x1, y1 - 8),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
 
-            # 크기 표시 (실제 픽셀 기준)
-            rw = int(abs(ex - ix) / SCALE)
-            rh = int(abs(ey - iy) / SCALE)
-            rx = int(min(ix, ex) / SCALE)
-            ry = int(min(iy, ey) / SCALE)
-            cv2.putText(img,
-                        f"x={rx} y={ry}  {rw}x{rh}px",
-                        (min(ix, ex), max(min(iy, ey) - 8, 15)),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.55, (255, 200, 0), 2)
-
-            if rect_done:
-                cv2.putText(img, "S=저장  R=다시그리기",
-                            (10, h_d - 10),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 200, 255), 2)
+            if roi_data["done"]:
+                cv2.putText(img, "Enter=저장  R=재시도  ESC=취소",
+                            (10, disp_h - 15),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
 
         # 안내 텍스트
-        cv2.putText(img, "드래그로 탐지영역 선택 | S=저장 R=초기화 Q=취소",
-                    (10, 22), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (255, 255, 255), 2)
+        if not roi_data["start"]:
+            cv2.putText(img, "드래그로 탐지 영역을 선택하세요",
+                        (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 0), 2)
 
         cv2.imshow(WIN, img)
-        key = cv2.waitKey(16) & 0xFF
+        key = cv2.waitKey(30) & 0xFF
 
-        if key in (ord('q'), 27):   # Q / ESC
-            print("[ROI] 취소")
+        # Enter / Space → 저장
+        if key in (13, 32) and roi_data["done"]:
+            sx, sy = roi_data["start"]
+            ex, ey = roi_data["end"]
+            x1, y1 = min(sx, ex), min(sy, ey)
+            x2, y2 = max(sx, ex), max(sy, ey)
+            real_x = int(x1 / scale)
+            real_y = int(y1 / scale)
+            real_w = int((x2 - x1) / scale)
+            real_h = int((y2 - y1) / scale)
+            if real_w > 10 and real_h > 10:
+                save_roi(real_x, real_y, real_w, real_h)
+                print(f"[ROI] ✅ 저장 완료!")
+                print(f"      탐지 영역: ({real_x},{real_y}) {real_w}x{real_h}")
+                print(f"      이제 python main.py 실행하세요.")
+            else:
+                print("[ROI] 너무 작은 영역입니다. 다시 드래그하세요.")
             break
 
-        elif key in (ord('s'), 13):  # S / Enter
-            if rect_done and abs(ex - ix) > 10 and abs(ey - iy) > 10:
-                rx, ry, rw, rh = get_roi_rect()
-                # 실제 픽셀로 변환
-                real_x = int(rx / SCALE)
-                real_y = int(ry / SCALE)
-                real_w = int(rw / SCALE)
-                real_h = int(rh / SCALE)
-                save_roi(real_x, real_y, real_w, real_h)
-                print(f"[ROI] 적용됨: x={real_x} y={real_y} w={real_w} h={real_h}")
-                print(f"[ROI] main.py 재실행하면 적용됩니다")
-                break
-            else:
-                print("[ROI] 먼저 영역을 드래그로 선택하세요")
+        # R → 초기화
+        elif key == ord("r") or key == ord("R"):
+            roi_data = {"start": None, "end": None, "drawing": False, "done": False}
+            base = display.copy()
+            print("[ROI] 초기화. 다시 드래그하세요.")
 
-        elif key == ord('r'):        # R : 초기화
-            ix, iy, ex, ey = -1, -1, -1, -1
-            rect_done = False
-            print("[ROI] 초기화")
-
-        elif key == ord('0'):        # 0 : ROI 해제 (전체화면)
-            save_roi(0, 0, 0, 0)
-            print("[ROI] 전체화면 탐지로 초기화됨")
+        # ESC → 취소
+        elif key == 27:
+            print("[ROI] 취소. config.json 변경 없음.")
             break
 
     cv2.destroyAllWindows()
