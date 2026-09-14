@@ -289,20 +289,35 @@ def mode_dot_or_click(cfg, do_click: bool):
             print(f"[피코] 연결 실패: {e}")
             ser = None
 
+    # config에서 드래그 설정 읽기
+    atk = cfg.get("attack", {})
+    drag_dx  = atk.get("drag_dx", 0)
+    drag_dy  = atk.get("drag_dy", 30)
+    hold_ms  = atk.get("hold_ms", 80)
+
     def pico_click(D_x, D_y):
-        """피코로 전체화면 좌표(D_x, D_y) 클릭"""
+        """피코로 전체화면 좌표(D_x, D_y) 드래그 공격 (main.py와 동일)"""
         if ser is None:
             return
-        E_x = round(D_x * scale_x)
-        E_y = round(D_y * scale_y)
+        E_x  = round(D_x * scale_x)
+        E_y  = round(D_y * scale_y)
+        dE_x = round(drag_dx * scale_x)
+        dE_y = round(drag_dy * scale_y)
+
         ctypes.windll.user32.SetCursorPos(0, 0)
         time.sleep(0.05)
         ser.write(b"MOVE:-9999:-9999\n"); ser.flush()
         time.sleep(0.5)
         ser.write(f"MOVE:{E_x}:{E_y}\n".encode()); ser.flush()
         time.sleep(0.08)
-        ser.write(b"CLICK:80\n"); ser.flush()
-        print(f"[피코클릭] 전체화면({D_x},{D_y}) → HID_MOVE({E_x},{E_y})")
+        ser.write(b"PRESS\n"); ser.flush()
+        time.sleep(hold_ms / 1000.0)
+        if drag_dx != 0 or drag_dy != 0:
+            ser.write(f"MOVE:{dE_x}:{dE_y}\n".encode()); ser.flush()
+            time.sleep(0.03)
+        ser.write(b"RELEASE\n"); ser.flush()
+        print(f"[피코드래그] 전체화면({D_x},{D_y}) → HID_MOVE({E_x},{E_y})"
+              f"  drag({dE_x},{dE_y})  hold={hold_ms}ms")
 
     mode_name = "클릭 테스트" if do_click else "점 표시 테스트"
     WIN = f"좌표 디버그 - {mode_name} (Q=종료)"
