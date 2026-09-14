@@ -127,8 +127,7 @@ def main():
     current_target    = None
     miss_start        = None
     prev_target_id    = None
-    first_attack_done = False
-    last_atk_time     = 0.0
+    attacked          = False   # 타겟당 1번만 클릭
     MISS_TIMEOUT      = cfg["target"].get("death_timeout_sec", 1.5)
     MISS_IOU_THRESH   = cfg["target"].get("death_iou_thresh",  0.3)
 
@@ -161,40 +160,33 @@ def main():
                         miss_start = time.time()
                     elif time.time() - miss_start > MISS_TIMEOUT:
                         print(f"[Target] 소실 → 해제")
-                        current_target    = None
-                        miss_start        = None
-                        prev_target_id    = None
-                        first_attack_done = False
+                        current_target = None
+                        miss_start     = None
+                        prev_target_id = None
+                        attacked       = False
 
             if current_target is None and monsters:
                 current_target = select_nearest(monsters, center_x, center_y)
                 if current_target:
                     tgt_id = (current_target.x, current_target.y)
                     if tgt_id != prev_target_id:
-                        prev_target_id    = tgt_id
-                        first_attack_done = False
+                        prev_target_id = tgt_id
+                        attacked       = False
                         print(f"[Target] 새 타겟: 게임내({current_target.cx - lb_x},{current_target.cy})")
 
-            # ctypes 클릭
-            if current_target is not None:
-                now = time.time()
-                do_attack = (not first_attack_done) or (now - last_atk_time >= atk_cooldown)
+            # ctypes 클릭 - 타겟당 1번만
+            if current_target is not None and not attacked:
+                attacked = True
 
-                if do_attack:
-                    last_atk_time     = now
-                    first_attack_done = True
+                # 현재 프레임의 최신 좌표로 클릭
+                gx   = current_target.cx - lb_x
+                gy   = current_target.cy
+                sc_x = mon_left + lb_x + gx
+                sc_y = mon_top  + gy
 
-                    # 게임 내 좌표 → Windows 절대좌표
-                    gx = current_target.cx - lb_x
-                    gy = current_target.cy
-                    sc_x = mon_left + lb_x + gx   # = mon_left + current_target.cx
-                    sc_y = mon_top  + gy
-
-                    print(f"[Click] 게임내({gx},{gy})  Windows절대({sc_x},{sc_y})")
-                    overlay.notify_attack(sc_x, sc_y)
-
-                    # ctypes 클릭
-                    ctypes_click(sc_x, sc_y, hold_ms=hold_ms, drag_dy=drag_dy)
+                print(f"[Click] 게임내({gx},{gy})  Windows절대({sc_x},{sc_y})")
+                overlay.notify_attack(sc_x, sc_y)
+                ctypes_click(sc_x, sc_y, hold_ms=hold_ms, drag_dy=drag_dy)
 
             # 오버레이 갱신
             miss_elapsed = (time.time() - miss_start if miss_start else 0.0)
