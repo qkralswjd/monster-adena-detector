@@ -9,7 +9,16 @@ YOLO 탐지 + 투명 오버레이 메인루프.
   3. YOLO 탐지기 초기화
   4. 피코 컨트롤러 연결
   5. 투명 오버레이 창 시작 (별도 스레드)
-  6. 메인루프: 캡처 → 탐지 → 오버레이 갱신
+  6. 메인루프: 캡처 → 탐지 → 추적 → 공격 → 오버레이 갱신
+
+공격 로직:
+  - 타겟 발견 → 첫 공격 즉시 실행
+  - 타겟이 살아있는 동안 cooldown_sec 마다 재공격
+  - 타겟 소실/사망 → 쿨다운 리셋 → 다음 타겟 선택
+
+추적 로직 (find_matching):
+  - IoU 우선 매칭 + IoU 없을 때 거리 기반 보조 추적
+  - 빠르게 이동하는 몬스터도 max_dist 안이면 추적 유지
 
 실행:
     python overlay_main.py
@@ -43,10 +52,6 @@ from overlay_window import OverlayWindow
 # ══════════════════════════════════════════════════════════════
 
 def get_letterbox_x(cfg, frame: np.ndarray) -> int:
-    """
-    config letterbox.auto_detect=true 면 실제 프레임에서 자동 감지.
-    false 면 config 값 그대로 사용.
-    """
     lb = cfg.get("letterbox", {})
 
     if lb.get("auto_detect", False):
@@ -71,11 +76,10 @@ def get_letterbox_x(cfg, frame: np.ndarray) -> int:
         game_w = lb_right - lb_left
         print(f"[Letterbox] 자동감지: 왼쪽={lb_left}px  오른쪽={w-lb_right}px  게임너비={game_w}px")
 
-        # config 저장
         cfg_path = os.path.join(os.path.dirname(__file__), "config.json")
-        cfg["letterbox"]["x"]          = lb_left
-        cfg["letterbox"]["game_width"] = game_w
-        cfg["letterbox"]["game_height"]= h
+        cfg["letterbox"]["x"]           = lb_left
+        cfg["letterbox"]["game_width"]  = game_w
+        cfg["letterbox"]["game_height"] = h
         with open(cfg_path, "w", encoding="utf-8") as f:
             json.dump(cfg, f, indent=4, ensure_ascii=False)
 
@@ -97,9 +101,9 @@ def main():
         cfg = json.load(f)
 
     # ── 캡처 초기화 ───────────────────────────────────────────
-    mon_idx = cfg["capture"]["monitor"]
-    cap = ScreenCapture(mon_idx)
-    mon = cap._monitor
+    mon_idx  = cfg["capture"]["monitor"]
+    cap      = ScreenCapture(mon_idx)
+    mon      = cap._monitor
     mon_left = mon["left"]
     mon_top  = mon["top"]
     cap_w    = mon["width"]
@@ -173,40 +177,45 @@ def main():
     print(f"[Overlay] 오버레이 시작: ({mon_left+lb_x},{mon_top})  {game_w}x{game_h}")
     time.sleep(0.5)  # tkinter 초기화 대기
 
-    # ── 타겟 상태 ─────────────────────────────────────────────
-    current_target  = None
-    miss_start      = None
-    MISS_TIMEOUT    = cfg["target"].get("death_timeout_sec", 1.5)
-    MISS_IOU_THRESH = cfg["target"].get("death_iou_thresh",  0.3)
-    prev_target_id  = None
-    attacked        = False   # 타겟당 1번만 클릭
+    # ── 추적 파라미터 ─────────────────────────────────────────
+    tcfg         = cfg["target"]
+    MISS_TIMEOUT = tcfg.get("death_timeout_sec", 1.5)   # 소실 판정까지 대기 (초)
+    IOU_THRESH   = tcfg.get("death_iou_thresh",  0.3)   # IoU 우선 채택 임계값
+    MAX_DIST     = tcfg.get("track_max_dist",    120.0) # 거리 추적 최대 반경 (px)
+    MIN_SCORE    = tcfg.get("track_min_score",   0.25)  # 혼합 스코어 최소값
+    IOU_WEIGHT   = tcfg.get("track_iou_weight",  0.5)   # IoU 가중치
+    DIST_WEIGHT  = tcfg.get("track_dist_weight", 0.5)   # 거리 가중치
 
     # ── 공격 설정 ─────────────────────────────────────────────
-    acfg    = cfg["attack"]
-    atk_enabled = acfg.get("enabled", True)
-    drag_dy = acfg.get("drag_dy", 30)
-    drag_dx = acfg.get("drag_dx", 0)
-    hold_ms = acfg.get("hold_ms", 80)
+    acfg        = cfg["attack"]
+    atk_enabled = acfg.get("enabled",      True)
+    drag_dy     = acfg.get("drag_dy",      30)
+    drag_dx     = acfg.get("drag_dx",      0)
+    hold_ms     = acfg.get("hold_ms",      80)
+    COOLDOWN    = acfg.get("cooldown_sec", 0.5)  # 재공격 쿨다운 (초)
 
     # ── 화면 중앙 (nearest 기준점) ────────────────────────────
-    # 프레임 기준 중앙 (letterbox 포함)
-    center_x = lb_x + game_w // 2
+    center_x = lb_x + game_w // 2   # 프레임 기준 중앙 X (letterbox 포함)
     center_y = game_h // 2
 
-    # ── 피코 좌표 계산 함수 ───────────────────────────────────
+    # ── 피코 좌표 변환 ─────────────────────────────────────────
     def frame_to_game(cx: int, cy: int):
         """
-        YOLO 프레임 좌표(1920x1080 기준) → 게임 영역 내 픽셀 좌표.
-        게임 영역 내 (0,0) = 게임 좌상단 = 피코 리셋 후 커서 위치.
-        gx = cx - lb_x  (letterbox 제거)
-        gy = cy          (상하 여백 없음)
+        YOLO 프레임 좌표 → 게임 영역 내 픽셀 좌표.
+          gx = cx - lb_x  (letterbox 제거)
+          gy = cy          (상하 여백 없음)
         """
-        gx = cx - lb_x
-        gy = cy
-        return gx, gy
+        return cx - lb_x, cy
+
+    # ── 타겟 상태 변수 ────────────────────────────────────────
+    current_target = None     # 현재 추적 중인 Detection
+    miss_start     = None     # 소실 시작 시각
+    prev_target_id = None     # 직전 타겟 식별용 (x,y 스냅샷)
+    last_attack_t  = 0.0      # 마지막 공격 시각 (쿨다운 계산)
 
     print(f"[Main] 루프 시작. Ctrl+C 로 종료.")
     print(f"       오버레이 클릭으로 해당 위치 피코 클릭 가능.")
+    print(f"       공격 쿨다운: {COOLDOWN}s  추적 반경: {MAX_DIST}px")
     print()
 
     try:
@@ -229,12 +238,19 @@ def main():
 
             # ── 타겟 추적 ─────────────────────────────────────
             if current_target is not None:
-                matched = find_matching(monsters, current_target, MISS_IOU_THRESH)
+                matched = find_matching(
+                    monsters, current_target,
+                    iou_thresh  = IOU_THRESH,
+                    max_dist    = MAX_DIST,
+                    min_score   = MIN_SCORE,
+                    iou_weight  = IOU_WEIGHT,
+                    dist_weight = DIST_WEIGHT,
+                )
                 if matched:
                     current_target = matched
                     miss_start     = None
                 else:
-                    # 소실
+                    # 소실 타이머 시작
                     if miss_start is None:
                         miss_start = time.time()
                     elif time.time() - miss_start > MISS_TIMEOUT:
@@ -242,30 +258,36 @@ def main():
                         current_target = None
                         miss_start     = None
                         prev_target_id = None
-                        attacked       = False
+                        last_attack_t  = 0.0   # 쿨다운 리셋
 
             # 타겟 없으면 nearest 자동 선택
             if current_target is None and monsters:
                 current_target = select_nearest(monsters, center_x, center_y)
                 if current_target:
-                    tgt_id = (current_target.x, current_target.y)
+                    tgt_id = id(current_target)  # 새 객체 → 항상 다른 id
                     if tgt_id != prev_target_id:
                         prev_target_id = tgt_id
-                        attacked       = False
-                        print(f"[Target] 새 타겟: 게임내({current_target.cx - lb_x},{current_target.cy})")
+                        last_attack_t  = 0.0     # 새 타겟 → 쿨다운 리셋(즉시 공격)
+                        gx0, gy0 = frame_to_game(current_target.cx, current_target.cy)
+                        print(f"[Target] 새 타겟: 게임내({gx0},{gy0})")
 
-            # ── 자동 공격 - 타겟당 1번만 ──────────────────────
-            if atk_enabled and current_target is not None and not attacked and not ctrl.is_attacking:
-                attacked = True
+            # ── 자동 공격 (쿨다운마다 재공격) ─────────────────
+            now = time.time()
+            if (atk_enabled
+                    and current_target is not None
+                    and not ctrl.is_attacking
+                    and (now - last_attack_t) >= COOLDOWN):
 
                 gx, gy = frame_to_game(current_target.cx, current_target.cy)
-
                 ctrl.drag_attack(gx, gy,
                                  drag_dx=drag_dx,
                                  drag_dy=drag_dy,
                                  hold_ms=hold_ms)
                 overlay.notify_attack(mon_left + lb_x + gx, mon_top + gy)
-                print(f"[Attack] 게임내({gx},{gy})")
+                last_attack_t = now
+
+                is_first = (now - last_attack_t) < 0.01  # 첫 공격 여부 로그
+                print(f"[Attack] 게임내({gx},{gy})  쿨다운={COOLDOWN}s")
 
             # ── 오버레이 갱신 ─────────────────────────────────
             miss_elapsed = (time.time() - miss_start
@@ -285,7 +307,8 @@ def main():
         print("\n[Main] Ctrl+C → 종료")
     finally:
         overlay.stop()
-        ctrl.disconnect() if hasattr(ctrl, "disconnect") else None
+        if hasattr(ctrl, "disconnect"):
+            ctrl.disconnect()
         print("[Main] 종료 완료")
 
 
