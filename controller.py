@@ -86,16 +86,22 @@ class DummyController(BaseController):
 
 class PicoController(BaseController):
 
-    # 화면 해상도
+    # 게임 화면 해상도
     SCREEN_W = 1920
     SCREEN_H = 1080
 
     # HID 감도 보정 스케일
     # 측정 결과: MOVE:1 → 실제 2.53px 이동
     # SCALE = 1 / 2.53 = 0.395
-    # 즉 원하는 픽셀 P를 이동하려면 P * 0.395 를 전송
     SCALE_X = 0.395
     SCALE_Y = 0.395
+
+    # 게임 모니터 오프셋 (Windows 가상 데스크탑 기준)
+    # 모니터2가 왼쪽: MON_OFFSET_X = -1920
+    # 모니터2가 오른쪽: MON_OFFSET_X = 1920
+    # 모니터1(기본): MON_OFFSET_X = 0
+    MON_OFFSET_X = -1920
+    MON_OFFSET_Y = 0
 
     def __init__(self, port: str, baudrate: int = 115200):
         self._port      = port
@@ -104,9 +110,9 @@ class PicoController(BaseController):
         self._connected = False
         self._lock      = threading.Lock()
 
-        # 피코 커서 추적 위치 (화면 중앙에서 시작)
-        self._cur_x = self.SCREEN_W // 2
-        self._cur_y = self.SCREEN_H // 2
+        # 피코 커서 추적 위치 (게임 모니터 중앙에서 시작)
+        self._cur_x = self.SCREEN_W // 2   # 게임 화면 내 x
+        self._cur_y = self.SCREEN_H // 2   # 게임 화면 내 y
 
     # ── 연결 ───────────────────────────────────────────────────────
     def connect(self) -> bool:
@@ -142,15 +148,24 @@ class PicoController(BaseController):
     # ── 커서 리셋 ──────────────────────────────────────────────────
     def _reset_cursor(self):
         """
-        커서를 좌상단(0,0)으로 리셋 후 화면 중앙으로 이동 → 위치 동기화.
-        MOVE:-9999:-9999 는 피코 펌웨어에서 좌상단 끝까지 이동 처리.
+        커서를 물리적 좌상단(0,0)으로 리셋 후 게임 모니터 중앙으로 이동.
+
+        모니터 배치:
+          모니터2 왼쪽(left=-1920): 좌상단 리셋 후 오른쪽으로 이동 불필요
+            → 피코 물리 (0,0) = 전체 데스크탑 좌상단 = 모니터2 좌상단
+          게임 중앙 = (SCREEN_W//2, SCREEN_H//2) = (960, 540)
         """
         self._send_text("MOVE:-9999:-9999")
         time.sleep(0.6)
 
-        # 중앙으로 이동 (스케일 적용)
+        # 게임 모니터 중앙으로 이동
+        # MON_OFFSET_X=-1920 이면 모니터2가 왼쪽 → 리셋 후 바로 게임화면
+        # 피코 물리좌표 기준: 중앙 = SCREEN_W//2, SCREEN_H//2
         cx = self.SCREEN_W // 2   # 960
         cy = self.SCREEN_H // 2   # 540
+
+        # 모니터2가 왼쪽(-1920)이면 좌상단 리셋이 이미 게임 모니터 좌상단
+        # 추가 오프셋 없이 게임 화면 중앙(960,540)으로 이동
         scaled_x = int(cx * self.SCALE_X)
         scaled_y = int(cy * self.SCALE_Y)
         self._send_text(f"MOVE:{scaled_x}:{scaled_y}")
@@ -158,7 +173,7 @@ class PicoController(BaseController):
 
         self._cur_x = cx
         self._cur_y = cy
-        print(f"[PicoController] 커서 리셋 완료: 중앙({cx},{cy}) 전송({scaled_x},{scaled_y})")
+        print(f"[PicoController] 커서 리셋 완료: 게임중앙({cx},{cy}) 전송({scaled_x},{scaled_y})")
 
     # ── 핵심 공격: 드래그 공격 ────────────────────────────────────
     def drag_attack(self, x: int, y: int,

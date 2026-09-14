@@ -93,15 +93,16 @@ class MonsterTrackerApp:
             self._ctrl.connect()
 
         # ── 모니터 절대좌표 오프셋 ──────────────────
-        # 피코 HID는 현재 게임 모니터 기준 상대좌표로 이동
-        # mss monitors[]의 left/top은 Windows 전체 가상 데스크탑 기준
-        # (모니터2가 왼쪽이면 left=-1920 등 음수가 될 수 있음)
-        # → 피코는 해당 모니터 내부 좌표만 사용하므로 항상 0,0 고정
+        # 프레임 내 좌표(0~1920) → 피코 이동 목표좌표 변환 시 오프셋 불필요
+        # 피코는 MOVE:-9999:-9999 로 물리 좌상단 리셋 후 게임 모니터 중앙으로 이동
+        # 게임이 모니터2(left=-1920)이든 모니터1(left=0)이든
+        # 리셋 후 게임화면 내 상대좌표(0~1920, 0~1080)로만 이동하면 됨
+        # → mon_left/top 은 항상 0 (프레임 내 좌표 = 피코 이동 좌표)
         mon = self._capture._monitor
         self._mon_left = 0
         self._mon_top  = 0
-        print(f"[Capture] 모니터 오프셋 고정: left=0, top=0 "
-              f"(mss raw: left={mon['left']}, top={mon['top']})")
+        print(f"[Capture] 게임모니터: mss left={mon['left']}, top={mon['top']} "
+              f"| 피코기준 오프셋: 0, 0")
 
         # ── 공격 설정 ───────────────────────────────
         acfg = self._cfg["attack"]
