@@ -31,7 +31,7 @@ def capture_screen(monitor_idx=1):
 
 def main():
     cfg_path = os.path.join(os.path.dirname(__file__), "config.json")
-    with open(cfg_path) as f:
+    with open(cfg_path, encoding="utf-8") as f:
         cfg = json.load(f)
 
     port        = cfg["controller"]["port"]
