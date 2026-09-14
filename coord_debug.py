@@ -471,11 +471,20 @@ def mode_manual_click(cfg):
     import threading
     lock = threading.Lock()
 
+    # 실제 창 이미지 영역 크기 (cv2.getWindowImageRect로 정확히 읽음)
+    # 초기값은 disp_w/h, 루프에서 매 프레임 갱신
+    win_img_rect = [0, 0, disp_w, disp_h]  # [x, y, w, h]
+
     def on_mouse(event, mx, my, flags, param):
         if event == cv2.EVENT_LBUTTONDOWN:
-            # [A] 프레임 좌표 = 디스플레이 좌표 × 2
-            A_x = mx * 2
-            A_y = my * 2
+            # 실제 이미지 영역 크기로 비율 계산
+            ww = win_img_rect[2] if win_img_rect[2] > 0 else disp_w
+            wh = win_img_rect[3] if win_img_rect[3] > 0 else disp_h
+            ratio_x = cap_w / ww
+            ratio_y = cap_h / wh
+            # [A] 프레임 좌표 = 클릭좌표 × 실제비율
+            A_x = round(mx * ratio_x)
+            A_y = round(my * ratio_y)
             # [D] 전체화면 좌표
             D_x = A_x + mon_left
             D_y = A_y + mon_top
@@ -483,7 +492,8 @@ def mode_manual_click(cfg):
             E_x = round(D_x * scale_x)
             E_y = round(D_y * scale_y)
             with lock:
-                click_queue.append((mx, my, A_x, A_y, D_x, D_y, E_x, E_y))
+                click_queue.append((mx, my, A_x, A_y, D_x, D_y, E_x, E_y,
+                                    ww, wh, ratio_x, ratio_y))
 
     WIN = "수동 클릭 테스트 (Q=종료)"
     cv2.namedWindow(WIN, cv2.WINDOW_NORMAL)
@@ -503,6 +513,17 @@ def mode_manual_click(cfg):
 
     try:
         while True:
+            # ── win_img_rect 갱신: 실제 이미지 영역 크기 (타이틀바 제외) ──
+            try:
+                r = cv2.getWindowImageRect(WIN)
+                if r[2] > 0 and r[3] > 0:
+                    win_img_rect[0] = r[0]
+                    win_img_rect[1] = r[1]
+                    win_img_rect[2] = r[2]
+                    win_img_rect[3] = r[3]
+            except Exception:
+                pass
+
             shot = sct2.grab(mon_rect)
             frame = np.array(shot)
             frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
@@ -510,12 +531,13 @@ def mode_manual_click(cfg):
 
             with lock:
                 if click_queue:
-                    mx, my, A_x, A_y, D_x, D_y, E_x, E_y = click_queue.pop(0)
+                    mx, my, A_x, A_y, D_x, D_y, E_x, E_y, ww, wh, ratio_x, ratio_y = click_queue.pop(0)
 
-                    print(f"({mx:4d},{my:4d})        "
-                          f"({A_x:4d},{A_y:4d})    "
-                          f"({D_x:6d},{D_y:4d})    "
-                          f"({E_x:5d},{E_y:4d})")
+                    print(f"({mx:4d},{my:4d})  "
+                          f"imgRect({ww}x{wh})  ratio({ratio_x:.3f},{ratio_y:.3f})")
+                    print(f"  → [A]프레임({A_x:4d},{A_y:4d})  "
+                          f"[D]전체화면({D_x:6d},{D_y:4d})  "
+                          f"[E]HID({E_x:5d},{E_y:4d})")
 
                     # 피코 클릭
                     if ser:
