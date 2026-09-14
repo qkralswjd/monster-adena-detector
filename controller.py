@@ -74,9 +74,15 @@ class DummyController(BaseController):
 
 class PicoController(BaseController):
 
-    # 화면 해상도 (커서 추적 범위 제한용)
+    # 화면 해상도
     SCREEN_W = 1920
     SCREEN_H = 1080
+
+    # HID 감도 보정 스케일
+    # 테스트 결과: MOVE:960 → 실제 1919 이동 → 비율 0.5
+    # 즉 원하는 픽셀의 절반만 보내야 정확히 이동
+    SCALE_X = 0.5
+    SCALE_Y = 0.5
 
     def __init__(self, port: str, baudrate: int = 115200):
         self._port      = port
@@ -106,18 +112,19 @@ class PicoController(BaseController):
             return False
 
     def _reset_cursor(self):
-        """커서를 화면 좌상단(0,0)으로 보낸 후 중앙으로 이동해서 위치 동기화."""
-        # 좌상단으로 충분히 이동 (어디있든 확실히 (0,0)으로)
+        """커서를 좌상단(0,0)으로 리셋 후 중앙으로 이동해서 위치 동기화."""
         self._send_text("MOVE:-9999:-9999")
-        time.sleep(0.3)
-        # 중앙으로 이동
+        time.sleep(0.5)
+        # 중앙으로 이동 (스케일 적용)
         cx = self.SCREEN_W // 2
         cy = self.SCREEN_H // 2
-        self._send_text(f"MOVE:{cx}:{cy}")
-        time.sleep(0.3)
+        scaled_x = int(cx * self.SCALE_X)
+        scaled_y = int(cy * self.SCALE_Y)
+        self._send_text(f"MOVE:{scaled_x}:{scaled_y}")
+        time.sleep(0.5)
         self._cur_x = cx
         self._cur_y = cy
-        print(f"[PicoController] 커서 리셋 완료: 중앙({cx},{cy})")
+        print(f"[PicoController] 커서 리셋: 중앙({cx},{cy}) 전송값({scaled_x},{scaled_y})") 
 
     def disconnect(self):
         if self._serial and self._serial.is_open:
@@ -137,11 +144,15 @@ class PicoController(BaseController):
         dx = x - self._cur_x
         dy = y - self._cur_y
 
-        print(f"[Pico] 현재추적({self._cur_x},{self._cur_y}) → 목표({x},{y}) dx={dx} dy={dy}")
+        # 스케일 적용 (HID 감도 보정)
+        sdx = int(dx * self.SCALE_X)
+        sdy = int(dy * self.SCALE_Y)
 
-        if abs(dx) > 2 or abs(dy) > 2:
-            self._send_text(f"MOVE:{dx}:{dy}")
-            time.sleep(0.06)  # 피코 이동 완료 대기
+        print(f"[Pico] 추적({self._cur_x},{self._cur_y}) → 목표({x},{y}) 전송MOVE({sdx},{sdy})")
+
+        if abs(sdx) > 0 or abs(sdy) > 0:
+            self._send_text(f"MOVE:{sdx}:{sdy}")
+            time.sleep(0.06)
 
         # 커서 추적 위치 업데이트
         self._cur_x = max(0, min(self.SCREEN_W, x))
@@ -156,7 +167,9 @@ class PicoController(BaseController):
     def click_move(self, x: int, y: int):
         dx = x - self._cur_x
         dy = y - self._cur_y
-        self._send_text(f"MOVE:{dx}:{dy}")
+        sdx = int(dx * self.SCALE_X)
+        sdy = int(dy * self.SCALE_Y)
+        self._send_text(f"MOVE:{sdx}:{sdy}")
         time.sleep(0.06)
         self._send_text("CLICK:20")
         self._cur_x = x
