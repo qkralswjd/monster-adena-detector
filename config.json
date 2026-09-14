@@ -62,6 +62,6 @@
     },
 
     "display": {
-        "show_window": false
+        "show_window": true
     }
 }
