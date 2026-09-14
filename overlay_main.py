@@ -250,6 +250,8 @@ def main():
                                      drag_dx=drag_dx,
                                      drag_dy=drag_dy,
                                      hold_ms=hold_ms)
+                    overlay.notify_attack(sc_x, sc_y)
+                    print(f"[Attack] 클릭 → 전체화면({sc_x},{sc_y})  오버레이({sc_x - mon_left - lb_x},{sc_y - mon_top})")
 
             # ── 오버레이 갱신 ─────────────────────────────────
             miss_elapsed = (time.time() - miss_start

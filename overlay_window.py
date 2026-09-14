@@ -89,6 +89,11 @@ class OverlayWindow:
         self._last_click = 0.0
         self._click_cooldown = 0.3  # 초
 
+        # 마지막 클릭 위치 표시용
+        self._last_click_ov    = None   # 오버레이 좌표 (ox, oy)
+        self._last_click_sc    = None   # 전체화면 좌표 (sc_x, sc_y)
+        self._click_show_until = 0.0   # 표시 종료 시각
+
     # ─────────────────────────────────────────────────────────
     #  외부 API
     # ─────────────────────────────────────────────────────────
@@ -103,6 +108,19 @@ class OverlayWindow:
             self._det_fps    = det_fps
             self._cap_fps    = cap_fps
             self._roi        = roi  # (rx, ry, rw, rh) or None
+
+    def notify_attack(self, sc_x: int, sc_y: int):
+        """
+        자동공격 실행 시 호출 → 오버레이에 클릭 위치 표시.
+        sc_x, sc_y = 전체화면 좌표
+        """
+        # 전체화면 좌표 → 오버레이 좌표
+        ov_x = sc_x - self._win_x
+        ov_y = sc_y - self._win_y
+        with self._lock:
+            self._last_click_ov    = (ov_x, ov_y)
+            self._last_click_sc    = (sc_x, sc_y)
+            self._click_show_until = time.time() + 1.5  # 1.5초 표시
 
     def start(self):
         """별도 스레드에서 tkinter 루프 시작."""
@@ -186,6 +204,12 @@ class OverlayWindow:
 
         print(f"[오버레이클릭] 오버레이({ov_x},{ov_y}) → 전체화면({sc_x},{sc_y})")
 
+        # 클릭 위치 저장 (오버레이에 표시용)
+        with self._lock:
+            self._last_click_ov    = (ov_x, ov_y)
+            self._last_click_sc    = (sc_x, sc_y)
+            self._click_show_until = time.time() + 2.0  # 2초간 표시
+
         if self._ctrl and self._ctrl.is_connected:
             self._ctrl.drag_attack(sc_x, sc_y)
 
@@ -201,12 +225,15 @@ class OverlayWindow:
         c.delete("all")  # 전체 지우기
 
         with self._lock:
-            dets    = list(self._detections)
-            target  = self._target
-            miss_t  = self._miss_t
-            det_fps = self._det_fps
-            cap_fps = self._cap_fps
-            roi     = self._roi
+            dets       = list(self._detections)
+            target     = self._target
+            miss_t     = self._miss_t
+            det_fps    = self._det_fps
+            cap_fps    = self._cap_fps
+            roi        = self._roi
+            click_ov   = self._last_click_ov
+            click_sc   = self._last_click_sc
+            click_show = self._click_show_until
 
         # ── ROI 존 표시 ───────────────────────────────────────
         if roi:
@@ -303,6 +330,23 @@ class OverlayWindow:
             # 라벨
             self._text(c, label, ox, oy - 10, color, size=10)
 
+        # ── 클릭 위치 표시 (자동공격 + 수동클릭) ─────────────────
+        if click_ov and time.time() < click_show:
+            cx_, cy_ = click_ov
+            sc_x_, sc_y_ = click_sc
+            # 외경원 (노랑)
+            c.create_oval(cx_-20, cy_-20, cx_+20, cy_+20,
+                          outline="#FFFF00", width=2)
+            # 내경원 (빨강)
+            c.create_oval(cx_-6, cy_-6, cx_+6, cy_+6,
+                          fill="#FF3300", outline="")
+            # 십자선
+            c.create_line(cx_-25, cy_, cx_+25, cy_, fill="#FFFF00", width=1)
+            c.create_line(cx_, cy_-25, cx_, cy_+25, fill="#FFFF00", width=1)
+            # 좌표 텍스트
+            self._text(c, f"CLICK ({sc_x_},{sc_y_})",
+                       cx_ + 14, cy_ - 8, "#FFFF00", size=9)
+
         # ── HUD (좌상단) ──────────────────────────────────────
         hud = [
             f"Monsters : {len([d for d in dets if d.class_id==0])}",
@@ -311,9 +355,11 @@ class OverlayWindow:
             f"Target   : {'YES' if target else 'NONE'}",
             f"LB offset: {self._lb_x}px",
         ]
+        if click_sc and time.time() < click_show:
+            hud.append(f"CLICK: {click_sc}")
         # 반투명 HUD 배경
         hud_h = len(hud) * 18 + 8
-        c.create_rectangle(6, 6, 180, 6 + hud_h,
+        c.create_rectangle(6, 6, 220, 6 + hud_h,
                            fill="#000000", outline="", stipple="gray50")
         for i, line in enumerate(hud):
             self._text(c, line, 10, 16 + i * 18, CLR_TEXT, size=9)
