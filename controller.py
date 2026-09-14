@@ -102,6 +102,9 @@ class PicoController:
 
         if sdx != 0 or sdy != 0:
             self._send(f"MOVE:{sdx}:{sdy}")
+            time.sleep(0.1)  # 이동 완료 대기
+            ax, ay = _get_cursor_pos()
+            print(f"[Pico] 실제도착: ({ax},{ay})  오차({ax-x},{ay-y})")
 
     # ── 드래그 공격 (비동기) ──────────────────────────────────
     def drag_attack(self, x: int, y: int,
