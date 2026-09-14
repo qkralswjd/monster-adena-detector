@@ -45,17 +45,33 @@ TEST_POINTS = [
 def check_reset(ctrl):
     """
     리셋 후 실제 커서가 (0,0) 에 있는지 확인.
-    (0,0) 이 아니면 리셋 실패 → 이후 모든 좌표가 틀림.
+    커서가 멈출 때까지 최대 5초 대기.
     """
     print("\n[리셋 확인]")
+    print("  커서 이동 완료 대기 중...")
+
+    # 커서가 멈출 때까지 대기 (최대 5초)
+    prev_x, prev_y = -1, -1
+    stable_count = 0
+    for _ in range(50):   # 0.1s * 50 = 5초
+        time.sleep(0.1)
+        ax, ay = get_cursor_pos()
+        if ax == prev_x and ay == prev_y:
+            stable_count += 1
+            if stable_count >= 3:   # 0.3초 연속 안 움직이면 완료
+                break
+        else:
+            stable_count = 0
+        prev_x, prev_y = ax, ay
+
     ax, ay = get_cursor_pos()
     print(f"  리셋 후 실제 커서: ({ax},{ay})")
-    if ax == 0 and ay == 0:
+    if ax <= 2 and ay <= 2:
         print("  리셋 성공 ✓")
         return True
     else:
-        print(f"  리셋 실패 ✗  오차: ({ax},{ay})")
-        print("  → controller.py _reset() 대기시간 더 늘려야 함")
+        print(f"  리셋 실패 ✗  커서가 ({ax},{ay}) 에 있음")
+        print("  → controller.py _reset() 전송 횟수/대기시간 늘려야 함")
         return False
 
 

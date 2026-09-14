@@ -88,13 +88,16 @@ class PicoController:
         """
         연결 시 1회만 호출.
         PICO 커서를 화면 (0,0) 으로 이동.
-        이후 _cur_x=0, _cur_y=0 기준으로 추적 시작.
+
+        PICO 펌웨어는 순수 상대이동 장치.
+        MOVE:-9999:-9999 → 127씩 나눠서 전송 (do_move 내부)
+        1920px 이동 시 1920/127 = 15스텝 * 0.008s = 0.12s
+        여유있게 3회 전송 + 충분한 대기.
         """
-        # 2번 전송 + 충분한 대기 (1회로 안 될 수 있음)
-        self._send("MOVE:-9999:-9999")
-        time.sleep(1.0)
-        self._send("MOVE:-9999:-9999")
-        time.sleep(1.5)
+        for _ in range(3):
+            self._send("MOVE:-9999:-9999")
+            time.sleep(0.5)
+        time.sleep(1.0)   # 마지막 이동 완료 대기
         self._cur_x = 0
         self._cur_y = 0
         print(f"[Pico] 리셋 완료 → 커서 (0,0)")
