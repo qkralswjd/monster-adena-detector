@@ -1,7 +1,7 @@
 """
 main.py
 -------
-Monster Tracker - 탐지 좌표 로그 버전
+Monster Tracker - 피코 HID 공격 통합 버전
 
 전체 흐름:
   1. 화면 캡처 (mss monitors[1], left=-1920)
@@ -9,16 +9,23 @@ Monster Tracker - 탐지 좌표 로그 버전
   3. ROI 필터링
   4. ROI 안 몬스터 전체 목록 로그 출력
   5. 탐지 순서대로 타겟 큐 구성 (1번→2번→...)
-  6. 현재 타겟 추적 - 매 프레임 전체화면 절대좌표 출력
-  7. 사망/소실(1.5초) → 다음 타겟으로
+  6. IoU 매칭으로 타겟 추적
+  7. 피코로 드래그 공격 (PRESS→아래드래그→RELEASE)
+  8. 사망/소실(1.5초) → 다음 타겟으로
 
 좌표 기준:
-  프레임좌표  = mss 캡처 기준 (0~1920, 0~1080)
+  프레임좌표  = mss 캡처 기준 (0~1920, 0~1080) ← 피코 MOVE 계산 기준
   전체화면좌표 = 프레임좌표 + mon_left/top
-                 게임이 left=-1920 이면 전체화면x = 프레임x - 1920
+                 게임이 left=-1920 이면 전체화면x = 프레임x - 1920 (음수, 정상)
+
+피코 좌표 계산:
+  커서 리셋(MOVE:-9999:-9999) 후 게임 중앙으로 이동
+  → 이후 프레임좌표 = 피코 추적 좌표 1:1 대응
+  dx = target.cx - _cur_x → MOVE:{dx*SCALE}:{dy*SCALE}
 
 핫키:
   Q / ESC : 종료 (창 모드)
+  C       : 타겟 수동 해제
   Ctrl+C  : 강제종료
 """
 
@@ -34,6 +41,7 @@ from screen_capture import ScreenCapture
 from detector import YOLODetector, Detection
 from target_selector import find_matching
 from death_detector import DeathDetector
+from controller import PicoController, DummyController
 
 
 def load_config(path: str = "config.json") -> dict:
@@ -79,6 +87,7 @@ class MonsterTrackerApp:
         print(f"[Capture] 게임모니터: left={self._mon_left}, top={self._mon_top} "
               f"| 캡처 크기: {mss_w}x{mss_h}")
         print(f"[Capture] 전체화면좌표 = 프레임좌표 + ({self._mon_left},{self._mon_top})")
+        print(f"[Capture] 피코 MOVE 기준 = 프레임좌표 (음수 전체화면좌표 아님)")
 
         # ── ROI (탐지 필터 존) ──────────────────────
         rcfg = self._cfg["roi"]
@@ -90,11 +99,42 @@ class MonsterTrackerApp:
             self._roi = None
             print("[ROI] 전체 화면 탐지")
 
+        # ── 피코 컨트롤러 ────────────────────────────
+        ccfg = self._cfg["controller"]
+        gcfg = self._cfg["game"]
+        if ccfg["enabled"]:
+            self._ctrl = PicoController(
+                port      = ccfg["port"],
+                baudrate  = ccfg["baudrate"],
+                screen_w  = gcfg["width"],
+                screen_h  = gcfg["height"],
+            )
+            if not self._ctrl.connect():
+                print("[Controller] 연결 실패 → DummyController로 대체")
+                self._ctrl = DummyController()
+                self._ctrl.connect()
+        else:
+            print("[Controller] enabled=false → DummyController")
+            self._ctrl = DummyController()
+            self._ctrl.connect()
+
+        # ── 공격 설정 ────────────────────────────────
+        acfg = self._cfg["attack"]
+        self._attack_enabled  = acfg["enabled"]
+        self._attack_cooldown = acfg["cooldown_sec"]
+        self._drag_dx         = acfg.get("drag_dx", 0)
+        self._drag_dy         = acfg.get("drag_dy", 30)
+        self._hold_ms         = acfg.get("hold_ms", 80)
+        self._aim_offset_y    = acfg.get("aim_offset_y", -10)  # 머리 조준 (음수=위)
+        self._last_attack_time = 0.0
+        print(f"[Attack] enabled={self._attack_enabled} "
+              f"drag=({self._drag_dx},{self._drag_dy}) "
+              f"hold={self._hold_ms}ms "
+              f"aim_offset_y={self._aim_offset_y}")
+
         # ── 타겟 상태 ───────────────────────────────
         self._target: Optional[Detection] = None
-        self._target_no: int = 0          # 현재 타겟 번호
-        # 이전 프레임 몬스터 ID 목록 (새 몬스터 감지용)
-        self._known_monster_ids: List[tuple] = []  # (cx, cy) 기준
+        self._target_no: int = 0
         self._running = False
 
         # ── FPS 제한 ────────────────────────────────
@@ -104,9 +144,9 @@ class MonsterTrackerApp:
         # ── 로그 타이머 ─────────────────────────────
         self._last_status_time = 0.0
         self._last_coord_time  = 0.0
-        self._last_monsters_log: List[Detection] = []   # 직전 프레임 몬스터 목록
+        self._last_monsters_log: List = []  # 직전 프레임 (cx,cy) 목록
 
-    # ── 전체화면 절대좌표 변환 ────────────────────────
+    # ── 전체화면 절대좌표 변환 (로그용) ───────────────
     def _to_screen(self, frame_x: int, frame_y: int):
         return frame_x + self._mon_left, frame_y + self._mon_top
 
@@ -114,11 +154,6 @@ class MonsterTrackerApp:
     #  몬스터 목록 로그 (변화 있을 때만 출력)
     # ══════════════════════════════════════════════
     def _log_monsters(self, monsters: List[Detection]):
-        """
-        ROI 안 몬스터 전체 목록 출력.
-        탐지된 몬스터 수/위치가 바뀔 때만 출력 (매 프레임 X).
-        """
-        # 현재 프레임 cx/cy 집합
         cur_ids = [(m.cx, m.cy) for m in monsters]
         if cur_ids == self._last_monsters_log:
             return
@@ -150,7 +185,6 @@ class MonsterTrackerApp:
         """
         if self._target is None:
             if monsters:
-                # 탐지 순서 첫 번째를 타겟으로
                 self._target = monsters[0]
                 self._target_no += 1
                 self._death_detector.reset()
@@ -181,24 +215,66 @@ class MonsterTrackerApp:
         return False
 
     # ══════════════════════════════════════════════
-    #  현재 타겟 이동 좌표 로그 (매 프레임)
+    #  피코 공격 실행
+    # ══════════════════════════════════════════════
+    def _do_attack(self):
+        """
+        타겟이 있고 쿨타임이 지나면 피코로 드래그 공격.
+
+        aim_offset_y 적용:
+          타겟 cx/cy는 바운딩박스 중심 → aim_offset_y=-10 이면 10px 위(머리)를 조준
+          공격 모션: PRESS → 아래로 drag_dy만큼 드래그 → RELEASE
+        """
+        if not self._attack_enabled or self._target is None:
+            return
+
+        now = time.time()
+        if now - self._last_attack_time < self._attack_cooldown:
+            return
+
+        # 공격 중이면 최신 좌표만 갱신
+        if hasattr(self._ctrl, 'is_attacking') and self._ctrl.is_attacking:
+            aim_y = self._target.cy + self._aim_offset_y
+            self._ctrl.update_target(self._target.cx, aim_y)
+            return
+
+        aim_x = self._target.cx
+        aim_y = self._target.cy + self._aim_offset_y
+
+        sc_x, sc_y = self._to_screen(aim_x, aim_y)
+        print(f"[Attack #{self._target_no}] 공격! "
+              f"프레임({aim_x},{aim_y})  전체화면({sc_x},{sc_y})  "
+              f"drag_dy={self._drag_dy}")
+
+        self._ctrl.drag_attack(
+            x       = aim_x,
+            y       = aim_y,
+            drag_dx = self._drag_dx,
+            drag_dy = self._drag_dy,
+            hold_ms = self._hold_ms,
+        )
+        self._last_attack_time = now
+
+    # ══════════════════════════════════════════════
+    #  현재 타겟 이동 좌표 로그 (0.1초마다)
     # ══════════════════════════════════════════════
     def _log_target_coord(self):
-        """현재 타겟 좌표를 매 프레임 출력"""
         if self._target is None:
             return
         now = time.time()
-        if now - self._last_coord_time < 0.1:   # 0.1초마다 (10fps)
+        if now - self._last_coord_time < 0.1:
             return
         self._last_coord_time = now
 
         sc_x, sc_y = self._to_screen(self._target.cx, self._target.cy)
         miss = self._death_detector.miss_elapsed
         miss_str = f"  소실중={miss:.1f}s" if miss > 0 else ""
+        atk_str  = " [공격중]" if (hasattr(self._ctrl, 'is_attacking') and
+                                    self._ctrl.is_attacking) else ""
         print(f"[타겟 #{self._target_no}] "
               f"프레임({self._target.cx:4d},{self._target.cy:4d})  "
               f"전체화면({sc_x:5d},{sc_y:4d})  "
-              f"conf={self._target.confidence:.2f}{miss_str}")
+              f"conf={self._target.confidence:.2f}{miss_str}{atk_str}")
 
     # ══════════════════════════════════════════════
     #  메인 루프
@@ -206,7 +282,6 @@ class MonsterTrackerApp:
     def run(self):
         show_window = self._cfg.get("display", {}).get("show_window", False)
         self._running = True
-        self._last_frame_size = (1080, 1920)
 
         if show_window:
             import cv2
@@ -232,7 +307,6 @@ class MonsterTrackerApp:
                 frame = self._capture.capture()
                 if frame is None:
                     continue
-                self._last_frame_size = (frame.shape[0], frame.shape[1])
 
                 # ── 탐지 ──────────────────────────────
                 all_detections = self._detector.detect(frame)
@@ -256,16 +330,21 @@ class MonsterTrackerApp:
                 if dead:
                     self._target = None
 
-                # ── 현재 타겟 이동 좌표 출력 ──────────
+                # ── 피코 공격 ─────────────────────────
+                self._do_attack()
+
+                # ── 현재 타겟 좌표 출력 ───────────────
                 self._log_target_coord()
 
                 # ── 5초마다 상태 요약 ─────────────────
                 if time.time() - self._last_status_time > 5.0:
+                    ctrl_status = ("연결" if self._ctrl.is_connected else "끊김")
                     target_str = (f"#{self._target_no} 프레임({self._target.cx},{self._target.cy})"
                                   if self._target else "없음")
                     print(f"[Status] monster={len(monsters)} | "
                           f"adena={len(adenas)} | "
                           f"타겟={target_str} | "
+                          f"피코={ctrl_status} | "
                           f"탐지FPS={self._detector.fps}")
                     self._last_status_time = time.time()
 
@@ -276,6 +355,8 @@ class MonsterTrackerApp:
         except KeyboardInterrupt:
             print("\n[MonsterTracker] Ctrl+C → 종료")
         finally:
+            self._ctrl.stop()
+            self._ctrl.disconnect()
             if show_window:
                 import cv2
                 cv2.destroyAllWindows()
