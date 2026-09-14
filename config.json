@@ -22,13 +22,12 @@
   "attack": {
     "enabled": true,
     "cooldown_sec": 0.8,
-    "drag_dy": 30,
+    "drag_dy": 0,
     "drag_dx": 0,
     "hold_ms": 80,
-    "_note": "drag_dy=30: PRESS 후 아래로 30px 드래그 → 공격 모션"
+    "_note": "drag_dy=0: 단순 클릭. 리니지는 클릭 한번으로 공격 걸림. 드래그 불필요"
   },
   "target": {
-    "select_mode": "nearest",
     "iou_thresh": 0.2,
     "max_dist": 350,
     "miss_timeout_sec": 4.0,

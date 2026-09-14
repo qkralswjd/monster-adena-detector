@@ -1,26 +1,14 @@
 """
 controller.py
 -------------
-PICO HID 절대좌표 클릭 컨트롤러 (v2).
-
-좌표 원칙:
-  - 입력: 화면 절대좌표 (x, y)  ← detector.py cx/cy 그대로
-  - 좌표 변환 없음
-  - GetCursorPos() 로 실제 커서 읽어서 dx/dy 계산
-
-개선 (v2):
-  - 잔류 오차 누적 보정 (_residual_x/y):
-    매 이동 후 실제 도착 위치와 목표의 차이를 기억해서 다음 HID 값에 반영
-  - SCALE 재보정 기능 불필요 (GetCursorPos 기반이라 항상 정확)
+PICO HID 절대좌표 클릭 컨트롤러.
 
 동작 원리:
   1. _move_to(x, y) 호출
   2. GetCursorPos() → 현재 커서 위치 읽기
-  3. dx = (x - cur_x) - residual_x  (잔류 오차 선보정)
-  4. dy = (y - cur_y) - residual_y
-  5. HID 전송: round(dx * SCALE_X), round(dy * SCALE_Y)
-  6. 이동 대기 후 GetCursorPos() → 실제 도착 위치 측정
-  7. 잔류 오차 갱신: residual = 실제도착 - 목표 (clamp ±30)
+  3. dx = x - cur_x  /  dy = y - cur_y
+  4. HID 전송: round(dx * SCALE_X), round(dy * SCALE_Y)
+  5. 이동 대기 후 PRESS / RELEASE
 
 PICO 프로토콜:
   MOVE:dx:dy   → 상대 마우스 이동 (HID 단위)
@@ -44,23 +32,16 @@ def _get_cursor_pos():
 
 class PicoController:
 
-    SCALE_X = 0.4968  # 측정값 (GetCursorPos 기반 3지점 평균)
-    SCALE_Y = 0.4948  # 측정값 (GetCursorPos 기반 3지점 평균)
-
-    # 잔류 오차 최대 clamp (픽셀)
-    MAX_RESIDUAL = 30
+    SCALE_X = 0.4968  # HID 1 단위당 실제 픽셀 역수 (GetCursorPos 기반 측정값)
+    SCALE_Y = 0.4948
 
     def __init__(self, port: str, baudrate: int = 115200):
-        self._port       = port
-        self._baudrate   = baudrate
-        self._ser        = None
-        self._lock       = threading.Lock()
-        self._connected  = False
-        self._attacking  = False
-
-        # 잔류 오차 (이전 이동 후 도착 오차 누적)
-        self._residual_x = 0.0
-        self._residual_y = 0.0
+        self._port      = port
+        self._baudrate  = baudrate
+        self._ser       = None
+        self._lock      = threading.Lock()
+        self._connected = False
+        self._attacking = False
 
     # ── 연결 ──────────────────────────────────────────────────
     def connect(self) -> bool:
@@ -69,8 +50,6 @@ class PicoController:
             self._ser = serial.Serial(self._port, self._baudrate, timeout=1.0)
             time.sleep(0.5)
             self._connected = True
-            self._residual_x = 0.0
-            self._residual_y = 0.0
             print(f"[Pico] 연결: {self._port} @ {self._baudrate}")
             return True
         except Exception as e:
@@ -84,10 +63,8 @@ class PicoController:
             pass
         if self._ser and self._ser.is_open:
             self._ser.close()
-        self._connected  = False
-        self._attacking  = False
-        self._residual_x = 0.0
-        self._residual_y = 0.0
+        self._connected = False
+        self._attacking = False
         print("[Pico] 연결 해제")
 
     @property
@@ -101,53 +78,31 @@ class PicoController:
     # ── 절대좌표 이동 ──────────────────────────────────────────
     def _move_to(self, x: int, y: int):
         """
-        GetCursorPos() 로 실제 커서 위치 읽어서 상대이동.
-        잔류 오차(_residual_x/y)를 선보정해서 누적 오차 방지.
+        GetCursorPos()로 현재 커서 읽고 목표까지 상대이동.
         """
         cur_x, cur_y = _get_cursor_pos()
-
-        # 잔류 오차 선보정: 이전에 목표보다 얼마나 틀렸는지 반영
-        dx = (x - cur_x) - self._residual_x
-        dy = (y - cur_y) - self._residual_y
-
+        dx = x - cur_x
+        dy = y - cur_y
         sdx = round(dx * self.SCALE_X)
         sdy = round(dy * self.SCALE_Y)
 
-        print(f"[Pico] 이동: ({cur_x},{cur_y}) → ({x},{y})"
-              f"  Δ({int(dx)},{int(dy)})  HID({sdx},{sdy})"
-              f"  residual=({self._residual_x:.1f},{self._residual_y:.1f})")
+        print(f"[Pico] 이동: ({cur_x},{cur_y}) → ({x},{y})  Δ({dx},{dy})  HID({sdx},{sdy})")
 
         if sdx != 0 or sdy != 0:
-            # 이동 완료 대기: 스텝수 × 8ms + 여유
             steps = max(abs(sdx), abs(sdy)) / 127 + 1
             wait  = steps * 0.008 + 0.05
             self._send(f"MOVE:{sdx}:{sdy}")
             time.sleep(wait)
-
-            # 실제 도착 측정 → 잔류 오차 갱신
             ax, ay = _get_cursor_pos()
-            err_x  = ax - x
-            err_y  = ay - y
-
-            # clamp: 너무 큰 오차는 무시 (측정 잡음 방지)
-            clamp = self.MAX_RESIDUAL
-            self._residual_x = max(-clamp, min(clamp, float(err_x)))
-            self._residual_y = max(-clamp, min(clamp, float(err_y)))
-
-            print(f"[Pico] 실제도착: ({ax},{ay})  오차({err_x},{err_y})"
-                  f"  → 잔류보정 갱신({self._residual_x:.1f},{self._residual_y:.1f})")
-        else:
-            # 이동 없음 → 잔류 오차 리셋 (이미 목표 위치)
-            self._residual_x = 0.0
-            self._residual_y = 0.0
+            print(f"[Pico] 실제도착: ({ax},{ay})  오차({ax-x},{ay-y})")
 
     # ── 드래그 공격 (비동기) ──────────────────────────────────
     def drag_attack(self, x: int, y: int,
-                    drag_dx: int = 0, drag_dy: int = 30,
+                    drag_dx: int = 0, drag_dy: int = 0,
                     hold_ms: int = 80):
         """
-        (x, y) 로 이동 → PRESS → 드래그 → RELEASE.
-        x, y = 화면 절대좌표. 변환 없음.
+        (x, y)로 이동 → PRESS → RELEASE.
+        drag_dx/dy = 0 이면 단순 클릭.
         비동기 스레드로 실행.
         """
         if self._attacking:
@@ -169,7 +124,7 @@ class PicoController:
             self._send("PRESS")
             time.sleep(hold_ms / 1000.0)
 
-            # 3. 드래그
+            # 3. 드래그 (drag_dx/dy != 0 일 때만)
             if drag_dx != 0 or drag_dy != 0:
                 sdx = round(drag_dx * self.SCALE_X)
                 sdy = round(drag_dy * self.SCALE_Y)
@@ -191,10 +146,6 @@ class PicoController:
 
     # ── 단순 클릭 ─────────────────────────────────────────────
     def click(self, x: int, y: int, hold_ms: int = 50):
-        """
-        (x, y) 로 이동 → PRESS → RELEASE.
-        x, y = 화면 절대좌표. 변환 없음.
-        """
         self._move_to(x, y)
         self._send("PRESS")
         time.sleep(hold_ms / 1000.0)
@@ -215,7 +166,7 @@ class PicoController:
 
     def stop(self):
         self._send("RELEASE")
-        self._attacking  = False
+        self._attacking = False
 
     def ping(self) -> bool:
         self._send("PING")
@@ -242,10 +193,9 @@ class DummyController:
         self._connected = False
 
     def drag_attack(self, x: int, y: int,
-                    drag_dx: int = 0, drag_dy: int = 30,
+                    drag_dx: int = 0, drag_dy: int = 0,
                     hold_ms: int = 80):
-        print(f"[Dummy] drag_attack: ({x},{y})"
-              f"  drag=({drag_dx},{drag_dy})  hold={hold_ms}ms")
+        print(f"[Dummy] drag_attack: ({x},{y})  drag=({drag_dx},{drag_dy})  hold={hold_ms}ms")
 
     def click(self, x: int, y: int, hold_ms: int = 50):
         print(f"[Dummy] click: ({x},{y})  hold={hold_ms}ms")
