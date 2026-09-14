@@ -198,20 +198,22 @@ class OverlayWindow:
         ov_x = event.x
         ov_y = event.y
 
-        # 전체화면 기준 절대 좌표
-        sc_x = self._win_x + ov_x   # = mon_left + lb_x + ov_x
-        sc_y = self._win_y + ov_y   # = mon_top  + ov_y
+        # 오버레이 좌표 = 게임 영역 내 픽셀 좌표 (그대로 피코에 전달)
+        gx = ov_x
+        gy = ov_y
 
-        print(f"[오버레이클릭] 오버레이({ov_x},{ov_y}) → 전체화면({sc_x},{sc_y})")
+        print(f"[오버레이클릭] 게임내({gx},{gy})")
 
         # 클릭 위치 저장 (오버레이에 표시용)
+        sc_x = self._win_x + ov_x
+        sc_y = self._win_y + ov_y
         with self._lock:
             self._last_click_ov    = (ov_x, ov_y)
-            self._last_click_sc    = (sc_x, sc_y)
+            self._last_click_sc    = (gx, gy)
             self._click_show_until = time.time() + 2.0  # 2초간 표시
 
         if self._ctrl and self._ctrl.is_connected:
-            self._ctrl.drag_attack(sc_x, sc_y)
+            self._ctrl.drag_attack(gx, gy)
 
     # ─────────────────────────────────────────────────────────
     #  그리기

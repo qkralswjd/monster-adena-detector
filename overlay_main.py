@@ -148,6 +148,7 @@ def main():
             baudrate  = ccfg["baudrate"],
             mon_left  = mon_left,
             mon_top   = mon_top,
+            lb_x      = lb_x,
         )
         if not ctrl.connect():
             print("[경고] 피코 연결 실패 → DummyController 사용")
@@ -193,15 +194,16 @@ def main():
     center_y = game_h // 2
 
     # ── 피코 좌표 계산 함수 ───────────────────────────────────
-    def frame_to_screen(cx: int, cy: int):
+    def frame_to_game(cx: int, cy: int):
         """
-        YOLO 프레임 좌표(1920x1080 기준) → 피코 전달용 전체화면 좌표.
-        피코 리셋: MOVE:-9999:-9999 → 커서=(0,0)=Windows원점
-        게임 모니터가 left=-1920이면 sc_x는 음수 → 피코가 왼쪽으로 이동 → 정상.
+        YOLO 프레임 좌표(1920x1080 기준) → 게임 영역 내 픽셀 좌표.
+        게임 영역 내 (0,0) = 게임 좌상단 = 피코 리셋 후 커서 위치.
+        gx = cx - lb_x  (letterbox 제거)
+        gy = cy          (상하 여백 없음)
         """
-        sc_x = mon_left + cx   # mon_left=-1920이면 음수, 피코는 음수도 처리 가능
-        sc_y = mon_top  + cy
-        return sc_x, sc_y
+        gx = cx - lb_x
+        gy = cy
+        return gx, gy
 
     print(f"[Main] 루프 시작. Ctrl+C 로 종료.")
     print(f"       오버레이 클릭으로 해당 위치 피코 클릭 가능.")
@@ -263,16 +265,14 @@ def main():
                     last_atk_time     = now
                     first_attack_done = True
 
-                    sc_x, sc_y = frame_to_screen(current_target.cx, current_target.cy)
+                    gx, gy = frame_to_game(current_target.cx, current_target.cy)
 
-                    ctrl.drag_attack(sc_x, sc_y,
+                    ctrl.drag_attack(gx, gy,
                                      drag_dx=drag_dx,
                                      drag_dy=drag_dy,
                                      hold_ms=hold_ms)
-                    overlay.notify_attack(sc_x, sc_y)
-                    ov_x = current_target.cx - lb_x
-                    ov_y = current_target.cy
-                    print(f"[Attack] sc=({sc_x},{sc_y})  overlay=({ov_x},{ov_y})")
+                    overlay.notify_attack(mon_left + lb_x + gx, mon_top + gy)
+                    print(f"[Attack] 게임내({gx},{gy})  프레임({current_target.cx},{current_target.cy})")
 
             # ── 오버레이 갱신 ─────────────────────────────────
             miss_elapsed = (time.time() - miss_start

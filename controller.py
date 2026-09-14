@@ -13,8 +13,10 @@ controller.py
 SCALE = 0.395  (MOVE:1 → 실제 2.53px 이동)
 
 커서 기준:
-  connect() 시 MOVE:-9999:-9999 → 피코(0,0) = Windows(0,0)
-  이후 전체화면 좌표 기준 상대이동으로 클릭
+  connect() 시 MOVE:-9999:-9999 → 커서를 Windows(0,0)으로 이동
+  이후 SetCursorPos(game_origin_x, game_origin_y) 로 게임 영역 좌상단으로 이동
+  _cur_x/_cur_y = 게임 영역 내 픽셀 좌표 (0,0 = 게임 좌상단)
+  drag_attack(gx, gy) 인자도 게임 영역 내 픽셀 좌표
 """
 
 import time
@@ -27,7 +29,8 @@ class PicoController:
     SCALE = 0.395  # HID 감도 스케일
 
     def __init__(self, port: str, baudrate: int = 115200,
-                 mon_left: int = 0, mon_top: int = 0):
+                 mon_left: int = 0, mon_top: int = 0,
+                 lb_x: int = 0):
         self._port     = port
         self._baudrate = baudrate
         self._ser      = None
@@ -36,8 +39,13 @@ class PicoController:
 
         self._mon_left = mon_left
         self._mon_top  = mon_top
+        self._lb_x     = lb_x
 
-        # 피코 커서 현재 위치 (전체화면 좌표 기준, 리셋 후 0,0)
+        # 게임 영역 좌상단의 Windows 절대 좌표
+        self._game_origin_x = mon_left + lb_x
+        self._game_origin_y = mon_top
+
+        # 피코 커서 현재 위치 (게임 영역 내 픽셀, 리셋 후 0,0 = 게임 좌상단)
         self._cur_x = 0
         self._cur_y = 0
 
@@ -79,20 +87,31 @@ class PicoController:
 
     # ── 커서 리셋 (connect 시 1회) ────────────────
     def _reset(self):
-        ctypes.windll.user32.SetCursorPos(0, 0)
+        # 1. Windows 커서를 게임 영역 좌상단으로 이동
+        ox = self._game_origin_x
+        oy = self._game_origin_y
+        ctypes.windll.user32.SetCursorPos(ox, oy)
         time.sleep(0.1)
+        # 2. 피코도 같은 위치로 맞춤 (MOVE:-9999:-9999 후 게임좌상단으로 이동)
         self._send("MOVE:-9999:-9999")
         time.sleep(1.5)
+        # 3. (0,0) → 게임 좌상단까지 이동
+        dx = round(ox * self.SCALE)
+        dy = round(oy * self.SCALE)
+        if dx != 0 or dy != 0:
+            self._send(f"MOVE:{dx}:{dy}")
+            time.sleep(0.3)
         self._cur_x = 0
         self._cur_y = 0
-        print("[Pico] 커서 리셋 완료 → (0,0)")
+        print(f"[Pico] 커서 리셋 완료 → 게임좌상단({ox},{oy}) = 게임내(0,0)")
 
     # ── 드래그 공격 (비동기) ──────────────────────
     def drag_attack(self, sc_x: int, sc_y: int,
                     drag_dx: int = 0, drag_dy: int = 30,
                     hold_ms: int = 80):
         """
-        sc_x, sc_y = 전체화면 좌표 (게임 left=-1920이면 음수)
+        sc_x, sc_y = 게임 영역 내 픽셀 좌표 (0,0 = 게임 좌상단)
+                     = YOLO 탐지 cx - lb_x,  cy
         별도 스레드로 실행 → 메인루프 블로킹 없음
         """
         if self._attacking:
