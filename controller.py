@@ -116,10 +116,10 @@ class PicoController(BaseController):
         self.MON_TOP  = mon_top    # 게임모니터 top  (보통 0)
 
         # 피코 커서 추적 ─ 전체화면 절대좌표 기준
-        # 리셋 후 게임모니터 좌상단(mon_left, mon_top) = 피코(0,0)
-        # 전체화면 중앙 = mon_left + screen_w//2
-        self._cur_x = mon_left + screen_w // 2
-        self._cur_y = mon_top  + screen_h // 2
+        # 리셋(MOVE:-9999:-9999) 후 피코(0,0) = Windows(0,0) = 전체화면(0,0)
+        # connect() 에서 _reset_cursor() 호출 → (0,0) 동기화
+        self._cur_x = 0
+        self._cur_y = 0
 
         # 공격 스레드 상태
         self._attack_thread: threading.Thread = None
@@ -163,25 +163,10 @@ class PicoController(BaseController):
 
     # ── 공격 중 타겟 좌표 실시간 갱신 ────────────────────────────
     def update_target(self, x: int, y: int):
-        """
-        메인 루프에서 매 프레임 호출.
-        공격 스레드가 PRESS 상태일 때 최신 몬스터 좌표를 반영해
-        MOVE로 커서를 따라가게 함.
-        """
+        """호환성 유지용 (타겟당 1회 클릭 방식에서는 미사용)"""
         with self._attack_lock:
             self._target_x = x
             self._target_y = y
-
-        # 공격 중이면 즉시 커서를 최신 위치로 추적
-        if self._attacking:
-            dx = x - self._cur_x
-            dy = y - self._cur_y
-            sdx = round(dx * self.SCALE_X)
-            sdy = round(dy * self.SCALE_Y)
-            if sdx != 0 or sdy != 0:
-                self._send(f"MOVE:{sdx}:{sdy}")
-                self._cur_x = x
-                self._cur_y = y
 
     # ── 커서 리셋 ─────────────────────────────────────────────────
     def _reset_cursor(self):
