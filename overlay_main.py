@@ -149,6 +149,8 @@ def main():
             mon_left  = mon_left,
             mon_top   = mon_top,
             lb_x      = lb_x,
+            game_w    = game_w,
+            game_h    = game_h,
         )
         if not ctrl.connect():
             print("[경고] 피코 연결 실패 → DummyController 사용")

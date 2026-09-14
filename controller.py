@@ -13,10 +13,12 @@ controller.py
 SCALE = 0.395  (MOVE:1 → 실제 2.53px 이동)
 
 커서 기준:
-  connect() 시 MOVE:-9999:-9999 → 커서를 Windows(0,0)으로 이동
-  이후 SetCursorPos(game_origin_x, game_origin_y) 로 게임 영역 좌상단으로 이동
-  _cur_x/_cur_y = 게임 영역 내 픽셀 좌표 (0,0 = 게임 좌상단)
-  drag_attack(gx, gy) 인자도 게임 영역 내 픽셀 좌표
+  매 공격마다:
+    1. MOVE:-9999:-9999  → 커서를 (0,0) 으로
+    2. MOVE:+cx*S:+cy*S  → 게임 중앙으로 이동
+    3. 중앙 기준 몬스터까지 상대이동
+    4. PRESS + RELEASE
+  → 오차 누적 없음, 항상 중앙 기준으로 정확하게 계산
 """
 
 import time
@@ -30,24 +32,21 @@ class PicoController:
 
     def __init__(self, port: str, baudrate: int = 115200,
                  mon_left: int = 0, mon_top: int = 0,
-                 lb_x: int = 0):
-        self._port     = port
-        self._baudrate = baudrate
-        self._ser      = None
-        self._lock     = threading.Lock()
+                 lb_x: int = 0,
+                 game_w: int = 1440, game_h: int = 1080):
+        self._port      = port
+        self._baudrate  = baudrate
+        self._ser       = None
+        self._lock      = threading.Lock()
         self._connected = False
 
         self._mon_left = mon_left
         self._mon_top  = mon_top
         self._lb_x     = lb_x
 
-        # 게임 영역 좌상단의 Windows 절대 좌표
-        self._game_origin_x = mon_left + lb_x
-        self._game_origin_y = mon_top
-
-        # 피코 커서 현재 위치 (게임 영역 내 픽셀, 리셋 후 0,0 = 게임 좌상단)
-        self._cur_x = 0
-        self._cur_y = 0
+        # 게임 중앙 (기준점) - 게임 영역 내 픽셀
+        self._center_x = game_w // 2   # 720
+        self._center_y = game_h // 2   # 540
 
         # 공격 스레드 상태
         self._attacking = False
@@ -87,70 +86,78 @@ class PicoController:
 
     # ── 커서 리셋 (connect 시 1회) ────────────────
     def _reset(self):
-        # 1. Windows 커서를 게임 영역 좌상단으로 이동
-        ox = self._game_origin_x
-        oy = self._game_origin_y
-        ctypes.windll.user32.SetCursorPos(ox, oy)
+        """연결 시 1회만 호출. 피코 커서를 (0,0)으로 초기화."""
+        ctypes.windll.user32.SetCursorPos(0, 0)
         time.sleep(0.1)
-        # 2. 피코도 같은 위치로 맞춤 (MOVE:-9999:-9999 후 게임좌상단으로 이동)
         self._send("MOVE:-9999:-9999")
         time.sleep(1.5)
-        # 3. (0,0) → 게임 좌상단까지 이동
-        dx = round(ox * self.SCALE)
-        dy = round(oy * self.SCALE)
-        if dx != 0 or dy != 0:
-            self._send(f"MOVE:{dx}:{dy}")
-            time.sleep(0.3)
-        self._cur_x = 0
-        self._cur_y = 0
-        print(f"[Pico] 커서 리셋 완료 → 게임좌상단({ox},{oy}) = 게임내(0,0)")
+        print(f"[Pico] 초기 리셋 완료 → (0,0)")
+
+    def _move_to_center(self):
+        """
+        매 공격 전 호출.
+        (0,0) → 게임 중앙으로 이동.
+        항상 (0,0) 기준에서 출발하므로 오차 누적 없음.
+        """
+        # 1. 좌상단으로
+        self._send("MOVE:-9999:-9999")
+        time.sleep(0.08)
+        # 2. 게임 중앙까지 절대이동 (Windows 원점 기준)
+        # 게임 중앙의 Windows 좌표 = mon_left + lb_x + center_x, mon_top + center_y
+        abs_cx = self._mon_left + self._lb_x + self._center_x
+        abs_cy = self._mon_top  + self._center_y
+        dx = round(abs_cx * self.SCALE)
+        dy = round(abs_cy * self.SCALE)
+        self._send(f"MOVE:{dx}:{dy}")
+        time.sleep(0.05)
 
     # ── 드래그 공격 (비동기) ──────────────────────
-    def drag_attack(self, sc_x: int, sc_y: int,
+    def drag_attack(self, gx: int, gy: int,
                     drag_dx: int = 0, drag_dy: int = 30,
                     hold_ms: int = 80):
         """
-        sc_x, sc_y = 게임 영역 내 픽셀 좌표 (0,0 = 게임 좌상단)
-                     = YOLO 탐지 cx - lb_x,  cy
-        별도 스레드로 실행 → 메인루프 블로킹 없음
+        gx, gy = 게임 영역 내 픽셀 좌표 (YOLO cx - lb_x, cy)
+        매 공격마다 중앙으로 리셋 후 중앙 기준 상대이동 → 오차 없음.
+        별도 스레드로 실행.
         """
         if self._attacking:
             return
         t = threading.Thread(
             target=self._attack_thread,
-            args=(sc_x, sc_y, drag_dx, drag_dy, hold_ms),
+            args=(gx, gy, drag_dx, drag_dy, hold_ms),
             daemon=True
         )
         t.start()
 
-    def _attack_thread(self, sc_x, sc_y, drag_dx, drag_dy, hold_ms):
+    def _attack_thread(self, gx, gy, drag_dx, drag_dy, hold_ms):
         self._attacking = True
         try:
-            # 현재 위치 → 목표 위치 상대이동
-            dx  = sc_x - self._cur_x
-            dy  = sc_y - self._cur_y
-            sdx = round(dx * self.SCALE)
-            sdy = round(dy * self.SCALE)
+            # 1. 매번 중앙으로 리셋 (오차 누적 방지)
+            self._move_to_center()
+
+            # 2. 중앙 → 몬스터까지 상대이동
+            #    중앙 기준 오프셋
+            rel_x = gx - self._center_x
+            rel_y = gy - self._center_y
+            sdx   = round(rel_x * self.SCALE)
+            sdy   = round(rel_y * self.SCALE)
+            print(f"[Pico] 중앙({self._center_x},{self._center_y}) → 몬스터({gx},{gy})  상대({rel_x},{rel_y})  HID({sdx},{sdy})")
             if sdx != 0 or sdy != 0:
                 self._send(f"MOVE:{sdx}:{sdy}")
                 time.sleep(0.05)
-            self._cur_x = sc_x
-            self._cur_y = sc_y
 
-            # PRESS
+            # 3. PRESS
             self._send("PRESS")
             time.sleep(hold_ms / 1000.0)
 
-            # 드래그
+            # 4. 드래그
             if drag_dx != 0 or drag_dy != 0:
                 dsdx = round(drag_dx * self.SCALE)
                 dsdy = round(drag_dy * self.SCALE)
                 self._send(f"MOVE:{dsdx}:{dsdy}")
-                self._cur_x += drag_dx
-                self._cur_y += drag_dy
                 time.sleep(0.03)
 
-            # RELEASE
+            # 5. RELEASE
             self._send("RELEASE")
 
 
