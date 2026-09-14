@@ -224,36 +224,38 @@ class PicoController(BaseController):
 
     def _drag_attack_thread(self, x: int, y: int,
                              drag_dx: int, drag_dy: int, hold_ms: int):
-        """단순 클릭드래그: MOVE → PRESS → 드래그 → RELEASE"""
+        """
+        매번 리셋 후 절대좌표로 이동 → PRESS → 드래그 → RELEASE
+        cur_x/y 추적 없음 - 항상 (0,0) 기준으로 절대이동
+        """
         self._attacking = True
         try:
-            # 1. 몬스터 위치로 이동
-            dx = x - self._cur_x
-            dy = y - self._cur_y
-            sdx = round(dx * self.SCALE_X)
-            sdy = round(dy * self.SCALE_Y)
-            if sdx != 0 or sdy != 0:
-                self._send(f"MOVE:{sdx}:{sdy}")
-                time.sleep(0.05)
-            self._cur_x = x
-            self._cur_y = y
+            # 1. Windows + 피코 커서 (0,0) 동기화
+            ctypes.windll.user32.SetCursorPos(0, 0)
+            time.sleep(0.05)
+            self._send("MOVE:-9999:-9999")
+            time.sleep(0.5)
 
-            # 2. 클릭
+            # 2. 목표 좌표로 절대이동 (0,0 기준)
+            sdx = round(x * self.SCALE_X)
+            sdy = round(y * self.SCALE_Y)
+            self._send(f"MOVE:{sdx}:{sdy}")
+            time.sleep(0.08)
+
+            # 3. PRESS
             self._send("PRESS")
             time.sleep(hold_ms / 1000.0)
 
-            # 3. 드래그 (아래로)
+            # 4. 드래그 (아래로)
             if drag_dx != 0 or drag_dy != 0:
                 dsdx = round(drag_dx * self.SCALE_X)
                 dsdy = round(drag_dy * self.SCALE_Y)
                 self._send(f"MOVE:{dsdx}:{dsdy}")
                 time.sleep(0.03)
-                self._cur_x += drag_dx
-                self._cur_y += drag_dy
 
-            # 4. 릴리즈
+            # 5. RELEASE
             self._send("RELEASE")
-            print(f"[Pico] 클릭완료: ({x},{y})")
+            print(f"[Pico] 클릭완료: ({x},{y})  전송MOVE({sdx},{sdy})")
 
         except Exception as e:
             print(f"[PicoController] 오류: {e}")
@@ -264,42 +266,33 @@ class PicoController(BaseController):
         finally:
             self._attacking = False
 
-    # ── 공격 클릭 (단순 클릭 공격용) ─────────────────────────────
+    # ── 공격 클릭 (단순) ──────────────────────────────────────────
     def attack_click(self, x: int, y: int, hold_ms: int = 80):
-        """MOVE → CLICK (PRESS+대기+RELEASE)"""
-        dx = x - self._cur_x
-        dy = y - self._cur_y
-        sdx = round(dx * self.SCALE_X)
-        sdy = round(dy * self.SCALE_Y)
-
-        print(f"[Pico] ({self._cur_x},{self._cur_y})→({x},{y}) "
-              f"이동({dx},{dy}) 전송MOVE({sdx},{sdy})")
-
-        if sdx != 0 or sdy != 0:
-            self._send(f"MOVE:{sdx}:{sdy}")
-            time.sleep(0.05)
-
-        self._cur_x = x
-        self._cur_y = y
-
+        """리셋 → 절대좌표 이동 → CLICK"""
+        ctypes.windll.user32.SetCursorPos(0, 0)
+        time.sleep(0.05)
+        self._send("MOVE:-9999:-9999")
+        time.sleep(0.5)
+        sdx = round(x * self.SCALE_X)
+        sdy = round(y * self.SCALE_Y)
+        self._send(f"MOVE:{sdx}:{sdy}")
+        time.sleep(0.08)
         self._send(f"CLICK:{hold_ms}")
-        print(f"[Pico] 공격클릭 @ ({x},{y}) hold={hold_ms}ms")
+        print(f"[Pico] 공격클릭: ({x},{y})  전송MOVE({sdx},{sdy})")
 
     # ── 단순 클릭 (아데나 줍기용) ─────────────────────────────────
     def click(self, x: int, y: int, hold_ms: int = 50):
-        dx = x - self._cur_x
-        dy = y - self._cur_y
-        sdx = round(dx * self.SCALE_X)
-        sdy = round(dy * self.SCALE_Y)
-
-        if sdx != 0 or sdy != 0:
-            self._send(f"MOVE:{sdx}:{sdy}")
-            time.sleep(0.05)
-
-        self._cur_x = x
-        self._cur_y = y
+        """리셋 → 절대좌표 이동 → CLICK"""
+        ctypes.windll.user32.SetCursorPos(0, 0)
+        time.sleep(0.05)
+        self._send("MOVE:-9999:-9999")
+        time.sleep(0.5)
+        sdx = round(x * self.SCALE_X)
+        sdy = round(y * self.SCALE_Y)
+        self._send(f"MOVE:{sdx}:{sdy}")
+        time.sleep(0.08)
         self._send(f"CLICK:{hold_ms}")
-        print(f"[Pico] 클릭: ({x},{y}) 전송MOVE({sdx},{sdy})")
+        print(f"[Pico] 클릭: ({x},{y})  전송MOVE({sdx},{sdy})")
 
     # ── 유틸 ──────────────────────────────────────────────────────
     def stop(self):

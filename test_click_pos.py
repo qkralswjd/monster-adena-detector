@@ -107,21 +107,19 @@ def main():
             if click_queue:
                 fx, fy, sc_x, sc_y = click_queue.pop(0)
 
-                # 피코 이동+클릭
-                dx = sc_x - cur_x
-                dy = sc_y - cur_y
-                sdx = round(dx * scale_x)
-                sdy = round(dy * scale_y)
+                # 매번 리셋 후 절대좌표로 이동
+                ctypes.windll.user32.SetCursorPos(0, 0)
+                time.sleep(0.05)
+                send(ser, "MOVE:-9999:-9999")
+                time.sleep(0.5)
 
-                print(f"클릭 → 프레임({fx},{fy})  전체화면({sc_x},{sc_y})  "
-                      f"MOVE({sdx},{sdy})")
-
-                if sdx != 0 or sdy != 0:
-                    send(ser, f"MOVE:{sdx}:{sdy}")
-                    time.sleep(0.05)
+                sdx = round(sc_x * scale_x)
+                sdy = round(sc_y * scale_y)
+                send(ser, f"MOVE:{sdx}:{sdy}")
+                time.sleep(0.08)
                 send(ser, "CLICK:80")
 
-                cur_x, cur_y = sc_x, sc_y
+                print(f"클릭 → 전체화면({sc_x},{sc_y})  MOVE({sdx},{sdy})")
                 last_click_info = (fx // 2, fy // 2, sc_x, sc_y)
 
         # 마지막 클릭 위치 표시
