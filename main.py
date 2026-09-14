@@ -403,6 +403,110 @@ class MonsterTrackerApp:
             print(f"[Render] 오류: {e}")
 
 
+def set_roi_interactive():
+    """
+    게임 화면을 캡처해서 마우스 드래그로 ROI 선택 → config.json 저장.
+    python main.py --set-roi 로 실행.
+    """
+    import mss, numpy as np
+
+    cfg_path = os.path.join(os.path.dirname(__file__), "config.json")
+    cfg = load_config(cfg_path)
+
+    mon_idx = cfg["capture"]["monitor"]
+    with mss.mss() as sct:
+        mon = sct.monitors[mon_idx]
+        shot = sct.grab(mon)
+        frame = np.array(shot)
+        frame = __import__('cv2').cvtColor(frame, __import__('cv2').COLOR_BGRA2BGR)
+
+    import cv2
+    # 절반 크기로 표시
+    cap_w, cap_h = mon["width"], mon["height"]
+    disp_w, disp_h = cap_w // 2, cap_h // 2
+    disp = cv2.resize(frame, (disp_w, disp_h))
+
+    roi_data = {"start": None, "end": None, "done": False}
+
+    def mouse_cb(event, x, y, flags, param):
+        if event == cv2.EVENT_LBUTTONDOWN:
+            roi_data["start"] = (x, y)
+            roi_data["end"]   = (x, y)
+            roi_data["done"]  = False
+        elif event == cv2.EVENT_MOUSEMOVE and roi_data["start"]:
+            roi_data["end"] = (x, y)
+        elif event == cv2.EVENT_LBUTTONUP:
+            roi_data["end"]  = (x, y)
+            roi_data["done"] = True
+
+    WIN = "ROI 설정 - 드래그 후 Enter(저장) / ESC(취소)"
+    cv2.namedWindow(WIN, cv2.WINDOW_NORMAL)
+    cv2.resizeWindow(WIN, disp_w, disp_h)
+    cv2.setMouseCallback(WIN, mouse_cb)
+
+    print("\n[ROI 설정] 게임 화면에서 탐지 영역을 드래그하세요.")
+    print("  Enter = 저장 / ESC = 취소\n")
+
+    while True:
+        img = disp.copy()
+
+        # 현재 ROI 표시
+        rcfg = cfg["roi"]
+        if rcfg["width"] > 0:
+            rx, ry, rw, rh = rcfg["x"]//2, rcfg["y"]//2, rcfg["width"]//2, rcfg["height"]//2
+            cv2.rectangle(img, (rx, ry), (rx+rw, ry+rh), (0, 255, 255), 1)
+            cv2.putText(img, "현재 ROI", (rx+4, ry+16),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 1)
+
+        # 드래그 중 표시
+        if roi_data["start"] and roi_data["end"]:
+            s, e = roi_data["start"], roi_data["end"]
+            cv2.rectangle(img, s, e, (0, 255, 0), 2)
+            # 실제 프레임 좌표 계산
+            fx = min(s[0], e[0]) * 2
+            fy = min(s[1], e[1]) * 2
+            fw = abs(e[0] - s[0]) * 2
+            fh = abs(e[1] - s[1]) * 2
+            cv2.putText(img, f"({fx},{fy}) {fw}x{fh}",
+                        (min(s[0],e[0])+4, min(s[1],e[1])+18),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
+
+        cv2.putText(img, "드래그: ROI 설정  |  Enter: 저장  |  ESC: 취소",
+                    (5, disp_h - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (200, 200, 0), 1)
+        cv2.imshow(WIN, img)
+        key = cv2.waitKey(30) & 0xFF
+
+        if key == 27:  # ESC
+            print("[ROI] 취소")
+            break
+
+        if key in (13, 32) and roi_data["done"]:  # Enter / Space
+            s, e = roi_data["start"], roi_data["end"]
+            fx = min(s[0], e[0]) * 2
+            fy = min(s[1], e[1]) * 2
+            fw = abs(e[0] - s[0]) * 2
+            fh = abs(e[1] - s[1]) * 2
+            if fw > 10 and fh > 10:
+                cfg["roi"]["x"]      = fx
+                cfg["roi"]["y"]      = fy
+                cfg["roi"]["width"]  = fw
+                cfg["roi"]["height"] = fh
+                with open(cfg_path, "w", encoding="utf-8") as f:
+                    json.dump(cfg, f, indent=4, ensure_ascii=False)
+                print(f"[ROI] 저장 완료: 프레임({fx},{fy}) 크기 {fw}x{fh}")
+                print(f"  → config.json 업데이트됨")
+            else:
+                print("[ROI] 너무 작습니다. 다시 드래그하세요.")
+                roi_data["done"] = False
+                continue
+            break
+
+    cv2.destroyAllWindows()
+
+
 if __name__ == "__main__":
-    app = MonsterTrackerApp()
-    app.run()
+    if "--set-roi" in sys.argv:
+        set_roi_interactive()
+    else:
+        app = MonsterTrackerApp()
+        app.run()
