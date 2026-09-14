@@ -263,7 +263,7 @@ class MonsterTrackerApp:
             drag_dy = self._drag_dy,
             hold_ms = self._hold_ms,
         )
-        self._last_attack_time = now
+        self._last_attack_time = time.time()
         self._attacked_target_no = self._target_no  # 이 타겟은 공격 완료
 
     # ══════════════════════════════════════════════
