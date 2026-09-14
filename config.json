@@ -36,7 +36,7 @@
         "enabled": true,
         "cooldown_sec": 0.5,
         "drag_dx": 0,
-        "drag_dy": 0,
+        "drag_dy": 30,
         "drag_hold_ms": 80,
         "aim_offset_y": -20
     },
