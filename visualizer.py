@@ -1,189 +1,110 @@
 """
 visualizer.py
 -------------
-추적 결과 시각화 모듈.
-
-표시 항목:
-  - 모든 트랙 박스 (초록)
-  - 타겟 박스 (빨강, 굵게)
-  - 타겟 이동 경로 (선)
-  - 예측 위치 (점선 박스)
-  - HUD (FPS, 상태, confidence, 속도 등)
-  - 타겟 스냅샷 (우하단)
+화면에 탐지 결과 / 타겟 / HUD를 그리는 모듈.
 """
 
 import cv2
 import numpy as np
-from typing import List, Optional, Tuple
-
-from byte_tracker import Track
-from target_tracker import TargetInfo, TARGET_TRACKING, TARGET_LOST, TARGET_CONFIRMED_LOST
-
-# 색상
-C_TRACK    = (50, 220, 50)      # 초록 - 일반 트랙
-C_TARGET   = (0, 60, 255)       # 빨강 - 타겟
-C_LOST     = (0, 165, 255)      # 주황 - lost
-C_PRED     = (255, 200, 0)      # 하늘 - 예측 위치
-C_PATH     = (0, 255, 220)      # 노랑 - 경로
-C_HUD      = (200, 255, 200)    # 연두 - HUD 텍스트
-C_VELOCITY = (255, 100, 255)    # 보라 - 속도 화살표
-
-FONT       = cv2.FONT_HERSHEY_SIMPLEX
+from typing import List, Optional
+from detector import Detection
 
 
-class Visualizer:
-    def __init__(self):
-        self._path_points: List[Tuple[int,int]] = []
+# 색상 (BGR)
+CLR_MONSTER = (0, 200, 255)   # 주황 - 일반 몬스터
+CLR_TARGET  = (0, 255, 0)     # 초록 - 현재 타겟
+CLR_DEAD    = (0, 0, 255)     # 빨강 - 소실/사망 중
+CLR_HUD     = (255, 255, 255) # 흰색 - HUD 텍스트
+CLR_SHADOW  = (0, 0, 0)       # 검정 - 텍스트 그림자
 
-    def draw(self,
-             frame: np.ndarray,
-             tracks: List[Track],
-             target_info: Optional[TargetInfo],
-             path_points: List[Tuple[int,int]],
-             snapshot: Optional[np.ndarray],
-             capture_fps: float,
-             detect_fps: float) -> np.ndarray:
 
-        out = frame.copy()
+def _text(img, txt, x, y, color=CLR_HUD, scale=0.55, thick=1):
+    """그림자 있는 텍스트."""
+    cv2.putText(img, txt, (x+1, y+1), cv2.FONT_HERSHEY_SIMPLEX,
+                scale, CLR_SHADOW, thick + 1, cv2.LINE_AA)
+    cv2.putText(img, txt, (x, y), cv2.FONT_HERSHEY_SIMPLEX,
+                scale, color, thick, cv2.LINE_AA)
 
-        # 1. 일반 트랙 박스
-        for t in tracks:
-            if target_info and t.track_id == target_info.track_id:
-                continue  # 타겟은 따로 그림
-            self._draw_track(out, t)
 
-        # 2. 이동 경로
-        self._draw_path(out, path_points)
+def draw(frame: np.ndarray,
+         detections: List[Detection],
+         target: Optional[Detection],
+         miss_elapsed: float = 0.0,
+         detector_fps: float = 0.0,
+         capture_fps: float = 0.0) -> np.ndarray:
+    """
+    탐지 박스 + 타겟 박스 + HUD 그리기.
 
-        # 3. 타겟 박스 + 정보
-        if target_info:
-            self._draw_target(out, target_info)
+    Args:
+        frame        : 원본 프레임 (BGR)
+        detections   : 이번 프레임 탐지 목록
+        target       : 현재 타겟 (None이면 미지정)
+        miss_elapsed : 타겟 소실 경과 시간 (0이면 정상)
+        detector_fps : 탐지기 FPS
+        capture_fps  : 캡처 FPS
+    Returns:
+        그려진 프레임
+    """
+    out = frame.copy()
 
-        # 4. HUD
-        self._draw_hud(out, tracks, target_info, capture_fps, detect_fps)
+    # ── 일반 몬스터 박스 ──────────────────────────────────────
+    for d in detections:
+        is_target = (target is not None and
+                     d.x == target.x and d.y == target.y)
+        if is_target:
+            continue  # 타겟은 아래서 따로 그림
+        x, y, w, h = d.x, d.y, d.w, d.h
+        cv2.rectangle(out, (x, y), (x+w, y+h), CLR_MONSTER, 1)
+        _text(out, f"{d.confidence:.2f}", x, y - 5,
+              color=CLR_MONSTER, scale=0.45)
 
-        # 5. 타겟 스냅샷
-        if snapshot is not None:
-            self._draw_snapshot(out, snapshot)
+    # ── 타겟 박스 ─────────────────────────────────────────────
+    if target is not None:
+        x, y, w, h = target.x, target.y, target.w, target.h
 
-        return out
-
-    # ------------------------------------------------------------------
-
-    def _draw_track(self, frame, track: Track):
-        x, y, w, h = track.predicted_bbox
-        cv2.rectangle(frame, (x,y), (x+w,y+h), C_TRACK, 1)
-        label = f"#{track.track_id} {track.score:.2f}"
-        cv2.putText(frame, label, (x, y-4),
-                    FONT, 0.4, C_TRACK, 1, cv2.LINE_AA)
-
-    def _draw_target(self, frame, info: TargetInfo):
-        x = info.cx - info.w//2
-        y = info.cy - info.h//2
-
-        if info.state == TARGET_TRACKING:
-            color = C_TARGET
-            thick = 3
-        elif info.state == TARGET_LOST:
-            color = C_LOST
-            thick = 2
-        else:
-            color = (100,100,100)
+        if miss_elapsed > 0:
+            # 소실 중 → 빨간 점선 효과 (두께 줄이기로 대체)
+            color = CLR_DEAD
             thick = 1
+            label = f"MISSING {miss_elapsed:.1f}s"
+        else:
+            color = CLR_TARGET
+            thick = 2
+            label = f"TARGET  {target.confidence:.2f}"
 
-        # 박스
-        cv2.rectangle(frame, (x,y), (x+info.w, y+info.h), color, thick)
+        cv2.rectangle(out, (x, y), (x+w, y+h), color, thick)
+
+        # 코너 강조
+        corner = 12
+        cv2.line(out, (x, y), (x+corner, y), color, 3)
+        cv2.line(out, (x, y), (x, y+corner), color, 3)
+        cv2.line(out, (x+w, y), (x+w-corner, y), color, 3)
+        cv2.line(out, (x+w, y), (x+w, y+corner), color, 3)
+        cv2.line(out, (x, y+h), (x+corner, y+h), color, 3)
+        cv2.line(out, (x, y+h), (x, y+h-corner), color, 3)
+        cv2.line(out, (x+w, y+h), (x+w-corner, y+h), color, 3)
+        cv2.line(out, (x+w, y+h), (x+w, y+h-corner), color, 3)
 
         # 중심점
-        cv2.circle(frame, (info.cx, info.cy), 5, color, -1)
+        cv2.circle(out, (target.cx, target.cy), 4, color, -1)
 
-        # 속도 화살표
-        if info.speed > 1:
-            ex = int(info.cx + info.vx * 5)
-            ey = int(info.cy + info.vy * 5)
-            cv2.arrowedLine(frame, (info.cx,info.cy), (ex,ey),
-                            C_VELOCITY, 2, tipLength=0.3)
+        # 라벨
+        _text(out, label, x, y - 8, color=color, scale=0.5, thick=1)
 
-        # 예측 위치 (lost일 때)
-        if info.state == TARGET_LOST and info.pred_cx and info.pred_cy:
-            px = info.pred_cx - info.w//2
-            py = info.pred_cy - info.h//2
-            cv2.rectangle(frame, (px,py), (px+info.w,py+info.h),
-                          C_PRED, 1)
-            cv2.putText(frame, "PRED", (px, py-4),
-                        FONT, 0.4, C_PRED, 1)
+    # ── HUD (좌상단) ──────────────────────────────────────────
+    hud_lines = [
+        f"Monsters : {len(detections)}",
+        f"Det FPS  : {detector_fps:.1f}",
+        f"Cap FPS  : {capture_fps:.1f}",
+        f"Target   : {'YES' if target else 'NONE'}",
+    ]
+    for i, line in enumerate(hud_lines):
+        _text(out, line, 10, 20 + i * 20, scale=0.5)
 
-        # 레이블
-        label = f"TARGET #{info.track_id} | {info.state}"
-        conf_label = f"conf:{info.target_confidence:.2f} spd:{info.speed:.1f}"
-        self._put_bg_text(frame, label, x, y-18, color)
-        self._put_bg_text(frame, conf_label, x, y-4, color, scale=0.4)
+    # ── 조작 안내 (우하단) ────────────────────────────────────
+    h, w = out.shape[:2]
+    tips = ["Click: 타겟 지정", "C: 해제", "R: ROI", "Q/ESC: 종료"]
+    for i, t in enumerate(reversed(tips)):
+        _text(out, t, w - 160, h - 10 - i * 18, scale=0.42)
 
-    def _draw_path(self, frame, points: List[Tuple[int,int]]):
-        if len(points) < 2:
-            return
-        for i in range(1, len(points)):
-            alpha = i / len(points)
-            color = (
-                int(C_PATH[0] * alpha),
-                int(C_PATH[1] * alpha),
-                int(C_PATH[2] * alpha)
-            )
-            cv2.line(frame, points[i-1], points[i], color, 2)
-
-    def _draw_hud(self, frame, tracks, target_info, cap_fps, det_fps):
-        lines = [
-            f"FPS: {cap_fps:.1f}  Det: {det_fps:.1f}",
-            f"Tracks: {len(tracks)}",
-        ]
-        if target_info:
-            lines += [
-                f"--- TARGET #{target_info.track_id} ---",
-                f"State: {target_info.state}",
-                f"Pos: ({target_info.cx}, {target_info.cy})",
-                f"Speed: {target_info.speed:.1f} px/f",
-                f"Vel: ({target_info.vx:.1f}, {target_info.vy:.1f})",
-                f"Det conf:  {target_info.det_confidence:.2f}",
-                f"Trk conf:  {target_info.track_confidence:.2f}",
-                f"Tgt conf:  {target_info.target_confidence:.2f}",
-            ]
-        else:
-            lines.append("Target: None (클릭으로 지정)")
-
-        for i, line in enumerate(lines):
-            y = 20 + i * 18
-            self._put_bg_text(frame, line, 8, y, C_HUD)
-
-        # 우상단 상태 크게
-        if target_info:
-            if target_info.state == TARGET_TRACKING:
-                status = "TRACKING"
-                color = (0, 220, 80)
-            elif target_info.state == TARGET_LOST:
-                status = "LOST - SEARCHING"
-                color = (0, 165, 255)
-            else:
-                status = "TARGET LOST"
-                color = (0, 0, 255)
-            h, w = frame.shape[:2]
-            self._put_bg_text(frame, status, w-220, 24, color, scale=0.7)
-
-    def _draw_snapshot(self, frame, snapshot: np.ndarray):
-        """우하단에 타겟 스냅샷 표시."""
-        fh, fw = frame.shape[:2]
-        sh, sw = snapshot.shape[:2]
-        x, y = fw - sw - 10, fh - sh - 10
-        frame[y:y+sh, x:x+sw] = snapshot
-        cv2.rectangle(frame, (x-1,y-1), (x+sw,y+sh), (255,255,255), 1)
-        cv2.putText(frame, "TARGET", (x, y-4),
-                    FONT, 0.4, (255,255,255), 1)
-
-    def _put_bg_text(self, frame, text, x, y, color,
-                     scale=0.45, thickness=1):
-        (tw, th), _ = cv2.getTextSize(text, FONT, scale, thickness)
-        sub = frame[max(0,y-th-2):y+4, max(0,x-1):x+tw+2]
-        if sub.size > 0:
-            rect = np.zeros_like(sub)
-            cv2.addWeighted(sub, 0.5, rect, 0.5, 0, sub)
-            frame[max(0,y-th-2):y+4, max(0,x-1):x+tw+2] = sub
-        cv2.putText(frame, text, (x,y), FONT, scale, color, thickness, cv2.LINE_AA)
+    return out

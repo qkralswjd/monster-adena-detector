@@ -13,28 +13,11 @@
         "classes": null
     },
 
-    "tracker": {
-        "track_high_thresh": 0.5,
-        "track_low_thresh": 0.1,
-        "new_track_thresh": 0.6,
-        "track_buffer": 30,
-        "match_thresh": 0.8,
-        "max_lost_frames": 60
-    },
-
     "target": {
-        "reid_dist_thresh": 150,
-        "lost_confirm_sec": 3.0,
-        "confidence_decay": 0.05,
-        "confidence_boost": 0.1,
-        "min_confidence": 0.3,
-        "prediction_max_frames": 30
-    },
-
-    "logger": {
-        "enabled": true,
-        "save_dir": "logs",
-        "max_records": 10000
+        "select_mode": "nearest",
+        "death_timeout_sec": 1.5,
+        "death_iou_thresh": 0.3,
+        "click_radius": 60
     },
 
     "roi": {
