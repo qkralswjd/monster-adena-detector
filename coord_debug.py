@@ -168,6 +168,9 @@ def mode_track(cfg):
     scale_x = float(re.search(r"SCALE_X\s*=\s*([\d.]+)", code).group(1))
     scale_y = float(re.search(r"SCALE_Y\s*=\s*([\d.]+)", code).group(1))
 
+    # letterbox 오프셋 (좌우 검은 여백)
+    lb_x = get_letterbox_x(cfg)
+
     cap = ScreenCapture(cfg["capture"]["monitor"])
     mon = cap._monitor
     mon_left = mon["left"]
@@ -192,11 +195,11 @@ def mode_track(cfg):
     dpi_scale = get_windows_dpi_scale()
 
     print(f"\n[추적모드] 캡처={cap_w}x{cap_h}  mon=({mon_left},{mon_top})  "
-          f"DPI={dpi_scale:.2f}x  SCALE=({scale_x},{scale_y})")
+          f"DPI={dpi_scale:.2f}x  SCALE=({scale_x},{scale_y})  letterbox_x={lb_x}")
     print("Ctrl+C 로 종료\n")
     print(f"{'bbox(x,y,w,h)':<22} {'[A]프레임cx,cy':<16} "
-          f"{'[D]전체화면x,y':<18} {'[E]HID_MOVE_x,y':<16} conf")
-    print("-" * 90)
+          f"{'[B]여백제거cx,cy':<16} {'[D]전체화면x,y':<18} {'[E]HID_MOVE_x,y':<16} conf")
+    print("-" * 105)
 
     try:
         while True:
@@ -212,16 +215,24 @@ def mode_track(cfg):
                 time.sleep(0.1)
                 continue
             for d in monsters:
-                # [A] mss 프레임 좌표
+                # [A] mss 프레임 좌표 (1920x1080 기준)
                 A_cx, A_cy = d.cx, d.cy
-                # [D] Windows 전체화면 좌표
-                D_x = A_cx + mon_left
-                D_y = A_cy + mon_top
+                # [B] letterbox 제거 후 게임 영역 기준 좌표
+                B_cx = A_cx - lb_x
+                B_cy = A_cy
+                # [D] Windows 전체화면 좌표 = 게임영역좌표 + 모니터 오프셋
+                #    피코 리셋(0,0) = Windows(0,0) = 모니터 왼쪽상단
+                #    전체화면에서의 절대 좌표 = mon_left + lb_x + B_cx
+                D_x = mon_left + lb_x + B_cx   # = mon_left + A_cx
+                D_y = mon_top  + B_cy           # = mon_top  + A_cy
+                # ❗ 피코가 리셋 후 mon_left+lb_x 위치로 커서 이동해야
+                #   현재 controller.py _reset()은 (0,0)으로리셋 → 이후 D_x,D_y로 바로 이동
                 # [E] HID MOVE 값
                 E_x = round(D_x * scale_x)
                 E_y = round(D_y * scale_y)
                 bbox_str = f"({d.x},{d.y},{d.w},{d.h})"
-                print(f"{bbox_str:<22} ({A_cx:4d},{A_cy:4d})        "
+                print(f"{bbox_str:<22} ({A_cx:4d},{A_cy:4d})   "
+                      f"({B_cx:4d},{B_cy:4d})   "
                       f"({D_x:6d},{D_y:4d})        "
                       f"({E_x:5d},{E_y:4d})   {d.confidence:.2f}")
             time.sleep(0.2)
@@ -476,10 +487,22 @@ def mode_dot_or_click(cfg, do_click: bool):
 #  수동 클릭 테스트 (캡처창 클릭 → 피코 클릭)
 # ══════════════════════════════════════════════════════
 
+def get_letterbox_x(cfg) -> int:
+    """
+    config.json의 letterbox 설정에서 x 오프셋 반환.
+    auto_detect=true이면 화면 캡처 후 자동 감지, false이면 설정값 사용.
+    """
+    lb = cfg.get("letterbox", {})
+    if lb.get("auto_detect", False):
+        return detect_letterbox(cfg)
+    return lb.get("x", 0)
+
+
 def detect_letterbox(cfg) -> int:
     """
     게임 화면 캡처 후 좌측 검은 여백(letterbox) 너비를 자동 감지.
     검은 픽셀(R+G+B < 30) 이 끝나는 X좌표 반환.
+    자동 감지 결과를 config.json에 저장함.
     """
     with mss.mss() as sct:
         mon_idx = cfg["capture"]["monitor"]
@@ -508,11 +531,22 @@ def detect_letterbox(cfg) -> int:
             break
 
     game_w = letterbox_right - letterbox_left
+    game_h = h  # 상하 여백 없으면 그대로
     print(f"\n[레터박스 자동감지]")
     print(f"  왼쪽 여백: {letterbox_left}px")
     print(f"  오른쪽 여백: {w - letterbox_right}px")
     print(f"  실제 게임 영역: x={letterbox_left}~{letterbox_right} (너비 {game_w}px)")
-    print(f"  → config.json letterbox_x = {letterbox_left} 으로 설정 권장")
+    print(f"  → config.json letterbox.x = {letterbox_left} 저장")
+
+    # config.json에 자동 저장
+    cfg_path = os.path.join(os.path.dirname(__file__), "config.json")
+    cfg["letterbox"]["x"] = letterbox_left
+    cfg["letterbox"]["game_width"] = game_w
+    cfg["letterbox"]["game_height"] = game_h
+    with open(cfg_path, "w", encoding="utf-8") as f:
+        json.dump(cfg, f, indent=4, ensure_ascii=False)
+    print(f"  config.json 자동 저장 완료")
+
     return letterbox_left
 
 

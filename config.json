@@ -59,9 +59,12 @@
         "height": 432
     },
     "letterbox": {
-        "auto_detect": true,
-        "x": 0,
-        "_note": "게임 좌측 검은 여백(px). auto_detect=true면 실행 시 자동 감지. 수동 지정하려면 auto_detect=false 후 x값 입력"
+        "auto_detect": false,
+        "x": 240,
+        "game_width": 1440,
+        "game_height": 1080,
+        "_note": "게임 좌측 검은 여백(px). 전체화면 1920x1080에서 4:3 게임 → 좌우 여백 각 240px. auto_detect=true면 실행 시 자동 감지.",
+        "_calc": "game_width = 1920*(3/4)=1440, letterbox_x = (1920-1440)/2 = 240"
     },
     "display": {
         "show_window": true
