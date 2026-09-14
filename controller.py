@@ -172,36 +172,37 @@ class PicoController(BaseController):
         except Exception:
             return self._cur_x, self._cur_y
 
-    def _move_to(self, abs_x: int, abs_y: int):
-        """절대 좌표로 커서 이동 (상대 이동 명령으로 변환).
-        매번 GetCursorPos로 실제 커서 위치를 읽어 오차 누적 방지.
+    def _move_to(self, abs_x: int, abs_y: int, tolerance: int = 5, max_attempts: int = 5):
         """
-        cx, cy = self._get_cursor()   # 실제 현재 커서 위치
-        dx = abs_x - cx
-        dy = abs_y - cy
-        if abs(dx) > 2 or abs(dy) > 2:   # 2px 이내면 이동 생략
+        절대 좌표로 커서 이동.
+        - 매 시도마다 GetCursorPos로 실제 위치 읽음
+        - 목표 도달할 때까지 최대 max_attempts번 보정
+        - tolerance px 이내면 도달로 판정
+        """
+        for _ in range(max_attempts):
+            cx, cy = self._get_cursor()
+            dx = abs_x - cx
+            dy = abs_y - cy
+            if abs(dx) <= tolerance and abs(dy) <= tolerance:
+                break  # 목표 도달
             self._send_text(f"MOVE:{dx}:{dy}")
-            # 피코가 이동 처리할 때까지 잠깐 대기
-            time.sleep(0.02)
-            self._cur_x = abs_x
-            self._cur_y = abs_y
+            time.sleep(0.05)  # 피코 이동 완료 대기
+        self._cur_x = abs_x
+        self._cur_y = abs_y
 
     def attack(self, x: int, y: int):
         """절대 좌표로 이동 후 클릭."""
         self._move_to(x, y)
-        time.sleep(0.02)
         self._send_text("CLICK:50")
 
     def click_drag(self, x: int, y: int, drag_dx: int = 5,
                    drag_dy: int = 0, hold_ms: int = 80):
         """
         절대 좌표로 이동 → CLICK.
-        드래그는 커서 위치 누적 오차를 유발하므로 단순 클릭으로 처리.
-        피코가 HID 클릭을 보내면 게임이 공격으로 인식.
+        이동 후 실제 커서 위치 확인하며 보정, 그 다음 클릭.
         """
         self._move_to(x, y)
-        time.sleep(0.05)                      # 이동 안정화 대기
-        self._send_text(f"CLICK:{hold_ms}")   # PRESS+RELEASE 원샷
+        self._send_text(f"CLICK:{hold_ms}")
 
     def click_move(self, x: int, y: int):
         """절대 좌표로 이동 후 단순 클릭 (바닥 이동용)."""
