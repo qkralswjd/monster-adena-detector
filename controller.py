@@ -1,20 +1,14 @@
 """
 controller.py
 -------------
-실제 입력(마우스/키보드) 전송만을 담당한다.
+피코 HID 컨트롤러.
 
-공격 로직과 입력 장치를 분리해서
-나중에 Pico HID 외에 다른 장치로 바꿔도 이 파일만 수정하면 된다.
-
-현재 지원:
-  - PicoController  : Raspberry Pi Pico HID (시리얼 통신)
-  - DummyController : 실제 입력 없이 로그만 출력 (테스트/개발용)
-
-사용 예:
-    controller = make_controller(cfg)
-    controller.connect()
-    controller.attack(x=500, y=300)
-    controller.disconnect()
+핵심 원칙:
+  - GetCursorPos 사용 안 함 (피코 HID 커서 != Windows 커서)
+  - 커서 위치를 직접 추적 (self._cur_x, self._cur_y)
+  - 시작 시 화면 중앙으로 커서 리셋
+  - 이동 = 현재 추적 위치 기준 dx/dy 계산 후 MOVE 1회
+  - 클릭 = CLICK 1회
 """
 
 import time
@@ -28,46 +22,29 @@ from typing import Optional
 # ------------------------------------------------------------------
 
 class BaseController(ABC):
-    """모든 컨트롤러가 구현해야 하는 인터페이스."""
 
     @abstractmethod
-    def connect(self) -> bool:
-        """장치 연결. 성공이면 True."""
-        ...
+    def connect(self) -> bool: ...
 
     @abstractmethod
-    def disconnect(self):
-        """장치 연결 해제."""
-        ...
+    def disconnect(self): ...
 
     @abstractmethod
-    def attack(self, x: int, y: int):
-        """
-        지정한 화면 좌표에 공격 입력을 전송한다.
-        x, y는 화면(스크린) 좌표다.
-        """
-        ...
+    def click_drag(self, x: int, y: int, drag_dx: int, drag_dy: int, hold_ms: int): ...
 
     @property
     @abstractmethod
-    def is_connected(self) -> bool:
-        """현재 연결 상태."""
-        ...
+    def is_connected(self) -> bool: ...
 
 
 # ------------------------------------------------------------------
-# Dummy Controller (테스트/개발용)
+# Dummy Controller
 # ------------------------------------------------------------------
 
 class DummyController(BaseController):
-    """
-    실제 입력 없이 로그만 출력하는 컨트롤러.
-    Pico가 연결되지 않았을 때 자동으로 사용된다.
-    """
 
     def __init__(self):
         self._connected = False
-        self._attack_count = 0
 
     def connect(self) -> bool:
         self._connected = True
@@ -76,27 +53,19 @@ class DummyController(BaseController):
 
     def disconnect(self):
         self._connected = False
-        print("[DummyController] 연결 해제")
 
     def attack(self, x: int, y: int):
-        self._attack_count += 1
-        print(f"[DummyController] 공격 #{self._attack_count}: ({x}, {y})")
+        print(f"[DummyController] 공격: ({x},{y})")
 
     def click_drag(self, x: int, y: int, drag_dx: int = 5, drag_dy: int = 0, hold_ms: int = 100):
-        """클릭 드래그 (자동공격용) - Dummy는 로그만 출력."""
-        print(f"[DummyController] 클릭드래그: ({x},{y}) → dx={drag_dx} hold={hold_ms}ms")
+        print(f"[DummyController] 클릭: ({x},{y})")
 
     def click_move(self, x: int, y: int):
-        """바닥 클릭 이동 - Dummy는 로그만 출력."""
-        print(f"[DummyController] 이동클릭: ({x}, {y})")
+        print(f"[DummyController] 이동클릭: ({x},{y})")
 
     @property
     def is_connected(self) -> bool:
         return self._connected
-
-    @property
-    def attack_count(self) -> int:
-        return self._attack_count
 
 
 # ------------------------------------------------------------------
@@ -104,41 +73,51 @@ class DummyController(BaseController):
 # ------------------------------------------------------------------
 
 class PicoController(BaseController):
-    """
-    Raspberry Pi Pico HID 컨트롤러.
 
-    펌웨어 프로토콜 (텍스트, 줄바꿈 종료):
-        PING            → PONG
-        MOVE:<dx>:<dy>  → 상대 이동 (현재 커서 기준)
-        CLICK[:<ms>]    → 클릭 (기본 20ms)
-        PRESS           → 마우스 누르기 (드래그용)
-        RELEASE         → 마우스 떼기
-        STOP            → 비상정지
-
-    절대좌표 → 상대좌표 변환:
-        PC에서 현재 커서 위치를 추적해서 차이값(dx,dy)으로 이동
-    """
+    # 화면 해상도 (커서 추적 범위 제한용)
+    SCREEN_W = 1920
+    SCREEN_H = 1080
 
     def __init__(self, port: str, baudrate: int = 115200):
-        self._port     = port
-        self._baudrate = baudrate
-        self._serial   = None
+        self._port      = port
+        self._baudrate  = baudrate
+        self._serial    = None
         self._connected = False
-        self._lock     = threading.Lock()
+        self._lock      = threading.Lock()
+
+        # 피코 커서 추적 위치 (화면 중앙에서 시작)
+        self._cur_x = self.SCREEN_W // 2
+        self._cur_y = self.SCREEN_H // 2
 
     def connect(self) -> bool:
         try:
             import serial
-            self._serial = serial.Serial(
-                self._port, self._baudrate, timeout=1.0)
+            self._serial = serial.Serial(self._port, self._baudrate, timeout=1.0)
             time.sleep(0.5)
             self._connected = True
             print(f"[PicoController] 연결 완료: {self._port} @ {self._baudrate}")
+
+            # 커서를 화면 중앙으로 리셋
+            self._reset_cursor()
             return True
         except Exception as e:
             print(f"[PicoController] 연결 실패: {e}")
             self._connected = False
             return False
+
+    def _reset_cursor(self):
+        """커서를 화면 좌상단(0,0)으로 보낸 후 중앙으로 이동해서 위치 동기화."""
+        # 좌상단으로 충분히 이동 (어디있든 확실히 (0,0)으로)
+        self._send_text("MOVE:-9999:-9999")
+        time.sleep(0.3)
+        # 중앙으로 이동
+        cx = self.SCREEN_W // 2
+        cy = self.SCREEN_H // 2
+        self._send_text(f"MOVE:{cx}:{cy}")
+        time.sleep(0.3)
+        self._cur_x = cx
+        self._cur_y = cy
+        print(f"[PicoController] 커서 리셋 완료: 중앙({cx},{cy})")
 
     def disconnect(self):
         if self._serial and self._serial.is_open:
@@ -149,57 +128,44 @@ class PicoController(BaseController):
         self._connected = False
         print("[PicoController] 연결 해제")
 
-    def _get_cursor(self):
-        """현재 실제 커서 위치 가져오기."""
-        try:
-            import ctypes
-            import ctypes.wintypes
-            pt = ctypes.wintypes.POINT()
-            ctypes.windll.user32.GetCursorPos(ctypes.byref(pt))
-            return pt.x, pt.y
-        except Exception:
-            return 0, 0
-
-    def attack(self, x: int, y: int):
-        """절대 좌표로 이동 후 클릭."""
-        cx, cy = self._get_cursor()
-        dx = x - cx
-        dy = y - cy
-        self._send_text(f"MOVE:{dx}:{dy}")
-        time.sleep(0.05)
-        self._send_text("CLICK:50")
-
     def click_drag(self, x: int, y: int, drag_dx: int = 5,
                    drag_dy: int = 0, hold_ms: int = 80):
-        """몬스터 위치로 이동 후 클릭 한 번."""
-        cx, cy = self._get_cursor()
-        dx = x - cx
-        dy = y - cy
-        self._send_text(f"MOVE:{dx}:{dy}")
-        time.sleep(0.05)
+        """
+        추적 중인 커서 위치 기준으로 목표까지 MOVE 후 CLICK.
+        로그에 현재 추적 위치와 목표 위치, dx/dy 출력.
+        """
+        dx = x - self._cur_x
+        dy = y - self._cur_y
+
+        print(f"[Pico] 현재추적({self._cur_x},{self._cur_y}) → 목표({x},{y}) dx={dx} dy={dy}")
+
+        if abs(dx) > 2 or abs(dy) > 2:
+            self._send_text(f"MOVE:{dx}:{dy}")
+            time.sleep(0.06)  # 피코 이동 완료 대기
+
+        # 커서 추적 위치 업데이트
+        self._cur_x = max(0, min(self.SCREEN_W, x))
+        self._cur_y = max(0, min(self.SCREEN_H, y))
+
         self._send_text(f"CLICK:{hold_ms}")
+        print(f"[Pico] CLICK @ ({self._cur_x},{self._cur_y})")
+
+    def attack(self, x: int, y: int):
+        self.click_drag(x, y, hold_ms=50)
 
     def click_move(self, x: int, y: int):
-        """절대 좌표로 이동 후 단순 클릭 (바닥 이동용)."""
-        cx, cy = self._get_cursor()
-        self._send_text(f"MOVE:{x-cx}:{y-cy}")
-        time.sleep(0.05)
+        dx = x - self._cur_x
+        dy = y - self._cur_y
+        self._send_text(f"MOVE:{dx}:{dy}")
+        time.sleep(0.06)
         self._send_text("CLICK:20")
+        self._cur_x = x
+        self._cur_y = y
 
-    def move(self, x: int, y: int):
-        """절대 좌표로 커서만 이동 (클릭 없음)."""
-        cx, cy = self._get_cursor()
-        self._send_text(f"MOVE:{x-cx}:{y-cy}")
-
-    def key_press(self, key: str):
-        """
-        키 입력 — 피코 펌웨어가 키보드 HID를 지원하지 않으므로
-        현재는 로그만 출력한다. 필요 시 펌웨어 확장 후 구현.
-        """
-        print(f"[PicoController] key_press({key!r}) — 펌웨어 미지원, 무시")
+    def stop(self):
+        self._send_text("STOP")
 
     def ping(self) -> bool:
-        """PING → PONG 응답 확인. 연결 테스트용."""
         self._send_text("PING")
         try:
             resp = self._serial.readline().decode("utf-8", "ignore").strip()
@@ -207,15 +173,7 @@ class PicoController(BaseController):
         except Exception:
             return False
 
-    def stop(self):
-        """비상 정지 (STOP 명령)."""
-        self._send_text("STOP")
-
     def _send_text(self, text: str):
-        """
-        텍스트 명령을 줄바꿈(\n) 붙여 UTF-8로 시리얼 전송.
-        피코 펌웨어가 기대하는 프로토콜 그대로 사용.
-        """
         if not self._connected or self._serial is None:
             return
         try:
@@ -237,31 +195,17 @@ class PicoController(BaseController):
 # ------------------------------------------------------------------
 
 def make_controller(cfg) -> BaseController:
-    """
-    config에 따라 적절한 컨트롤러를 생성해서 반환한다.
-    controller.enabled가 False이거나 연결 실패 시 DummyController를 반환한다.
-    """
     if not cfg.controller.enabled:
-        print("[Controller] enabled=false → DummyController 사용")
         c = DummyController()
         c.connect()
         return c
 
     if cfg.controller.type == "pico":
-        c = PicoController(
-            port=cfg.controller.port,
-            baudrate=cfg.controller.baudrate
-        )
+        c = PicoController(port=cfg.controller.port, baudrate=cfg.controller.baudrate)
         if c.connect():
             return c
-        else:
-            print("[Controller] Pico 연결 실패 → DummyController로 폴백")
-            dummy = DummyController()
-            dummy.connect()
-            return dummy
+        print("[Controller] Pico 연결 실패 → DummyController로 폴백")
 
-    # 알 수 없는 타입
-    print(f"[Controller] 알 수 없는 타입: {cfg.controller.type} → DummyController")
     dummy = DummyController()
     dummy.connect()
     return dummy
