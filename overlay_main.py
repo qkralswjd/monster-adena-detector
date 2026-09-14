@@ -175,6 +175,7 @@ def main():
     miss_start      = None
     MISS_TIMEOUT    = cfg["target"].get("death_timeout_sec", 1.5)
     MISS_IOU_THRESH = cfg["target"].get("death_iou_thresh",  0.3)
+    prev_target_id  = None   # 새 타겟 감지용
 
     # ── 공격 쿨다운 ───────────────────────────────────────────
     acfg          = cfg["attack"]
@@ -184,11 +185,23 @@ def main():
     drag_dx       = acfg.get("drag_dx", 0)
     hold_ms       = acfg.get("hold_ms", 80)
     last_atk_time = 0.0
+    first_attack_done = False   # 새 타겟 첫 클릭 여부
 
     # ── 화면 중앙 (nearest 기준점) ────────────────────────────
     # 프레임 기준 중앙 (letterbox 포함)
     center_x = lb_x + game_w // 2
     center_y = game_h // 2
+
+    # ── 피코 좌표 계산 함수 ───────────────────────────────────
+    def frame_to_screen(cx: int, cy: int):
+        """
+        YOLO 프레임 좌표(1920x1080 기준) → 피코 전달용 전체화면 좌표.
+        피코 리셋: MOVE:-9999:-9999 → 커서=(0,0)=Windows원점
+        게임 모니터가 left=-1920이면 sc_x는 음수 → 피코가 왼쪽으로 이동 → 정상.
+        """
+        sc_x = mon_left + cx   # mon_left=-1920이면 음수, 피코는 음수도 처리 가능
+        sc_y = mon_top  + cy
+        return sc_x, sc_y
 
     print(f"[Main] 루프 시작. Ctrl+C 로 종료.")
     print(f"       오버레이 클릭으로 해당 위치 피코 클릭 가능.")
@@ -224,34 +237,42 @@ def main():
                         miss_start = time.time()
                     elif time.time() - miss_start > MISS_TIMEOUT:
                         print(f"[Target] 타겟 소실/사망 → 해제")
-                        current_target = None
-                        miss_start     = None
+                        current_target    = None
+                        miss_start        = None
+                        prev_target_id    = None
+                        first_attack_done = False
 
             # 타겟 없으면 nearest 자동 선택
             if current_target is None and monsters:
                 current_target = select_nearest(monsters, center_x, center_y)
                 if current_target:
-                    print(f"[Target] 새 타겟: 프레임({current_target.cx},{current_target.cy})")
+                    tgt_id = (current_target.x, current_target.y)
+                    if tgt_id != prev_target_id:
+                        # ★ 새 타겟 발견 → 즉시 첫 클릭 (쿨다운 무시)
+                        prev_target_id    = tgt_id
+                        first_attack_done = False
+                        print(f"[Target] 새 타겟: 프레임({current_target.cx},{current_target.cy})")
 
             # ── 자동 공격 ─────────────────────────────────────
-            if (atk_enabled and current_target is not None
-                    and not ctrl.is_attacking):
+            if atk_enabled and current_target is not None and not ctrl.is_attacking:
                 now = time.time()
-                if now - last_atk_time >= atk_cooldown:
-                    last_atk_time = now
+                # 새 타겟이면 즉시 공격, 아니면 쿨다운 체크
+                do_attack = (not first_attack_done) or (now - last_atk_time >= atk_cooldown)
 
-                    # 프레임 좌표 → 전체화면 좌표
-                    # 오버레이(0,0) = Windows(mon_left+lb_x, mon_top)
-                    # 탐지 cx = 프레임 기준 (lb_x 포함)
-                    sc_x = mon_left + current_target.cx   # lb_x 이미 포함된 cx
-                    sc_y = mon_top  + current_target.cy
+                if do_attack:
+                    last_atk_time     = now
+                    first_attack_done = True
+
+                    sc_x, sc_y = frame_to_screen(current_target.cx, current_target.cy)
 
                     ctrl.drag_attack(sc_x, sc_y,
                                      drag_dx=drag_dx,
                                      drag_dy=drag_dy,
                                      hold_ms=hold_ms)
                     overlay.notify_attack(sc_x, sc_y)
-                    print(f"[Attack] 클릭 → 전체화면({sc_x},{sc_y})  오버레이({sc_x - mon_left - lb_x},{sc_y - mon_top})")
+                    ov_x = current_target.cx - lb_x
+                    ov_y = current_target.cy
+                    print(f"[Attack] sc=({sc_x},{sc_y})  overlay=({ov_x},{ov_y})")
 
             # ── 오버레이 갱신 ─────────────────────────────────
             miss_elapsed = (time.time() - miss_start
