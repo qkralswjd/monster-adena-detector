@@ -131,6 +131,7 @@ class MonsterTrackerApp:
         self._click_offset_x  = acfg.get("click_offset_x", 0)
         self._click_offset_y  = acfg.get("click_offset_y", 0)
         self._last_attack_time = 0.0
+        self._attacked_target_no = -1  # 이미 공격한 타겟 번호 (타겟당 1회만 클릭)
         print(f"[Attack] enabled={self._attack_enabled} "
               f"drag=({self._drag_dx},{self._drag_dy}) "
               f"hold={self._hold_ms}ms "
@@ -237,8 +238,8 @@ class MonsterTrackerApp:
         if not self._attack_enabled or self._target is None:
             return
 
-        now = time.time()
-        if now - self._last_attack_time < self._attack_cooldown:
+        # 이미 이 타겟을 공격했으면 스킵 (타겟당 1회만 클릭)
+        if self._target_no == self._attacked_target_no:
             return
 
         # 공격 중이면 스킵
@@ -263,6 +264,7 @@ class MonsterTrackerApp:
             hold_ms = self._hold_ms,
         )
         self._last_attack_time = now
+        self._attacked_target_no = self._target_no  # 이 타겟은 공격 완료
 
     # ══════════════════════════════════════════════
     #  현재 타겟 이동 좌표 로그 (0.1초마다)
