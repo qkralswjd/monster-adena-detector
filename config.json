@@ -44,8 +44,6 @@
     },
 
     "display": {
-        "show_window": true,
-        "window_x": -1920,
-        "window_y": 0
+        "show_window": false
     }
 }

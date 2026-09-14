@@ -217,26 +217,49 @@ class MonsterTrackerApp:
         print(f"[Attack] 공격: 프레임({self._target.cx},{self._target.cy}) → 절대({x},{y})")
 
     # ─────────────────────────────────────────────
+    def _setup_hotkeys(self):
+        """글로벌 핫키 등록 (창 없는 백그라운드 모드용)."""
+        try:
+            import keyboard
+            keyboard.add_hotkey('F9', self._toggle_attack)
+            keyboard.add_hotkey('F10', self._request_stop)
+            print("[핫키] F9=공격토글 / F10=종료")
+        except ImportError:
+            print("[핫키] keyboard 모듈 없음 → pip install keyboard")
+        except Exception as e:
+            print(f"[핫키] 등록 실패: {e}")
+
+    def _toggle_attack(self):
+        self._attack_enabled = not self._attack_enabled
+        state = "ON" if self._attack_enabled else "OFF"
+        print(f"[핫키] 공격 {state}")
+
+    def _request_stop(self):
+        self._running = False
+        print("[핫키] F10 → 종료 요청")
+
+    # ─────────────────────────────────────────────
     def run(self):
         dcfg = self._cfg.get("display", {})
         show_window = dcfg.get("show_window", True)
-        win_x = dcfg.get("window_x", -1920)  # 기본: 왼쪽 모니터
-        win_y = dcfg.get("window_y", 0)
+
+        self._running = True
+        self._last_frame_size = (1080, 1920)
 
         if show_window:
             cv2.namedWindow(self.WIN, cv2.WINDOW_NORMAL)
             cv2.setMouseCallback(self.WIN, self._on_mouse)
-            # 게임 모니터(오른쪽) 포커스 안 빼앗도록 왼쪽 모니터에 창 배치
-            cv2.moveWindow(self.WIN, win_x, win_y)
             cv2.resizeWindow(self.WIN, 960, 540)
-
-        self._last_frame_size = (720, 1280)  # 기본값, 첫 프레임에서 갱신
-
-        print("[MonsterTracker] 시작. Q/ESC=종료, Click=타겟지정, C=해제, R=ROI재설정")
+            print("[MonsterTracker] 창모드. Q/ESC=종료, C=타겟해제")
+        else:
+            # 백그라운드 모드 - 글로벌 핫키로 제어
+            self._setup_hotkeys()
+            print("[MonsterTracker] 백그라운드 모드 시작!")
+            print("[MonsterTracker] F9=공격ON/OFF  F10=종료  Ctrl+C=강제종료")
 
         last_time = time.time()
 
-        while True:
+        while self._running:
             # ── FPS 제한 ──────────────────────────────
             now = time.time()
             elapsed = now - last_time
@@ -259,41 +282,26 @@ class MonsterTrackerApp:
             # ── 공격 ──────────────────────────────────
             self._try_attack()
 
-            # ── 시각화 ────────────────────────────────
-            miss = self._death_detector.miss_elapsed
-            out = visualizer.draw(
-                frame       = frame,
-                detections  = detections,
-                target      = self._target,
-                miss_elapsed= miss,
-                detector_fps= self._detector.fps,
-                capture_fps = self._capture.fps,
-            )
+            # ── 창 모드일 때만 시각화 + 키입력 ──────────
             if show_window:
+                miss = self._death_detector.miss_elapsed
+                out = visualizer.draw(
+                    frame        = frame,
+                    detections   = detections,
+                    target       = self._target,
+                    miss_elapsed = miss,
+                    detector_fps = self._detector.fps,
+                    capture_fps  = self._capture.fps,
+                )
                 cv2.imshow(self.WIN, out)
-
-            # ── 키 입력 ───────────────────────────────
-            key = cv2.waitKey(1) & 0xFF
-
-            if key in (ord('q'), 27):  # Q or ESC
-                break
-
-            elif key == ord('c'):      # C: 타겟 해제
-                self._target = None
-                self._auto_select = False
-                self._death_detector.reset()
-                print("[Target] 해제")
-
-            elif key == ord('r'):      # R: ROI 재설정
-                full = self._capture.capture_full()
-                if full is not None:
-                    result = self._capture.select_roi_interactive(full)
-                    if result:
-                        x, y, w, h = result
-                        self._capture.set_roi(x, y, w, h)
-                    else:
-                        self._capture.clear_roi()
-                        print("[Capture] ROI 해제 (전체 화면)")
+                key = cv2.waitKey(1) & 0xFF
+                if key in (ord('q'), 27):
+                    break
+                elif key == ord('c'):
+                    self._target = None
+                    self._auto_select = True
+                    self._death_detector.reset()
+                    print("[Target] 해제")
 
         cv2.destroyAllWindows()
         self._controller.disconnect()
