@@ -225,6 +225,11 @@ class MonsterTrackerApp:
         """
         타겟이 있고 쿨타임이 지나면 피코로 드래그 공격.
 
+        ★ 좌표 기준: 프레임 좌표 (0~1920, 양수) 를 피코에 전달!
+          MOVE:-9999:-9999 리셋 후 피코(0,0) = 전체화면(0,0) 기준
+          게임이 left=-1920이면: 프레임x = 피코 이동 거리 (양수 그대로)
+          절대 전체화면좌표(음수) 전달 금지! → 리셋 후 음수 MOVE = 왼쪽 고정
+
         aim_offset_y 적용:
           타겟 cx/cy는 바운딩박스 중심 → aim_offset_y=-10 이면 10px 위(머리)를 조준
           공격 모션: PRESS → 아래로 drag_dy만큼 드래그 → RELEASE
@@ -236,21 +241,23 @@ class MonsterTrackerApp:
         if now - self._last_attack_time < self._attack_cooldown:
             return
 
-        # 전체화면 절대좌표로 변환 (피코 _cur_x/y 와 동일 기준)
-        sc_x, sc_y = self._to_screen(
-            self._target.cx + self._click_offset_x,
-            self._target.cy + self._aim_offset_y + self._click_offset_y)
-
         # 공격 중이면 스킵
         if hasattr(self._ctrl, 'is_attacking') and self._ctrl.is_attacking:
             return
 
+        # ★ 프레임 좌표 (양수) 사용 - 전체화면좌표(음수) 아님!
+        frame_x = self._target.cx + self._click_offset_x
+        frame_y = self._target.cy + self._aim_offset_y + self._click_offset_y
+
+        # 로그용 전체화면좌표 (확인용만)
+        sc_x, sc_y = self._to_screen(frame_x, frame_y)
+
         print(f"[Attack #{self._target_no}] 공격! "
-              f"전체화면({sc_x},{sc_y})  drag_dy={self._drag_dy}")
+              f"프레임({frame_x},{frame_y})  전체화면({sc_x},{sc_y})  drag_dy={self._drag_dy}")
 
         self._ctrl.drag_attack(
-            x       = sc_x,   # 전체화면 절대좌표
-            y       = sc_y,   # 전체화면 절대좌표
+            x       = frame_x,   # ★ 프레임 좌표 (양수) - controller.py에서 SCALE 곱해 MOVE 전송
+            y       = frame_y,   # ★ 프레임 좌표 (양수)
             drag_dx = self._drag_dx,
             drag_dy = self._drag_dy,
             hold_ms = self._hold_ms,

@@ -76,10 +76,10 @@ def main():
 
     def on_mouse(event, x, y, flags, param):
         if event == cv2.EVENT_LBUTTONDOWN:
-            # 디스플레이 좌표 → 원본 프레임 좌표
+            # 디스플레이 좌표 → 원본 프레임 좌표 (양수, 0~1920)
             fx = x * 2
             fy = y * 2
-            # 전체화면 좌표
+            # 전체화면 좌표 (로그용만, 피코 MOVE에는 사용 안 함)
             sc_x = fx + mon_left
             sc_y = fy + mon_top
             with lock:
@@ -107,19 +107,22 @@ def main():
             if click_queue:
                 fx, fy, sc_x, sc_y = click_queue.pop(0)
 
-                # 매번 리셋 후 절대좌표로 이동
+                # 매번 리셋 후 프레임 좌표(양수)로 이동
+                # ★ fx/fy (프레임 좌표, 양수) 사용! sc_x/sc_y (음수) 아님!
+                #   MOVE:-9999:-9999 후 피코(0,0) = 전체화면(0,0) 기준
+                #   게임이 left=-1920이면 프레임x = 피코 이동 거리 (양수)
                 ctypes.windll.user32.SetCursorPos(0, 0)
                 time.sleep(0.05)
                 send(ser, "MOVE:-9999:-9999")
                 time.sleep(0.5)
 
-                sdx = round(sc_x * scale_x)
-                sdy = round(sc_y * scale_y)
+                sdx = round(fx * scale_x)   # ★ fx (프레임 좌표, 양수)
+                sdy = round(fy * scale_y)   # ★ fy (프레임 좌표, 양수)
                 send(ser, f"MOVE:{sdx}:{sdy}")
                 time.sleep(0.08)
                 send(ser, "CLICK:80")
 
-                print(f"클릭 → 전체화면({sc_x},{sc_y})  MOVE({sdx},{sdy})")
+                print(f"클릭 → 프레임({fx},{fy})  전체화면({sc_x},{sc_y})  MOVE({sdx},{sdy})")
                 last_click_info = (fx // 2, fy // 2, sc_x, sc_y)
 
         # 마지막 클릭 위치 표시

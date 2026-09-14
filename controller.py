@@ -210,6 +210,13 @@ class PicoController(BaseController):
         """
         몬스터 좌표로 이동 → PRESS → 드래그 → RELEASE
         공격 중이면 무시 (새 공격 시작 안 함)
+
+        x, y = 프레임 좌표 (0~1920, 0~1080) ← 반드시 양수!
+               MOVE:-9999:-9999 리셋 후 피코(0,0) = 전체화면(0,0) 기준이므로
+               게임이 left=-1920에 있어도 프레임 좌표(양수)를 그대로 전달해야
+               정확히 해당 픽셀로 이동함.
+               전체화면 좌표(음수) 전달 시 리셋 후 음수 MOVE → 최소값에서 더 못 이동
+               → X축 고정(0), Y만 이동 → 항상 왼쪽 가장자리 클릭!
         """
         if self._attacking:
             return
@@ -225,8 +232,12 @@ class PicoController(BaseController):
     def _drag_attack_thread(self, x: int, y: int,
                              drag_dx: int, drag_dy: int, hold_ms: int):
         """
-        매번 리셋 후 절대좌표로 이동 → PRESS → 드래그 → RELEASE
-        cur_x/y 추적 없음 - 항상 (0,0) 기준으로 절대이동
+        매번 리셋 후 프레임 좌표로 이동 → PRESS → 드래그 → RELEASE
+
+        x, y = 프레임 좌표 (양수 0~1920, 0~1080)
+        MOVE:-9999:-9999 후 피코(0,0) = 전체화면(0,0) = 화면 맨 왼쪽 상단
+        게임 모니터가 left=-1920이면 프레임(0,0) = 전체화면(-1920, 0)
+        → 피코 MOVE로 프레임 좌표만큼 이동하면 정확히 게임 화면 해당 픽셀에 도달
         """
         self._attacking = True
         try:
@@ -236,7 +247,9 @@ class PicoController(BaseController):
             self._send("MOVE:-9999:-9999")
             time.sleep(0.5)
 
-            # 2. 목표 좌표로 절대이동 (0,0 기준)
+            # 2. 프레임 좌표로 절대이동
+            #    x, y 는 이미 프레임 좌표(양수)여야 함!
+            #    전체화면 좌표(음수) 전달 시 리셋 후 왼쪽으로 더 이동 불가 → 고정됨
             sdx = round(x * self.SCALE_X)
             sdy = round(y * self.SCALE_Y)
             self._send(f"MOVE:{sdx}:{sdy}")
@@ -255,7 +268,7 @@ class PicoController(BaseController):
 
             # 5. RELEASE
             self._send("RELEASE")
-            print(f"[Pico] 클릭완료: ({x},{y})  전송MOVE({sdx},{sdy})")
+            print(f"[Pico] 클릭완료: 프레임({x},{y})  전송MOVE({sdx},{sdy})")
 
         except Exception as e:
             print(f"[PicoController] 오류: {e}")
@@ -268,7 +281,7 @@ class PicoController(BaseController):
 
     # ── 공격 클릭 (단순) ──────────────────────────────────────────
     def attack_click(self, x: int, y: int, hold_ms: int = 80):
-        """리셋 → 절대좌표 이동 → CLICK"""
+        """리셋 → 프레임 좌표 이동 → CLICK  (x,y = 프레임 좌표, 양수)"""
         ctypes.windll.user32.SetCursorPos(0, 0)
         time.sleep(0.05)
         self._send("MOVE:-9999:-9999")
@@ -278,11 +291,11 @@ class PicoController(BaseController):
         self._send(f"MOVE:{sdx}:{sdy}")
         time.sleep(0.08)
         self._send(f"CLICK:{hold_ms}")
-        print(f"[Pico] 공격클릭: ({x},{y})  전송MOVE({sdx},{sdy})")
+        print(f"[Pico] 공격클릭: 프레임({x},{y})  전송MOVE({sdx},{sdy})")
 
     # ── 단순 클릭 (아데나 줍기용) ─────────────────────────────────
     def click(self, x: int, y: int, hold_ms: int = 50):
-        """리셋 → 절대좌표 이동 → CLICK"""
+        """리셋 → 프레임 좌표 이동 → CLICK  (x,y = 프레임 좌표, 양수)"""
         ctypes.windll.user32.SetCursorPos(0, 0)
         time.sleep(0.05)
         self._send("MOVE:-9999:-9999")
@@ -292,7 +305,7 @@ class PicoController(BaseController):
         self._send(f"MOVE:{sdx}:{sdy}")
         time.sleep(0.08)
         self._send(f"CLICK:{hold_ms}")
-        print(f"[Pico] 클릭: ({x},{y})  전송MOVE({sdx},{sdy})")
+        print(f"[Pico] 클릭: 프레임({x},{y})  전송MOVE({sdx},{sdy})")
 
     # ── 유틸 ──────────────────────────────────────────────────────
     def stop(self):
