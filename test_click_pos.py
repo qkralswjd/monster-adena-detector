@@ -42,7 +42,7 @@ def main():
     # controller.py에서 현재 SCALE 읽기
     ctrl_path = os.path.join(os.path.dirname(__file__), "controller.py")
     import re
-    with open(ctrl_path) as f:
+    with open(ctrl_path, encoding="utf-8") as f:
         code = f.read()
     m = re.search(r"SCALE_X\s*=\s*([\d.]+)", code)
     if m: scale_x = float(m.group(1))
