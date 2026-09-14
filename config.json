@@ -30,9 +30,11 @@
     "attack": {
         "enabled": true,
         "cooldown_sec": 0.5,
-        "drag_dx": 5,
+
+        "drag_dx": 15,
         "drag_dy": 0,
         "drag_hold_ms": 80,
+
         "aim_offset_y": -20
     },
 
