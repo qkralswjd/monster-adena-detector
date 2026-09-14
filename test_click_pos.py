@@ -1,8 +1,7 @@
 """
 test_click_pos.py
 -----------------
-화면 캡처 후 클릭한 위치로 피코가 이동 + 클릭.
-실제 클릭 좌표가 맞는지 확인용.
+실시간 화면 캡처창에서 클릭하면 피코가 해당 좌표로 이동+클릭.
 """
 
 import sys
@@ -10,23 +9,16 @@ import time
 import serial
 import json
 import os
+import re
 import cv2
 import numpy as np
 import mss
+import threading
 
 
 def send(ser, text):
     ser.write((text + "\n").encode("utf-8"))
     ser.flush()
-    time.sleep(0.05)
-
-
-def capture_screen(monitor_idx=1):
-    with mss.mss() as sct:
-        mon = sct.monitors[monitor_idx]
-        shot = sct.grab(mon)
-        frame = np.array(shot)
-        return cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR), mon
 
 
 def main():
@@ -36,22 +28,19 @@ def main():
 
     port        = cfg["controller"]["port"]
     monitor_idx = cfg["capture"]["monitor"]
-    scale_x     = 0.395
-    scale_y     = 0.395
 
-    # controller.py에서 현재 SCALE 읽기
+    # controller.py에서 SCALE 읽기
     ctrl_path = os.path.join(os.path.dirname(__file__), "controller.py")
-    import re
     with open(ctrl_path, encoding="utf-8") as f:
         code = f.read()
-    m = re.search(r"SCALE_X\s*=\s*([\d.]+)", code)
-    if m: scale_x = float(m.group(1))
-    m = re.search(r"SCALE_Y\s*=\s*([\d.]+)", code)
-    if m: scale_y = float(m.group(1))
+    scale_x = float(re.search(r"SCALE_X\s*=\s*([\d.]+)", code).group(1))
+    scale_y = float(re.search(r"SCALE_Y\s*=\s*([\d.]+)", code).group(1))
 
     print("=" * 50)
-    print("  피코 클릭 위치 테스트")
-    print(f"  SCALE_X={scale_x}  SCALE_Y={scale_y}")
+    print("  실시간 클릭 테스트")
+    print(f"  PORT={port}  SCALE_X={scale_x}  SCALE_Y={scale_y}")
+    print("  캡처창에서 클릭 → 피코가 해당 위치 클릭")
+    print("  ESC = 종료")
     print("=" * 50)
 
     try:
@@ -62,11 +51,7 @@ def main():
         print(f"❌ 연결 실패: {e}")
         sys.exit(1)
 
-    # 커서 리셋
-    print("커서 리셋 중...")
-    send(ser, "MOVE:-9999:-9999")
-    time.sleep(1.0)
-
+    # 모니터 정보
     with mss.mss() as sct:
         mon = sct.monitors[monitor_idx]
         mon_left = mon["left"]
@@ -74,80 +59,89 @@ def main():
         screen_w = mon["width"]
         screen_h = mon["height"]
 
-    # 리셋 후 게임 중앙으로
+    # 커서 리셋
+    print("커서 리셋 중...")
+    send(ser, "MOVE:-9999:-9999")
+    time.sleep(1.0)
     cx = mon_left + screen_w // 2
     cy = mon_top  + screen_h // 2
-    sx = round(cx * scale_x)
-    sy = round(cy * scale_y)
-    send(ser, f"MOVE:{sx}:{sy}")
+    send(ser, f"MOVE:{round(cx * scale_x)}:{round(cy * scale_y)}")
     time.sleep(0.5)
     cur_x, cur_y = cx, cy
-    print(f"커서 리셋 완료 → 전체화면 중앙({cx},{cy})")
+    print(f"리셋 완료 → 전체화면 중앙({cx},{cy})")
+    print()
+
+    # 클릭 이벤트 처리 (별도 스레드)
+    click_queue = []
+    lock = threading.Lock()
+
+    def on_mouse(event, x, y, flags, param):
+        if event == cv2.EVENT_LBUTTONDOWN:
+            # 디스플레이 좌표 → 원본 프레임 좌표
+            fx = x * 2
+            fy = y * 2
+            # 전체화면 좌표
+            sc_x = fx + mon_left
+            sc_y = fy + mon_top
+            with lock:
+                click_queue.append((fx, fy, sc_x, sc_y))
+
+    WIN = "실시간 클릭 테스트 (ESC=종료)"
+    cv2.namedWindow(WIN, cv2.WINDOW_NORMAL)
+    cv2.resizeWindow(WIN, screen_w // 2, screen_h // 2)
+    cv2.setMouseCallback(WIN, on_mouse)
+
+    sct = mss.mss()
+    mon_rect = sct.monitors[monitor_idx]
+
+    last_click_info = None  # 마지막 클릭 정보 (화면에 표시용)
 
     while True:
-        print()
-        print("─" * 50)
-        print("화면 캡처 중...")
-        frame, mon = capture_screen(monitor_idx)
-        h, w = frame.shape[:2]
-        disp = cv2.resize(frame, (w // 2, h // 2))
+        # 실시간 캡처
+        shot = sct.grab(mon_rect)
+        frame = np.array(shot)
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
+        disp = cv2.resize(frame, (screen_w // 2, screen_h // 2))
 
-        result = {"pt": None}
+        # 클릭 처리
+        with lock:
+            if click_queue:
+                fx, fy, sc_x, sc_y = click_queue.pop(0)
 
-        def on_click(event, x, y, flags, param):
-            if event == cv2.EVENT_LBUTTONDOWN:
-                # 원본 해상도 프레임 좌표
-                fx = x * 2
-                fy = y * 2
-                # 전체화면 좌표
-                sc_x = fx + mon_left
-                sc_y = fy + mon_top
-                result["pt"] = (fx, fy, sc_x, sc_y)
+                # 피코 이동+클릭
+                dx = sc_x - cur_x
+                dy = sc_y - cur_y
+                sdx = round(dx * scale_x)
+                sdy = round(dy * scale_y)
 
-                cv2.circle(disp, (x, y), 8, (0, 255, 0), -1)
-                cv2.putText(disp, f"프레임({fx},{fy})", (x+10, y-10),
-                           cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-                cv2.putText(disp, f"전체화면({sc_x},{sc_y})", (x+10, y+15),
-                           cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 200, 255), 2)
-                cv2.imshow("클릭할 위치 선택 (ESC=종료)", disp)
+                print(f"클릭 → 프레임({fx},{fy})  전체화면({sc_x},{sc_y})  "
+                      f"MOVE({sdx},{sdy})")
 
-        cv2.namedWindow("클릭할 위치 선택 (ESC=종료)", cv2.WINDOW_NORMAL)
-        cv2.resizeWindow("클릭할 위치 선택 (ESC=종료)", w // 2, h // 2)
-        cv2.setMouseCallback("클릭할 위치 선택 (ESC=종료)", on_click)
-        cv2.imshow("클릭할 위치 선택 (ESC=종료)", disp)
-        print("클릭할 위치를 선택하세요. (ESC=종료)")
+                if sdx != 0 or sdy != 0:
+                    send(ser, f"MOVE:{sdx}:{sdy}")
+                    time.sleep(0.05)
+                send(ser, "CLICK:80")
 
-        while result["pt"] is None:
-            key = cv2.waitKey(30) & 0xFF
-            if key == 27:
-                cv2.destroyAllWindows()
-                ser.close()
-                print("종료")
-                return
+                cur_x, cur_y = sc_x, sc_y
+                last_click_info = (fx // 2, fy // 2, sc_x, sc_y)
 
-        cv2.destroyAllWindows()
+        # 마지막 클릭 위치 표시
+        if last_click_info:
+            dx2, dy2, scx2, scy2 = last_click_info
+            cv2.circle(disp, (dx2, dy2), 10, (0, 0, 255), -1)
+            cv2.circle(disp, (dx2, dy2), 10, (255, 255, 255), 2)
+            cv2.putText(disp, f"({scx2},{scy2})", (dx2 + 12, dy2 - 5),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 0, 255), 2)
 
-        fx, fy, sc_x, sc_y = result["pt"]
-        print(f"선택: 프레임({fx},{fy})  전체화면({sc_x},{sc_y})")
+        cv2.imshow(WIN, disp)
+        key = cv2.waitKey(1) & 0xFF
+        if key == 27:  # ESC
+            break
 
-        # 피코 이동량 계산 (전체화면 기준)
-        dx = sc_x - cur_x
-        dy = sc_y - cur_y
-        sdx = round(dx * scale_x)
-        sdy = round(dy * scale_y)
-
-        print(f"현재커서({cur_x},{cur_y}) → 목표({sc_x},{sc_y})")
-        print(f"이동: dx={dx}, dy={dy} → MOVE:{sdx}:{sdy}")
-        print(f"CLICK 전송...")
-
-        if sdx != 0 or sdy != 0:
-            send(ser, f"MOVE:{sdx}:{sdy}")
-            time.sleep(0.1)
-        send(ser, "CLICK:80")
-
-        cur_x, cur_y = sc_x, sc_y
-        print(f"✅ 클릭 완료!")
-        print("실제로 해당 위치가 클릭됐는지 확인하세요.")
+    sct.close()
+    ser.close()
+    cv2.destroyAllWindows()
+    print("종료")
 
 
 if __name__ == "__main__":
