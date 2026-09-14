@@ -242,9 +242,12 @@ class MonsterTrackerApp:
         if self._target_no == self._attacked_target_no:
             return
 
-        # 공격 중이면 스킵
+        # 공격 중이면 스킵 (단, 스레드 타임아웃 2초 초과 시 강제 해제)
         if hasattr(self._ctrl, 'is_attacking') and self._ctrl.is_attacking:
-            return
+            if time.time() - self._last_attack_time > 2.0:
+                self._ctrl._attacking = False  # 2초 넘으면 강제 해제
+            else:
+                return
 
         # 전체화면 좌표 (음수) → 피코에 전달
         # 피코 리셋(0,0) = Windows(0,0) = 전체화면(0,0) 기준
@@ -340,6 +343,7 @@ class MonsterTrackerApp:
                 dead = self._update_target(monsters)
                 if dead:
                     self._target = None
+                    self._attacked_target_no = -1  # 다음 타겟 공격 가능하도록 초기화
 
                 # ── 피코 공격 ─────────────────────────
                 self._do_attack()
