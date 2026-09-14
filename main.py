@@ -227,32 +227,42 @@ class MonsterTrackerApp:
         """
         타겟이 있고 쿨타임이 지나면 피코로 드래그 공격.
 
-        ★ 좌표 기준: 프레임 좌표 (0~1920, 양수) 를 피코에 전달!
-          MOVE:-9999:-9999 리셋 후 피코(0,0) = 전체화면(0,0) 기준
-          게임이 left=-1920이면: 프레임x = 피코 이동 거리 (양수 그대로)
-          절대 전체화면좌표(음수) 전달 금지! → 리셋 후 음수 MOVE = 왼쪽 고정
+        ★ 좌표 기준: 전체화면 좌표 (sc_x, sc_y) 를 피코에 전달!
+          피코 리셋(0,0) = Windows(0,0) = 전체화면(0,0) 기준
+          게임이 left=-1920 → sc_x 음수 → MOVE:음수 → 왼쪽 이동 → 게임 화면 도달
 
         aim_offset_y 적용:
           타겟 cx/cy는 바운딩박스 중심 → aim_offset_y=-10 이면 10px 위(머리)를 조준
           공격 모션: PRESS → 아래로 drag_dy만큼 드래그 → RELEASE
         """
-        if not self._attack_enabled or self._target is None:
+        if not self._attack_enabled:
+            print("[Attack] SKIP: attack_enabled=False")
             return
+        if self._target is None:
+            return  # 타겟 없음은 정상 상황이므로 로그 생략
 
         # 이미 이 타겟을 공격했으면 스킵 (타겟당 1회만 클릭)
         if self._target_no == self._attacked_target_no:
+            return  # 이미 공격 완료 - 정상 상황이므로 로그 생략
+
+        # 쿨타임 체크
+        now = time.time()
+        elapsed_since_last = now - self._last_attack_time
+        if elapsed_since_last < self._attack_cooldown:
+            print(f"[Attack] SKIP: 쿨타임 중 ({elapsed_since_last:.2f}s < {self._attack_cooldown}s)")
             return
 
         # 공격 중이면 스킵 (단, 스레드 타임아웃 2초 초과 시 강제 해제)
-        if hasattr(self._ctrl, 'is_attacking') and self._ctrl.is_attacking:
-            if time.time() - self._last_attack_time > 2.0:
+        is_atk = getattr(self._ctrl, 'is_attacking', False)
+        if is_atk:
+            if now - self._last_attack_time > 2.0:
                 self._ctrl._attacking = False  # 2초 넘으면 강제 해제
+                print(f"[Attack] is_attacking 강제 해제 (2초 초과)")
             else:
+                print(f"[Attack] SKIP: 공격 스레드 실행 중")
                 return
 
-        # 전체화면 좌표 (음수) → 피코에 전달
-        # 피코 리셋(0,0) = Windows(0,0) = 전체화면(0,0) 기준
-        # 게임이 left=-1920 → sc_x 음수 → MOVE:음수 → 왼쪽 이동 → 게임 화면 도달
+        # 전체화면 좌표 계산 → 피코에 전달
         frame_x = self._target.cx + self._click_offset_x
         frame_y = self._target.cy + self._aim_offset_y + self._click_offset_y
         sc_x, sc_y = self._to_screen(frame_x, frame_y)
@@ -261,7 +271,7 @@ class MonsterTrackerApp:
               f"프레임({frame_x},{frame_y})  전체화면({sc_x},{sc_y})  drag_dy={self._drag_dy}")
 
         self._ctrl.drag_attack(
-            x       = sc_x,   # 전체화면 좌표 (음수) - SCALE 곱해 MOVE 전송
+            x       = sc_x,   # 전체화면 좌표 (음수 가능) - SCALE 곱해 MOVE 전송
             y       = sc_y,
             drag_dx = self._drag_dx,
             drag_dy = self._drag_dy,
