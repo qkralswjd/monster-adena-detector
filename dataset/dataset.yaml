@@ -1,0 +1,7 @@
+path: C:\Users\dongj\monster_tracker\dataset
+train: images/train
+val: images/val
+nc: 2
+names:
+- monster
+- adena
