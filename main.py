@@ -253,7 +253,12 @@ class MonsterTrackerApp:
         if now - self._last_attack_time < self._attack_cooldown:
             return
 
-        print(f"[공격] 몬스터→({x},{y}) drag_dy={self._drag_dy}")
+        fw, fh = self._last_frame_size[1], self._last_frame_size[0]
+        print(f"[좌표] 몬스터 프레임({self._target.cx},{self._target.cy}) "
+              f"조준({x},{y}) "
+              f"bbox=({self._target.x},{self._target.y},{self._target.w},{self._target.h}) "
+              f"conf={self._target.confidence:.2f} "
+              f"화면비=({x/fw:.3f},{y/fh:.3f})")
 
         # 비동기 드래그 공격: 별도 스레드로 실행 → 메인루프 블로킹 없음
         self._ctrl.drag_attack(

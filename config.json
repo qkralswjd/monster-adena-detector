@@ -27,7 +27,7 @@
         "click_radius": 60
     },
     "controller": {
-        "enabled": true,
+        "enabled": false,
         "type": "pico",
         "port": "COM4",
         "baudrate": 115200
