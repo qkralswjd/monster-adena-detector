@@ -105,16 +105,23 @@ class PicoController(BaseController):
     SCALE_Y = 0.395
 
     def __init__(self, port: str, baudrate: int = 115200,
-                 screen_w: int = 1920, screen_h: int = 1080):
+                 screen_w: int = 1920, screen_h: int = 1080,
+                 mon_left: int = 0, mon_top: int = 0):
         """
         Args:
             port      : 시리얼 포트 (예: "COM4")
             baudrate  : 통신 속도
             screen_w  : 게임 화면 너비 (mss 캡처 너비와 반드시 동일해야 함)
             screen_h  : 게임 화면 높이 (mss 캡처 높이와 반드시 동일해야 함)
+            mon_left  : mss monitors[idx].left (게임 모니터의 절대 X 오프셋)
+            mon_top   : mss monitors[idx].top  (게임 모니터의 절대 Y 오프셋)
 
-        중요: screen_w / screen_h 는 mss monitors[idx].width / height 와 같아야
-              탐지 좌표 (0~screen_w) 와 피코 이동 목표가 정확히 일치합니다.
+        중요:
+          피코 MOVE:-9999:-9999 → 전체 데스크탑 좌상단(0,0) 으로 이동
+          전체 데스크탑 (0,0) = Windows 기본 모니터 좌상단
+          게임 모니터가 left=-1920 이면 → 리셋 후 1920px 오른쪽으로 이동해야
+          게임 모니터 좌상단에 도달.
+          mon_left 가 음수면 abs(mon_left) 만큼 오른쪽으로 추가 이동 필요.
         """
         self._port      = port
         self._baudrate  = baudrate
@@ -125,6 +132,11 @@ class PicoController(BaseController):
         # 게임 화면 해상도 (mss 캡처 크기와 동일해야 함)
         self.SCREEN_W = screen_w
         self.SCREEN_H = screen_h
+
+        # 게임 모니터 절대 오프셋 (전체 데스크탑 기준)
+        # left=-1920 이면 피코 리셋(0,0) 후 1920px 오른쪽 이동 필요
+        self._mon_left = mon_left
+        self._mon_top  = mon_top
 
         # 피코 커서 추적 위치 (게임 화면 중앙에서 시작)
         self._cur_x = self.SCREEN_W // 2
@@ -168,28 +180,72 @@ class PicoController(BaseController):
         """
         커서를 물리적 좌상단(0,0)으로 이동 후 게임 화면 중앙으로 이동.
 
-        ⚠ 전제 조건:
-          MOVE:-9999:-9999 → HID 커서가 물리적 좌상단(0,0)으로 이동
-          이후 MOVE:scaled_cx:scaled_cy → 게임 모니터 중앙
+        전체 데스크탑 좌표계:
+          MOVE:-9999:-9999 → 피코 커서가 (0,0) = 전체 데스크탑 좌상단
+          전체 데스크탑 (0,0) = 가장 왼쪽 모니터의 좌상단
 
-        ⚠ 좌표 정확도 조건:
-          self.SCREEN_W/H == mss monitors[capture_idx].width/height
-          이 둘이 같아야 "프레임 내 cx/cy" == "피코 이동 목표" 가 일치.
+          예) 모니터1(게임) left=-1920, 모니터2 left=0
+              피코 (0,0) = 모니터1 좌상단
+              게임 중앙 = (0,0) + (960, 540) → 총 이동 = (960, 540)
+
+          예) 모니터1(게임) left=0, 모니터2 left=-1920
+              피코 (0,0) = 모니터2(왼쪽) 좌상단
+              게임 중앙 = (0,0) + 1920(오프셋) + 960(게임 절반) = 2880
+              → 총 이동 = (2880, 540)
+
+        mon_left 이 음수면 abs(mon_left) 만큼 이미 오른쪽에 있음 → 추가 이동 불필요
+        mon_left 이 양수면 그만큼 오른쪽으로 추가 이동 필요
         """
         self._send_text("MOVE:-9999:-9999")
         time.sleep(0.6)
 
-        # 게임 화면 중앙으로 이동
-        cx = self.SCREEN_W // 2
-        cy = self.SCREEN_H // 2
-        scaled_x = round(cx * self.SCALE_X)
-        scaled_y = round(cy * self.SCALE_Y)
+        # 게임 화면 중앙까지 총 이동거리
+        # = mon_left 오프셋 (0,0 기준 게임모니터 시작점) + 게임 화면 절반
+        # mon_left=-1920 이면: -1920 + 960 = -960 → 음수이므로 왼쪽
+        # 하지만 피코 리셋(0,0)은 이미 가장 왼쪽 = mon_left가 가장 작은 모니터
+        # → 실제 이동 = abs(mon_left) + 게임절반 이 아니라
+        #   전체데스크탑 기준 절대좌표 = mon_left + SCREEN_W//2
+        #   피코(0,0)=전체좌상단 기준이므로 음수mon_left는 이미 반영됨
+        #
+        # 실제로:
+        #   피코(0,0) = 전체 left 최솟값 모니터의 (0,0)
+        #   전체 left 최솟값 = mon_left (가장 왼쪽 모니터)
+        #   게임이 left=-1920이면 피코(0,0) = 게임모니터 좌상단 → cx=960, cy=540
+        #   게임이 left=0이면 피코(0,0) = 왼쪽 모니터 좌상단 → cx=0+1920+960=2880
+
+        # 전체 데스크탑에서 가장 왼쪽 left값 (피코 0,0 기준점)
+        # = mon_left 가 음수면 그게 기준, 양수면 0이 기준
+        desktop_origin_x = min(0, self._mon_left)
+        desktop_origin_y = min(0, self._mon_top)
+
+        # 게임 화면 중앙의 전체 데스크탑 절대좌표
+        abs_cx = self._mon_left + self.SCREEN_W // 2
+        abs_cy = self._mon_top  + self.SCREEN_H // 2
+
+        # 피코 (0,0) 기준 상대좌표
+        target_x = abs_cx - desktop_origin_x
+        target_y = abs_cy - desktop_origin_y
+
+        scaled_x = round(target_x * self.SCALE_X)
+        scaled_y = round(target_y * self.SCALE_Y)
         self._send_text(f"MOVE:{scaled_x}:{scaled_y}")
         time.sleep(0.5)
 
-        self._cur_x = cx
-        self._cur_y = cy
-        print(f"[PicoController] 커서 리셋: 게임 중앙({cx},{cy}) → 전송({scaled_x},{scaled_y})")
+        # 피코 추적 좌표는 게임 프레임 내 좌표 기준 (0~SCREEN_W)
+        self._cur_x = self.SCREEN_W // 2
+        self._cur_y = self.SCREEN_H // 2
+
+        # 피코 절대 추적 (전체 데스크탑 기준) - 이동 계산용
+        self._abs_x = abs_cx - desktop_origin_x
+        self._abs_y = abs_cy - desktop_origin_y
+        self._desktop_origin_x = desktop_origin_x
+        self._desktop_origin_y = desktop_origin_y
+
+        print(f"[PicoController] 커서 리셋: "
+              f"mon_left={self._mon_left} "
+              f"게임중앙(절대)=({abs_cx},{abs_cy}) "
+              f"피코기준=({target_x},{target_y}) "
+              f"전송=({scaled_x},{scaled_y})")
 
     # ── 핵심 공격: 드래그 공격 ────────────────────────────────────
     def drag_attack(self, x: int, y: int,
@@ -205,13 +261,19 @@ class PicoController(BaseController):
         ⚠ x,y 가 정확하려면 SCREEN_W/H == mss 캡처 크기 이어야 함.
         """
         # ── 1. 현재 추적 위치 → 목표로 이동 ────────────────────
-        dx = x - self._cur_x
-        dy = y - self._cur_y
+        # x,y = 게임 프레임 내 좌표 (0~SCREEN_W)
+        # 피코 절대 추적(_abs_x/y) 기준으로 이동량 계산
+        # 목표 피코 절대좌표 = desktop_origin 기준 게임모니터 좌상단 + 프레임좌표
+        target_abs_x = (-self._desktop_origin_x + self._mon_left) + x
+        target_abs_y = (-self._desktop_origin_y + self._mon_top)  + y
+
+        dx = target_abs_x - self._abs_x
+        dy = target_abs_y - self._abs_y
         sdx = round(dx * self.SCALE_X)
         sdy = round(dy * self.SCALE_Y)
 
-        print(f"[Pico] 추적({self._cur_x},{self._cur_y}) → 목표({x},{y}) "
-              f"전송MOVE({sdx},{sdy})")
+        print(f"[Pico] 추적프레임({self._cur_x},{self._cur_y}) → 목표프레임({x},{y}) "
+              f"절대이동({dx},{dy}) 전송MOVE({sdx},{sdy})")
 
         if abs(sdx) > 0 or abs(sdy) > 0:
             self._send_text(f"MOVE:{sdx}:{sdy}")
@@ -220,6 +282,8 @@ class PicoController(BaseController):
         # 추적 위치 업데이트
         self._cur_x = max(0, min(self.SCREEN_W, x))
         self._cur_y = max(0, min(self.SCREEN_H, y))
+        self._abs_x = target_abs_x
+        self._abs_y = target_abs_y
 
         # ── 2. PRESS ────────────────────────────────────────────
         self._send_text("PRESS")
@@ -241,8 +305,11 @@ class PicoController(BaseController):
     # ── 단순 CLICK ────────────────────────────────────────────────
     def click(self, x: int, y: int, hold_ms: int = 50):
         """이동 후 단순 CLICK (드래그 없음). 아데나 줍기용."""
-        dx = x - self._cur_x
-        dy = y - self._cur_y
+        target_abs_x = (-self._desktop_origin_x + self._mon_left) + x
+        target_abs_y = (-self._desktop_origin_y + self._mon_top)  + y
+
+        dx = target_abs_x - self._abs_x
+        dy = target_abs_y - self._abs_y
         sdx = round(dx * self.SCALE_X)
         sdy = round(dy * self.SCALE_Y)
         if abs(sdx) > 0 or abs(sdy) > 0:
@@ -250,8 +317,10 @@ class PicoController(BaseController):
             time.sleep(0.05)
         self._cur_x = max(0, min(self.SCREEN_W, x))
         self._cur_y = max(0, min(self.SCREEN_H, y))
+        self._abs_x = target_abs_x
+        self._abs_y = target_abs_y
         self._send_text(f"CLICK:{hold_ms}")
-        print(f"[Pico] 클릭: 목표({x},{y}) 전송MOVE({sdx},{sdy})")
+        print(f"[Pico] 클릭: 목표({x},{y}) 절대이동({dx},{dy}) 전송MOVE({sdx},{sdy})")
 
     # ── 하위호환 alias ─────────────────────────────────────────────
     def click_drag(self, x: int, y: int,
