@@ -476,6 +476,46 @@ def mode_dot_or_click(cfg, do_click: bool):
 #  수동 클릭 테스트 (캡처창 클릭 → 피코 클릭)
 # ══════════════════════════════════════════════════════
 
+def detect_letterbox(cfg) -> int:
+    """
+    게임 화면 캡처 후 좌측 검은 여백(letterbox) 너비를 자동 감지.
+    검은 픽셀(R+G+B < 30) 이 끝나는 X좌표 반환.
+    """
+    with mss.mss() as sct:
+        mon_idx = cfg["capture"]["monitor"]
+        mon = sct.monitors[mon_idx]
+        shot = sct.grab(mon)
+        frame = np.array(shot)
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
+
+    h, w = frame.shape[:2]
+    # 화면 중앙 Y라인에서 검은 픽셀 탐색
+    mid_y = h // 2
+    row = frame[mid_y]  # (w, 3)
+
+    letterbox_left = 0
+    for x in range(w):
+        b, g, r = int(row[x][0]), int(row[x][1]), int(row[x][2])
+        if r + g + b > 30:  # 검은색 아님 → 게임 시작
+            letterbox_left = x
+            break
+
+    letterbox_right = w
+    for x in range(w - 1, -1, -1):
+        b, g, r = int(row[x][0]), int(row[x][1]), int(row[x][2])
+        if r + g + b > 30:
+            letterbox_right = x
+            break
+
+    game_w = letterbox_right - letterbox_left
+    print(f"\n[레터박스 자동감지]")
+    print(f"  왼쪽 여백: {letterbox_left}px")
+    print(f"  오른쪽 여백: {w - letterbox_right}px")
+    print(f"  실제 게임 영역: x={letterbox_left}~{letterbox_right} (너비 {game_w}px)")
+    print(f"  → config.json letterbox_x = {letterbox_left} 으로 설정 권장")
+    return letterbox_left
+
+
 def mode_manual_click(cfg):
     """
     캡처창에서 마우스 클릭 → 해당 좌표 피코 클릭.
@@ -645,6 +685,10 @@ def main():
         cfg = json.load(f)
 
     args = sys.argv[1:]
+
+    if "--letterbox" in args:
+        detect_letterbox(cfg)
+        return
 
     if "--info" in args:
         print_system_info(cfg)

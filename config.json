@@ -58,6 +58,11 @@
         "width": 912,
         "height": 432
     },
+    "letterbox": {
+        "auto_detect": true,
+        "x": 0,
+        "_note": "게임 좌측 검은 여백(px). auto_detect=true면 실행 시 자동 감지. 수동 지정하려면 auto_detect=false 후 x값 입력"
+    },
     "display": {
         "show_window": true
     }

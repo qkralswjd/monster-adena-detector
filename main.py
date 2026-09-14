@@ -89,6 +89,17 @@ class MonsterTrackerApp:
         print(f"[Capture] 전체화면좌표 = 프레임좌표 + ({self._mon_left},{self._mon_top})")
         print(f"[Capture] 피코 MOVE 기준 = 프레임좌표 (음수 전체화면좌표 아님)")
 
+        # ── 레터박스 보정 ────────────────────────────
+        lcfg = self._cfg.get("letterbox", {})
+        if lcfg.get("auto_detect", True):
+            self._letterbox_x = self._detect_letterbox()
+        else:
+            self._letterbox_x = lcfg.get("x", 0)
+        if self._letterbox_x > 0:
+            print(f"[Letterbox] 좌측 검은 여백: {self._letterbox_x}px → 클릭 X좌표 보정 적용")
+        else:
+            print(f"[Letterbox] 검은 여백 없음 (보정 불필요)")
+
         # ── ROI (탐지 필터 존) ──────────────────────
         rcfg = self._cfg["roi"]
         if rcfg["width"] > 0 and rcfg["height"] > 0:
@@ -150,6 +161,26 @@ class MonsterTrackerApp:
         self._last_status_time = 0.0
         self._last_coord_time  = 0.0
         self._last_monsters_log: List = []  # 직전 프레임 (cx,cy) 목록
+
+    # ── 레터박스 자동 감지 ────────────────────────────
+    def _detect_letterbox(self) -> int:
+        """
+        게임 화면 캡처 후 좌측 검은 여백 너비 자동 감지.
+        화면 중앙 Y라인에서 검은 픽셀(R+G+B<30) 끝나는 X 반환.
+        """
+        import numpy as np
+        import cv2
+        frame = self._capture.capture_full()
+        if frame is None:
+            return 0
+        h, w = frame.shape[:2]
+        mid_y = h // 2
+        row = frame[mid_y]
+        for x in range(w):
+            b, g, r = int(row[x][0]), int(row[x][1]), int(row[x][2])
+            if r + g + b > 30:
+                return x
+        return 0
 
     # ── 전체화면 절대좌표 변환 (로그용) ───────────────
     def _to_screen(self, frame_x: int, frame_y: int):
@@ -263,7 +294,8 @@ class MonsterTrackerApp:
                 return
 
         # 전체화면 좌표 계산 → 피코에 전달
-        frame_x = self._target.cx + self._click_offset_x
+        # letterbox 보정: YOLO cx는 검은여백 포함 기준 → 여백만큼 빼면 게임 내 실제 X
+        frame_x = self._target.cx + self._click_offset_x - self._letterbox_x
         frame_y = self._target.cy + self._aim_offset_y + self._click_offset_y
         sc_x, sc_y = self._to_screen(frame_x, frame_y)
 
