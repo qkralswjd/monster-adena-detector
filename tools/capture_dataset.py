@@ -53,7 +53,7 @@ def main():
         if key in (ord('q'), 27):
             break
 
-        elif key == ord('t'):
+        elif key in (ord('t'), ord('T')):
             ts   = datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]
             path = os.path.join(SAVE_DIR, f"{ts}.jpg")
             cv2.imwrite(path, frame)
