@@ -64,6 +64,9 @@ class DummyController(BaseController):
     def drag_attack(self, x, y, drag_dx=8, drag_dy=0, hold_ms=80):
         print(f"[DummyController] 드래그공격: ({x},{y}) drag=({drag_dx},{drag_dy})")
 
+    def attack_click(self, x, y, hold_ms=80):
+        print(f"[DummyController] 공격클릭: ({x},{y}) hold={hold_ms}ms")
+
     def click(self, x, y, hold_ms=50):
         print(f"[DummyController] 클릭: ({x},{y})")
 
@@ -195,6 +198,33 @@ class PicoController(BaseController):
         # 4. RELEASE
         self._send("RELEASE")
         print(f"[Pico] 공격완료 @ ({self._cur_x},{self._cur_y})")
+
+    # ── 공격 클릭 (몬스터 공격용) ────────────────────────────────
+    def attack_click(self, x: int, y: int, hold_ms: int = 80):
+        """
+        몬스터 공격 전용 클릭.
+        MOVE로 목표 위치 이동 → CLICK (PRESS+대기+RELEASE) 전송.
+
+        리니지 계열: 몬스터 위에 정확히 클릭 = 공격
+        드래그(PRESS→MOVE→RELEASE)는 빈 공간 이동 명령으로 오인됨 → 사용 금지
+        """
+        dx = x - self._cur_x
+        dy = y - self._cur_y
+        sdx = round(dx * self.SCALE_X)
+        sdy = round(dy * self.SCALE_Y)
+
+        print(f"[Pico] ({self._cur_x},{self._cur_y})→({x},{y}) "
+              f"이동({dx},{dy}) 전송MOVE({sdx},{sdy})")
+
+        if sdx != 0 or sdy != 0:
+            self._send(f"MOVE:{sdx}:{sdy}")
+            time.sleep(0.05)
+
+        self._cur_x = x
+        self._cur_y = y
+
+        self._send(f"CLICK:{hold_ms}")
+        print(f"[Pico] 공격클릭 @ ({x},{y}) hold={hold_ms}ms")
 
     # ── 단순 클릭 (아데나 줍기용) ─────────────────────────────────
     def click(self, x: int, y: int, hold_ms: int = 50):

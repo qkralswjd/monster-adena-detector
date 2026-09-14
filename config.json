@@ -4,7 +4,6 @@
         "monitor": 1,
         "_note_monitor": "mss 인덱스: monitors[0]=전체, monitors[1]=Windows모니터1(left=-1920, 게임), monitors[2]=Windows모니터2(left=0, 탐지창표시)"
     },
-
     "game": {
         "width": 1920,
         "height": 1080,
@@ -12,7 +11,6 @@
         "_check": "mss monitors[2].width x monitors[2].height 와 이 값이 같아야 함",
         "_dpi_warning": "Windows DPI 스케일(125%/150%) 설정 시 mss 캡처 크기가 달라질 수 있음. mss 실제 크기로 맞출 것"
     },
-
     "detector": {
         "model": "runs/detect/monster_v1/weights/best.pt",
         "confidence": 0.4,
@@ -22,30 +20,26 @@
         "classes": null,
         "_note": "classes=null 이어도 best.pt는 monster(0)/adena(1) 2클래스만 탐지"
     },
-
     "target": {
         "select_mode": "nearest",
         "death_timeout_sec": 1.5,
         "death_iou_thresh": 0.3,
         "click_radius": 60
     },
-
     "controller": {
         "enabled": true,
         "type": "pico",
         "port": "COM4",
         "baudrate": 115200
     },
-
     "attack": {
         "enabled": true,
         "cooldown_sec": 0.5,
-        "drag_dx": 15,
+        "drag_dx": 0,
         "drag_dy": 0,
         "drag_hold_ms": 80,
         "aim_offset_y": -20
     },
-
     "adena": {
         "enabled": true,
         "search_radius": 120,
@@ -53,14 +47,12 @@
         "click_hold_ms": 50,
         "max_picks": 5
     },
-
     "roi": {
         "x": 522,
         "y": 234,
         "width": 912,
         "height": 432
     },
-
     "display": {
         "show_window": true
     }

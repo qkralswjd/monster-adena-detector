@@ -252,11 +252,11 @@ class MonsterTrackerApp:
               f"화면비율=({rx:.3f},{ry:.3f}) "
               f"피코목표=({x},{y})")
 
-        self._ctrl.drag_attack(
+        # 리니지 계열: 몬스터 위에 정확히 CLICK = 공격
+        # drag_attack(PRESS→MOVE→RELEASE)은 빈공간 이동 명령으로 오인됨
+        self._ctrl.attack_click(
             x       = x,
             y       = y,
-            drag_dx = self._drag_dx,
-            drag_dy = self._drag_dy,
             hold_ms = self._drag_hold_ms,
         )
         self._last_attack_time = now
