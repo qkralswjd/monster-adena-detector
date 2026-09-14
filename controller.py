@@ -98,16 +98,25 @@ class PicoController:
         매 공격 전 호출.
         (0,0) → 게임 중앙으로 이동.
         항상 (0,0) 기준에서 출발하므로 오차 누적 없음.
+
+        좌표 계산:
+          피코 MOVE는 모니터 물리 픽셀 기준 (mon_left 음수 무시).
+          게임 모니터 내부 기준:
+            center_px_x = lb_x + center_x  (letterbox + 게임 중앙)
+            center_px_y = mon_top + center_y  (모니터 상단 오프셋 + 게임 중앙)
+          mon_left 가 음수여도 물리 픽셀에는 영향 없음 → 제외.
         """
-        # 1. 좌상단으로
+        # 1. 좌상단(0,0)으로 리셋
         self._send("MOVE:-9999:-9999")
         time.sleep(0.08)
-        # 2. 게임 중앙까지 절대이동 (Windows 원점 기준)
-        # 게임 중앙의 Windows 좌표 = mon_left + lb_x + center_x, mon_top + center_y
-        abs_cx = self._mon_left + self._lb_x + self._center_x
-        abs_cy = self._mon_top  + self._center_y
-        dx = round(abs_cx * self.SCALE)
-        dy = round(abs_cy * self.SCALE)
+        # 2. 게임 중앙까지 이동 (물리 픽셀 기준, mon_left 제외)
+        #    center_px_x = letterbox_x + game_center_x
+        #    center_px_y = mon_top(보통 0) + game_center_y
+        center_px_x = self._lb_x + self._center_x          # 240 + 720 = 960
+        center_px_y = max(0, self._mon_top) + self._center_y  # 0 + 540 = 540
+        dx = round(center_px_x * self.SCALE)
+        dy = round(center_px_y * self.SCALE)
+        print(f"[Pico] 중앙이동: 물리픽셀({center_px_x},{center_px_y})  HID({dx},{dy})")
         self._send(f"MOVE:{dx}:{dy}")
         time.sleep(0.05)
 
