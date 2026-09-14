@@ -49,11 +49,13 @@ def main():
     acfg  = cfg["attack"]
     tcfg  = cfg["target"]
 
-    cooldown     = acfg["cooldown_sec"]       # 공격 쿨다운 (초)
-    drag_dx      = acfg["drag_dx"]            # 드래그 X
-    drag_dy      = acfg["drag_dy"]            # 드래그 Y (아래로)
-    hold_ms      = acfg["hold_ms"]            # PRESS 유지 (ms)
-    miss_timeout = tcfg["miss_timeout_sec"]   # 탐지 없을 때 박스 유지 (초)
+    cooldown       = acfg["cooldown_sec"]       # 공격 쿨다운 (초)
+    drag_dx        = acfg["drag_dx"]            # 드래그 X
+    drag_dy        = acfg["drag_dy"]            # 드래그 Y (아래로)
+    hold_ms        = acfg["hold_ms"]            # PRESS 유지 (ms)
+    miss_timeout   = tcfg["miss_timeout_sec"]   # 탐지 없을 때 박스 유지 (초)
+    min_conf       = tcfg.get("min_conf", 0.35) # 공격 최소 confidence
+    min_cy         = tcfg.get("min_cy", 150)    # UI 영역 제외 (cy 최솟값)
 
     # ── 캡처 초기화 ───────────────────────────────────────────
     cap = ScreenCapture(monitor=cfg["capture"]["monitor"])
@@ -136,11 +138,18 @@ def main():
                     last_target     = None
 
             # ── PICO 공격 ─────────────────────────────────────
-            # 조건: 타겟 있음 + 쿨다운 지남 + 공격 중 아님
-            if (last_target is not None
-                    and miss_elapsed == 0.0          # 현재 탐지된 타겟만
-                    and now - last_attack_t >= cooldown
-                    and not ctrl.is_attacking):
+            # 조건:
+            #   1. 이번 프레임에 실제 탐지됨 (miss 중 공격 금지)
+            #   2. 타겟 conf >= min_conf (오탐 방지)
+            #   3. 타겟 cy >= min_cy (UI 영역 제외)
+            #   4. 쿨다운 지남
+            #   5. 공격 중 아님
+            if (detections                                        # 1. 실제 탐지
+                    and last_target is not None
+                    and last_target.confidence >= min_conf        # 2. conf 필터
+                    and last_target.cy >= min_cy                  # 3. UI 필터
+                    and now - last_attack_t >= cooldown           # 4. 쿨다운
+                    and not ctrl.is_attacking):                   # 5. 비공격 중
 
                 cx, cy = last_target.cx, last_target.cy
                 print(f"[Attack] → ({cx},{cy})  conf={last_target.confidence:.2f}")
