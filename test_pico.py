@@ -78,48 +78,61 @@ def check_reset(ctrl):
 # ── SCALE 측정 모드 ──────────────────────────────────────────
 def measure_scale(ctrl):
     """
-    리셋(0,0) 후 두 지점으로 이동해서 SCALE_X / SCALE_Y 역산.
+    리셋(0,0) 후 3개 지점으로 이동해서 SCALE_X/Y 역산.
+    긴 거리 측정일수록 정확함 → (1919,1079) 우하단 사용.
     """
     print("\n[SCALE 측정 모드]")
-    print("  리셋 후 (960,540) 으로 이동해서 실제 위치 측정")
 
     # 리셋 확인
     ax0, ay0 = get_cursor_pos()
-    if ax0 != 0 or ay0 != 0:
+    if ax0 > 2 or ay0 > 2:
         print(f"  리셋 안됨: ({ax0},{ay0}) → 측정 불가")
         return
 
-    # (960, 540) 으로 이동
-    TARGET_X, TARGET_Y = 960, 540
-    dx = TARGET_X - ctrl._cur_x
-    dy = TARGET_Y - ctrl._cur_y
-    hid_x = round(dx * ctrl.SCALE_X)
-    hid_y = round(dy * ctrl.SCALE_Y)
-    ctrl._send(f"MOVE:{hid_x}:{hid_y}")
-    ctrl._cur_x = TARGET_X
-    ctrl._cur_y = TARGET_Y
-    time.sleep(0.3)
+    results = []
+    # 3개 지점 측정: 중앙, 우하단, 임의
+    targets = [
+        (960,  540),
+        (1919, 1079),
+        (480,  270),
+    ]
 
-    ax, ay = get_cursor_pos()
-    print(f"  목표: ({TARGET_X},{TARGET_Y})")
-    print(f"  실제: ({ax},{ay})")
-    print(f"  HID 전송: ({hid_x},{hid_y})")
+    for TARGET_X, TARGET_Y in targets:
+        # (0,0) 으로 다시 리셋
+        ctrl._send("MOVE:-9999:-9999")
+        ctrl._send("MOVE:-9999:-9999")
+        time.sleep(2.5)
+        ctrl._cur_x = 0
+        ctrl._cur_y = 0
 
-    if hid_x != 0 and ax != 0:
-        real_scale_x = round(hid_x / ax, 4)
-        print(f"\n  현재 SCALE_X = {ctrl.SCALE_X}")
-        print(f"  측정 SCALE_X = {real_scale_x}  (= HID{hid_x} / 실제{ax}px)")
+        # 목표로 이동 (SCALE 적용)
+        hid_x = round(TARGET_X * ctrl.SCALE_X)
+        hid_y = round(TARGET_Y * ctrl.SCALE_Y)
+        ctrl._send(f"MOVE:{hid_x}:{hid_y}")
+        time.sleep(0.4)
 
-    if hid_y != 0 and ay != 0:
-        real_scale_y = round(hid_y / ay, 4)
-        print(f"  현재 SCALE_Y = {ctrl.SCALE_Y}")
-        print(f"  측정 SCALE_Y = {real_scale_y}  (= HID{hid_y} / 실제{ay}px)")
+        ax, ay = get_cursor_pos()
+        print(f"  목표({TARGET_X},{TARGET_Y})  실제({ax},{ay})  HID({hid_x},{hid_y})")
 
+        if ax > 0 and ay > 0:
+            results.append((TARGET_X, TARGET_Y, ax, ay, hid_x, hid_y))
+
+    if not results:
+        print("  측정 실패")
+        return
+
+    # 평균 SCALE 계산
+    sx_list = [hid_x / ax for (_, _, ax, _, hid_x, _) in results if ax > 0]
+    sy_list = [hid_y / ay for (_, _, _, ay, _, hid_y) in results if ay > 0]
+
+    new_scale_x = round(sum(sx_list) / len(sx_list), 4)
+    new_scale_y = round(sum(sy_list) / len(sy_list), 4)
+
+    print(f"\n  현재 SCALE_X={ctrl.SCALE_X}  측정 SCALE_X={new_scale_x}")
+    print(f"  현재 SCALE_Y={ctrl.SCALE_Y}  측정 SCALE_Y={new_scale_y}")
     print(f"\n  → controller.py 에서 수정:")
-    if hid_x != 0 and ax != 0:
-        print(f"    SCALE_X = {round(hid_x / ax, 4)}")
-    if hid_y != 0 and ay != 0:
-        print(f"    SCALE_Y = {round(hid_y / ay, 4)}")
+    print(f"    SCALE_X = {new_scale_x}")
+    print(f"    SCALE_Y = {new_scale_y}")
 
 
 # ── 기본 좌표 검증 ────────────────────────────────────────────
