@@ -101,8 +101,11 @@ class PicoController:
               f"  Δ({dx},{dy})  HID({sdx},{sdy})")
 
         if sdx != 0 or sdy != 0:
+            # 이동 완료 대기: 스텝수 × 8ms + 여유
+            steps = max(abs(sdx), abs(sdy)) / 127 + 1
+            wait = steps * 0.008 + 0.05
             self._send(f"MOVE:{sdx}:{sdy}")
-            time.sleep(0.1)  # 이동 완료 대기
+            time.sleep(wait)
             ax, ay = _get_cursor_pos()
             print(f"[Pico] 실제도착: ({ax},{ay})  오차({ax-x},{ay-y})")
 
