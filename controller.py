@@ -29,6 +29,15 @@ PICO 프로토콜:
 
 import time
 import threading
+import ctypes
+import ctypes.wintypes
+
+
+def _get_cursor_pos():
+    """Windows 실제 커서 위치 반환."""
+    pt = ctypes.wintypes.POINT()
+    ctypes.windll.user32.GetCursorPos(ctypes.byref(pt))
+    return pt.x, pt.y
 
 
 class PicoController:
@@ -42,12 +51,6 @@ class PicoController:
         self._ser       = None
         self._lock      = threading.Lock()
         self._connected = False
-
-        # 커서 추적 - 화면 절대좌표 기준
-        # 리셋 후 PICO 커서 = 화면 (0,0)
-        self._cur_x = 0
-        self._cur_y = 0
-
         self._attacking = False
 
     # ── 연결 ──────────────────────────────────────────────────
@@ -58,7 +61,6 @@ class PicoController:
             time.sleep(0.5)
             self._connected = True
             print(f"[Pico] 연결: {self._port} @ {self._baudrate}")
-            self._reset()
             return True
         except Exception as e:
             print(f"[Pico] 연결 실패: {e}")
@@ -83,49 +85,23 @@ class PicoController:
     def is_attacking(self) -> bool:
         return self._attacking
 
-    # ── 초기 리셋 ─────────────────────────────────────────────
-    def _reset(self):
-        """
-        연결 시 1회만 호출.
-        PICO 커서를 화면 (0,0) 으로 이동.
-
-        PICO 펌웨어는 순수 상대이동 장치.
-        MOVE:-9999:-9999 → 127씩 나눠서 전송 (do_move 내부)
-        1920px 이동 시 1920/127 = 15스텝 * 0.008s = 0.12s
-        여유있게 3회 전송 + 충분한 대기.
-        """
-        for i in range(3):
-            self._send("MOVE:-9999:-9999", wait_ok=True)  # OK:MOVE 올 때까지 대기
-            time.sleep(0.1)
-        time.sleep(0.3)   # 마지막 여유
-        self._cur_x = 0
-        self._cur_y = 0
-        print(f"[Pico] 리셋 완료 → 커서 (0,0)")
-
     # ── 절대좌표 이동 ──────────────────────────────────────────
     def _move_to(self, x: int, y: int):
         """
-        현재 _cur_x/_cur_y 기준 상대이동으로 (x,y) 에 도달.
-
-        dx = x - _cur_x
-        dy = y - _cur_y
-        MOVE: round(dx*SCALE) : round(dy*SCALE)
-
-        좌표 변환 없음. x, y 는 화면 절대좌표 그대로.
+        GetCursorPos() 로 실제 커서 위치 읽어서 상대이동.
+        리셋/추적 불필요. 항상 정확.
         """
-        dx = x - self._cur_x
-        dy = y - self._cur_y
+        cur_x, cur_y = _get_cursor_pos()
+        dx = x - cur_x
+        dy = y - cur_y
         sdx = round(dx * self.SCALE_X)
         sdy = round(dy * self.SCALE_Y)
 
-        print(f"[Pico] 이동: ({self._cur_x},{self._cur_y}) → ({x},{y})"
+        print(f"[Pico] 이동: ({cur_x},{cur_y}) → ({x},{y})"
               f"  Δ({dx},{dy})  HID({sdx},{sdy})")
 
         if sdx != 0 or sdy != 0:
-            self._send(f"MOVE:{sdx}:{sdy}", wait_ok=True)  # 이동 완료 대기
-
-        self._cur_x = x
-        self._cur_y = y
+            self._send(f"MOVE:{sdx}:{sdy}")
 
     # ── 드래그 공격 (비동기) ──────────────────────────────────
     def drag_attack(self, x: int, y: int,
@@ -160,8 +136,6 @@ class PicoController:
                 sdx = round(drag_dx * self.SCALE_X)
                 sdy = round(drag_dy * self.SCALE_Y)
                 self._send(f"MOVE:{sdx}:{sdy}")
-                self._cur_x += drag_dx
-                self._cur_y += drag_dy
                 time.sleep(0.03)
 
             # 4. RELEASE
@@ -190,26 +164,13 @@ class PicoController:
         print(f"[Pico] 클릭: ({x},{y})")
 
     # ── 전송 ──────────────────────────────────────────────────
-    def _send(self, text: str, wait_ok: bool = False, timeout: float = 5.0):
-        """
-        PICO 로 명령 전송.
-        wait_ok=True: OK:XXX 응답 받을 때까지 대기 (이동 완료 보장)
-        """
+    def _send(self, text: str):
         if not self._connected or self._ser is None:
             return
         try:
             with self._lock:
                 self._ser.write((text + "\n").encode())
                 self._ser.flush()
-
-                if wait_ok:
-                    deadline = time.time() + timeout
-                    while time.time() < deadline:
-                        if self._ser.in_waiting > 0:
-                            resp = self._ser.readline().decode("utf-8", "ignore").strip()
-                            if resp.startswith("OK:") or resp.startswith("ERR:"):
-                                return
-                        time.sleep(0.001)
         except Exception as e:
             print(f"[Pico] 전송 실패: {e}")
             self._connected = False
