@@ -3,12 +3,18 @@ main.py
 -------
 화면캡처 → YOLO → PICO 클릭 자동 공격봇.
 
+변경 내용 (pico_image_autoclicker 방식 적용):
+  - controller는 클로즈드루프 이동 + CLICK 원자 명령 사용
+  - PING/PONG 하트비트: ping_interval_sec 마다 ping() 호출, 3회 연속 실패 시 중단
+  - click_pulse_ms config에서 읽어 PicoController 생성 시 전달
+
 동작:
   1. 화면 캡처 (mss 1920x1080)
   2. YOLO 탐지 (monster/adena)
   3. 타겟 추적 (TargetTracker - 한번 고정하면 사망 전까지 유지)
   4. 탐지된 프레임에서만 공격 (conf >= min_conf, cy >= min_cy, 쿨다운)
   5. 오버레이 갱신
+  6. PING/PONG 하트비트 주기적 확인
 
 좌표 원칙:
   cx, cy = YOLO 출력 그대로 → PICO 전달 (변환 없음)
@@ -48,12 +54,15 @@ def main():
     acfg = cfg["attack"]
     tcfg = cfg["target"]
 
-    cooldown = acfg["cooldown_sec"]
-    drag_dx  = acfg["drag_dx"]
-    drag_dy  = acfg["drag_dy"]
-    hold_ms  = acfg["hold_ms"]
-    min_conf = tcfg.get("min_conf", 0.35)
-    min_cy   = tcfg.get("min_cy", 150)
+    cooldown        = acfg["cooldown_sec"]
+    hold_ms         = acfg["hold_ms"]
+    click_pulse_ms  = acfg.get("click_pulse_ms", 20)   # CLICK 원자 명령 펄스
+    min_conf        = tcfg.get("min_conf", 0.35)
+    min_cy          = tcfg.get("min_cy", 150)
+
+    # 하트비트 설정
+    ping_interval   = ccfg.get("ping_interval_sec", 3.0)
+    ping_fail_limit = ccfg.get("ping_fail_limit", 3)
 
     # ── 초기화 ────────────────────────────────────────────────
     cap = ScreenCapture(monitor=cfg["capture"]["monitor"])
@@ -73,7 +82,11 @@ def main():
         ctrl.connect()
         print("[Init] DUMMY 모드")
     else:
-        ctrl = PicoController(port=ccfg["port"], baudrate=ccfg["baudrate"])
+        ctrl = PicoController(
+            port           = ccfg["port"],
+            baudrate       = ccfg["baudrate"],
+            click_pulse_ms = click_pulse_ms,
+        )
         if not ctrl.connect():
             print("[Init] PICO 연결 실패 → DUMMY 모드")
             ctrl = DummyController()
@@ -90,7 +103,9 @@ def main():
     ov.start()
 
     print(f"\n[Start] 자동 공격 시작. Ctrl+C 로 종료.")
-    print(f"        쿨다운={cooldown}s  hold={hold_ms}ms  min_conf={min_conf}  min_cy={min_cy}\n")
+    print(f"        쿨다운={cooldown}s  pulse={click_pulse_ms}ms  "
+          f"min_conf={min_conf}  min_cy={min_cy}")
+    print(f"        하트비트: {ping_interval}s 마다, {ping_fail_limit}회 실패 시 중단\n")
 
     # ── 타겟 추적기 ───────────────────────────────────────────
     tracker = TargetTracker(
@@ -104,15 +119,34 @@ def main():
     prev_log_t      = 0.0
     LOG_INTERVAL    = 0.5
 
+    # 하트비트 상태
+    last_ping_t     = time.time()
+    ping_fail_count = 0
+
     try:
         while True:
+            now = time.time()
+
+            # ── PING/PONG 하트비트 (pico_image_autoclicker 방식) ──
+            if (isinstance(ctrl, PicoController)
+                    and now - last_ping_t >= ping_interval):
+                last_ping_t = now
+                if ctrl.ping():
+                    ping_fail_count = 0
+                else:
+                    ping_fail_count += 1
+                    print(f"[Heartbeat] PING 실패 {ping_fail_count}/{ping_fail_limit}")
+                    if ping_fail_count >= ping_fail_limit:
+                        print("[Heartbeat] Pico 응답 없음 → 중단")
+                        break
+
+            # ── 캡처 + 탐지 ───────────────────────────────────
             frame = cap.capture()
             if frame is None:
                 time.sleep(0.01)
                 continue
 
             detections = det.detect(frame)
-            now = time.time()
 
             monsters = [d for d in detections if d.class_id == 0]
             adenas   = [d for d in detections if d.class_id == 1]
@@ -138,10 +172,8 @@ def main():
 
                 cx, cy = last_target.cx, last_target.cy
                 print(f"[Attack] → ({cx},{cy})  conf={last_target.confidence:.2f}")
-                ctrl.drag_attack(cx, cy,
-                                 drag_dx=drag_dx,
-                                 drag_dy=drag_dy,
-                                 hold_ms=hold_ms)
+                # drag_attack 내부에서 클로즈드루프 이동 + CLICK 원자 명령 실행
+                ctrl.drag_attack(cx, cy, hold_ms=hold_ms)
                 last_attack_t = now
 
             # ── 오버레이 갱신 ─────────────────────────────────
