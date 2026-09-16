@@ -1,0 +1,124 @@
+[
+  {
+    "timestamp": "2026-09-17T07:45:08.301",
+    "event": "PATROL_START"
+  },
+  {
+    "timestamp": "2026-09-17T07:45:39.718",
+    "event": "TARGET_SELECTED",
+    "data": {
+      "cx": 20,
+      "cy": 419,
+      "conf": 0.483,
+      "abs_cx": 392,
+      "abs_cy": 678
+    }
+  },
+  {
+    "timestamp": "2026-09-17T07:45:39.719",
+    "event": "COMBAT_START",
+    "data": {
+      "cx": 20,
+      "cy": 419,
+      "conf": 0.483
+    }
+  },
+  {
+    "timestamp": "2026-09-17T07:45:45.580",
+    "event": "COMBAT_BLOCK_NEW_ATTACK",
+    "data": {
+      "target": "cx=20 cy=419 conf=0.48"
+    }
+  },
+  {
+    "timestamp": "2026-09-17T07:45:52.595",
+    "event": "COMBAT_BLOCK_NEW_ATTACK",
+    "data": {
+      "target": "cx=20 cy=419 conf=0.48"
+    }
+  },
+  {
+    "timestamp": "2026-09-17T07:45:59.252",
+    "event": "TARGET_LOST",
+    "data": {
+      "target": "cx=20 cy=419 conf=0.48",
+      "miss_timeout_sec": 3.5
+    }
+  },
+  {
+    "timestamp": "2026-09-17T07:46:11.043",
+    "event": "TARGET_SELECTED",
+    "data": {
+      "cx": 81,
+      "cy": 323,
+      "conf": 0.61,
+      "abs_cx": 453,
+      "abs_cy": 582
+    }
+  },
+  {
+    "timestamp": "2026-09-17T07:46:11.043",
+    "event": "COMBAT_START",
+    "data": {
+      "cx": 81,
+      "cy": 323,
+      "conf": 0.61
+    }
+  },
+  {
+    "timestamp": "2026-09-17T07:46:16.583",
+    "event": "COMBAT_BLOCK_NEW_ATTACK",
+    "data": {
+      "target": "cx=81 cy=323 conf=0.61"
+    }
+  },
+  {
+    "timestamp": "2026-09-17T07:46:22.102",
+    "event": "COMBAT_BLOCK_NEW_ATTACK",
+    "data": {
+      "target": "cx=81 cy=323 conf=0.61"
+    }
+  },
+  {
+    "timestamp": "2026-09-17T07:46:26.179",
+    "event": "COMBAT_BLOCK_NEW_ATTACK",
+    "data": {
+      "target": "cx=81 cy=323 conf=0.61"
+    }
+  },
+  {
+    "timestamp": "2026-09-17T07:46:26.682",
+    "event": "COMBAT_BLOCK_NEW_ATTACK",
+    "data": {
+      "target": "cx=81 cy=323 conf=0.61"
+    }
+  },
+  {
+    "timestamp": "2026-09-17T07:46:27.195",
+    "event": "COMBAT_BLOCK_NEW_ATTACK",
+    "data": {
+      "target": "cx=81 cy=323 conf=0.61"
+    }
+  },
+  {
+    "timestamp": "2026-09-17T07:46:27.696",
+    "event": "COMBAT_BLOCK_NEW_ATTACK",
+    "data": {
+      "target": "cx=81 cy=323 conf=0.61"
+    }
+  },
+  {
+    "timestamp": "2026-09-17T07:46:28.210",
+    "event": "COMBAT_BLOCK_NEW_ATTACK",
+    "data": {
+      "target": "cx=81 cy=323 conf=0.61"
+    }
+  },
+  {
+    "timestamp": "2026-09-17T07:46:28.731",
+    "event": "COMBAT_BLOCK_NEW_ATTACK",
+    "data": {
+      "target": "cx=81 cy=323 conf=0.61"
+    }
+  }
+]
