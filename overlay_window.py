@@ -248,15 +248,10 @@ class OverlayWindow:
 
         # ── HWND 저장 (클릭통과 전환용) ──────────────────────
         root.update()  # 창 생성 완료 대기
-        self._hwnd = ctypes.windll.user32.GetParent(
-            ctypes.windll.user32.GetFocus()
-        )
-        # tkinter 창 HWND 가져오기
         try:
-            self._hwnd = root.winfo_id()
-            # 실제 최상위 창 HWND
-            import ctypes
-            self._hwnd = ctypes.windll.user32.GetAncestor(self._hwnd, 2)  # GA_ROOT=2
+            hwnd_child = root.winfo_id()
+            # GA_ROOT=2: 최상위 부모 창 HWND 획득
+            self._hwnd = ctypes.windll.user32.GetAncestor(hwnd_child, 2)
         except Exception:
             self._hwnd = None
 
