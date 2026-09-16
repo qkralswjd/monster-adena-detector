@@ -42,7 +42,7 @@ from typing import Optional
 
 import numpy as np
 
-from waypoint_mover  import WaypointMover
+from waypoint_mover  import WaypointMover, RandomPatrolMover
 from loot_detector   import LootDetector
 from level_detector  import LevelDetector
 
@@ -156,16 +156,33 @@ class StateMachine:
         else:
             self.hunt_mover = None
 
-        # ── 순찰 웨이포인트 (patrol_waypoints, loop=True) ────────────────
-        pwps = patrol_wps if patrol_wps else hunt_wps
-        if pwps:
-            self.patrol_mover = WaypointMover(
-                waypoints       = pwps,
+        # ── 순찰 모드 결정 (patrol_mode: "random" or "waypoint") ────────
+        patrol_mode = mcfg.get("patrol_mode", "waypoint")
+
+        if patrol_mode == "random":
+            pc     = mcfg.get("patrol_center", {})
+            pcx    = pc.get("x", 960)
+            pcy    = pc.get("y", 540)
+            pradius = mcfg.get("patrol_radius", 300)
+            pinterval = mcfg.get("patrol_interval_sec", 3.0)
+            self.patrol_mover = RandomPatrolMover(
+                center          = (pcx, pcy),
+                radius          = pradius,
                 move_timeout_ms = wp_timeout,
-                loop            = True,
+                interval_sec    = pinterval,
             )
+            print(f"[SM] 순찰 모드: 랜덤  중심=({pcx},{pcy})  반경={pradius}px  간격={pinterval}s")
         else:
-            self.patrol_mover = None
+            # 기존 고정 웨이포인트 순찰
+            pwps = patrol_wps if patrol_wps else hunt_wps
+            if pwps:
+                self.patrol_mover = WaypointMover(
+                    waypoints       = pwps,
+                    move_timeout_ms = wp_timeout,
+                    loop            = True,
+                )
+            else:
+                self.patrol_mover = None
 
         # ── 아데나 탐지기 ────────────────────────────────────────────────
         adcfg = cfg.get("adena", {})
@@ -389,7 +406,8 @@ class StateMachine:
             if self.patrol_mover:
                 status = self.patrol_mover.tick(self.ctrl)
                 if status == "ARRIVED":
-                    label = self.patrol_mover.current_label
+                    # RandomPatrolMover는 current_label 없음
+                    label = getattr(self.patrol_mover, "current_label", "랜덤")
                     print(f"[SM] 순찰 '{label}' 도착")
 
     # ── LOOTING ───────────────────────────────────────────────────────────

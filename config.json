@@ -153,7 +153,11 @@
         "wait_ms": 500
       }
     ],
-    "_note": "hunt_waypoints: 허수아비->사냥터 이동 경유 7개 좌표 (loop=False). patrol_waypoints: 사냥터 내 순찰 5개 좌표 (loop=True). move_timeout_ms: 웨이포인트 도착 판정 타임아웃(ms)."
+    "patrol_mode": "random",
+    "patrol_center": {"x": 1300, "y": 250},
+    "patrol_radius": 300,
+    "patrol_interval_sec": 3.0,
+    "_note": "hunt_waypoints: 허수아비->사냥터 이동 경유 7개 좌표 (loop=False). patrol_waypoints: patrol_mode=waypoint 일 때만 사용. patrol_mode=random: 중심점+반경 랜덤 순찰. move_timeout_ms: 웨이포인트 도착 판정 타임아웃(ms)."
   },
   "level_detector": {
     "target_level": 5,
