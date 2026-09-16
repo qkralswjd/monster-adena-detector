@@ -211,10 +211,15 @@ def main():
     ov.start()
 
     # 타겟 추적기
+    # min_conf: config.json → target.min_conf 와 동일한 값을 Tracker에 전달.
+    # Tracker 타겟 선택(select_by_confidence)과 main.py 공격 조건이
+    # 동일한 confidence 기준을 공유하게 됨.
     tracker = TargetTracker(
         miss_timeout = tcfg["miss_timeout_sec"],
         max_dist     = tcfg.get("max_dist", 350),
+        min_conf     = min_conf,   # config.json → target.min_conf (현재 0.20)
     )
+    print(f"[Init] Tracker min_conf={min_conf} (config target.min_conf)")
 
     # ── 테스트 기록 초기화 (--record 플래그, config 로드 이후) ─────
     # monitor 번호를 config에서 읽어야 하므로 config 로드 후에 위치.

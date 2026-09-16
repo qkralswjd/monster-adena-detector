@@ -42,6 +42,13 @@ from detector import Detection
 # 이 값 미만인 몬스터는 타겟 선택 단계에서 원천 차단.
 MIN_TARGET_CY: int = 150
 
+# 신규 타겟 선택 시 최소 confidence 필터 기본값.
+# 실제 사용값은 config.json → target.min_conf 이며,
+# TargetTracker(min_conf=...) 로 전달돼 인스턴스별로 관리된다.
+# 이 상수는 TargetTracker 생성 시 min_conf가 생략된 경우의 fallback 전용.
+# main.py가 항상 config 값을 명시적으로 전달하므로 실질적으로는 사용되지 않음.
+_DEFAULT_MIN_CONF: float = 0.20
+
 # 재연결 탐색 최소 보장 반경 (px).
 # 속도 미확보 상태(초기, vx=vy=0)에서 max_speed * elapsed가
 # 너무 작아질 때 최소한의 탐색 범위를 보장.
@@ -56,28 +63,34 @@ _MIN_SEARCH_R: float = 60.0
 _DT_MAX: float = 0.2
 
 
-def select_by_confidence(detections: List[Detection]) -> Optional[Detection]:
+def select_by_confidence(
+        detections: List[Detection],
+        min_conf: float = _DEFAULT_MIN_CONF,
+) -> Optional[Detection]:
     """
-    cy >= MIN_TARGET_CY 이고 class_id == 0 인 몬스터 중 confidence 최고값 반환.
+    다음 3가지 조건을 모두 만족하는 몬스터 중 confidence 최고값 반환.
+      1. class_id == 0  (monster)
+      2. cy >= MIN_TARGET_CY(150)  — 화면 상단 오탐 차단
+      3. confidence >= min_conf    — config.json target.min_conf 기준
 
-    [변경 전]
-      monsters = [d for d in detections if d.class_id == 0]
-      → cy 필터 없음 → cy=55, cy=110 같은 화면 상단 오탐도 타겟 선택
-      → 공격 판정(cy >= min_cy)에서 막히지만 그 사이 실제 몬스터를 놓침
+    [이번 변경]
+      confidence >= min_conf 조건 추가.
+      min_conf는 TargetTracker(min_conf=...) 를 통해 config.json 값이 전달됨.
+      → Tracker 타겟 선택 단계와 main.py 공격 조건이 동일한 기준(min_conf)을 공유.
+      → conf < min_conf 인 탐지는 Tracker가 타겟으로 선택하지 않음.
+        (이전: Tracker가 선택 → 3.5s 추적 → 공격 0건 → TARGET_LOST 낭비)
 
-    [변경 후]
-      cy >= MIN_TARGET_CY(150) 필터 추가
-      → 타겟 선택 단계에서 원천 차단
-      → 처음부터 공격 가능한 위치의 몬스터만 선택
-
-    이번 단계에서 추가하지 않는 것:
-      - confidence threshold 상향 (0.15 유지)
-      - cx 경계 필터
-      - 중앙 거리 가중치 / 복합 점수
+    [유지하는 것]
+      - cy >= MIN_TARGET_CY 필터
+      - max(confidence) 선택 방식
+      - cx 경계 필터 없음
+      - 중앙 거리 가중치 없음
     """
     monsters = [
         d for d in detections
-        if d.class_id == 0 and d.cy >= MIN_TARGET_CY
+        if d.class_id == 0
+        and d.cy >= MIN_TARGET_CY
+        and d.confidence >= min_conf
     ]
     if not monsters:
         return None
@@ -138,13 +151,17 @@ class TargetTracker:
                  miss_timeout: float = 3.5,
                  max_dist: float = 150,            # 하위 호환용 (현재 미사용)
                  max_speed: float = 250,            # px/초
-                 min_search_r: float = _MIN_SEARCH_R):
+                 min_search_r: float = _MIN_SEARCH_R,
+                 min_conf: float = _DEFAULT_MIN_CONF):  # config.json target.min_conf
         self._target       = None         # 현재 추적 중인 실제 Detection
         self._ghost        = None         # miss 중 예측 위치 Detection (오버레이·ref용)
         self._last_seen    = 0.0          # 마지막 실제 탐지의 time.time()
         self._miss_timeout = miss_timeout
         self._max_speed    = max_speed
         self._min_search_r = min_search_r
+        # config.json → target.min_conf 에서 전달받은 값.
+        # select_by_confidence() 호출 시 전달해 Tracker 선택 단계에 적용.
+        self._min_conf     = min_conf
 
         # 속도 벡터 (px/초). 항상 max_speed 이하로 클램핑됨.
         self._vx = 0.0
@@ -186,7 +203,8 @@ class TargetTracker:
 
         # ── 타겟 없음 → 새 타겟 선택 ─────────────────────────────────
         if self._target is None:
-            new = select_by_confidence(monsters)  # cy >= MIN_TARGET_CY 포함
+            # min_conf 전달: cy>=MIN_TARGET_CY AND conf>=self._min_conf 동시 적용
+            new = select_by_confidence(monsters, min_conf=self._min_conf)
             if new:
                 self._target    = new
                 self._ghost     = None
@@ -239,11 +257,16 @@ class TargetTracker:
         # ── 가장 가까운 몬스터 탐색 (ref 기준) ───────────────────────
         # best_dist를 max_allowed_dist로 초기화해서
         # 반경 밖은 후보에서 제외하고, 반경 안에서 ref와 가장 가까운 것을 선택.
-        # confidence는 이번 단계에서 갈아타기 조건으로 사용하지 않음.
+        # confidence >= min_conf 조건 추가:
+        #   재연결 탐색에서도 동일한 confidence 기준 적용.
+        #   이전: confidence 무관하게 거리만으로 재연결 → conf=0.18도 재연결됨
+        #   이후: conf < min_conf 후보는 재연결 탐색에서도 건너뜀
         best      = None
         best_dist = max_allowed_dist
 
         for d in monsters:
+            if d.confidence < self._min_conf:   # confidence 기준 미달 → 재연결 불가
+                continue
             dist = math.hypot(d.cx - ref.cx, d.cy - ref.cy)
             if dist < best_dist:
                 best_dist = dist
@@ -304,7 +327,8 @@ class TargetTracker:
             self._ghost  = None
             self._vx = self._vy = 0.0
 
-            new = select_by_confidence(monsters)  # cy >= MIN_TARGET_CY 포함
+            # min_conf 전달: TARGET_LOST 후 재탐색에도 동일 기준 적용
+            new = select_by_confidence(monsters, min_conf=self._min_conf)
             if new:
                 self._target    = new
                 self._last_seen = now
