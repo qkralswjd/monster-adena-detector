@@ -63,9 +63,19 @@
   "level_detector": {
     "target_level": 5,
     "hp_threshold": 50.0,
-    "level_roi": null,
-    "hp_roi": null,
-    "_note": "level_roi/hp_roi: {x,y,w,h} 절대 화면 좌표. setup_tool.py 에서 드래그로 등록."
+    "level_roi": {
+      "x": 238,
+      "y": 863,
+      "w": 109,
+      "h": 30
+    },
+    "hp_roi": {
+      "x": 548,
+      "y": 842,
+      "w": 335,
+      "h": 53
+    },
+    "_note": "level_roi/hp_roi: {x,y,w,h} 절대 화면 좌표. setup_tool.py 에서 드래그로 등록. 현재값은 레퍼런스 기준 기본값 (x=238,y=863,w=109,h=30 / x=548,y=842,w=335,h=53). 화면 해상도/UI 위치가 다르면 setup_tool.py 로 재등록 필요."
   },
   "items": {
     "hp_potion_key": "F4",
