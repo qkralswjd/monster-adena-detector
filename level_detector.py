@@ -16,7 +16,7 @@ level_detector.py
 
 [레벨 인식]
   - 엔진: easyocr (detail=1, confidence 포함)
-  - 전처리: 2배 확대 + CLAHE(clipLimit=3.0) + OTSU 이진화
+  - 전처리: OTSU 이진화만 (확대 없음 — 확대 보간이 '1'→'9'/'4' 오인식 유발)
   - 신뢰도 임계값: 0.1 (LEV:14 등 OCR 신뢰도 낮아 완화)
   - 정규식 패턴:
       1) LEV/LEC/LEU 계열: [Ll][Ee][VvCcUu][: .]*?(\\d+)  ← V→C/U 오인식 포함
@@ -95,33 +95,23 @@ def _calc_hp_pct(crop_bgr: np.ndarray) -> float:
 def _preprocess_for_ocr(crop_bgr: np.ndarray) -> np.ndarray:
     """레벨 OCR 인식률을 높이기 위한 전처리.
 
-    실측 기반:
+    실측 기반 (tesseract 비교 테스트 결과):
       - 배경: 주황/갈색 그라데이션 (어두운 계열)
       - 텍스트: 흰색 (RGB≈240,245,255) → 그레이스케일 시 배경보다 밝음
-      → OTSU 이진화(THRESH_BINARY)로 흰 텍스트=255, 어두운 배경=0
-      → easyocr은 밝은 배경+어두운 텍스트를 선호하므로 추가 반전
+      → OTSU 이진화 후 확대 X — 확대 보간이 '1'획에 픽셀을 채워 '9'/'4'로 변형시킴
+      → 이진화 결과 그대로 (흰 배경 + 검정 텍스트) easyocr에 전달
 
     처리 순서:
-      1) 3배 확대 (작은 텍스트 인식률 향상)
-      2) 그레이스케일
-      3) CLAHE 대비 향상
-      4) OTSU 이진화 (흰 텍스트 추출)
-      5) bitwise_not 반전 → 흰 배경 + 검정 텍스트 (easyocr 최적)
+      1) 그레이스케일
+      2) OTSU 이진화 (흰 텍스트=255, 어두운 배경=0)
+      3) bitwise_not 반전 → 흰 배경 + 검정 텍스트 (easyocr 최적)
+      ※ 확대(resize) 제거: 이진화 후 확대하면 보간으로 '1'→'9'/'4' 오인식 발생
     """
-    h, w = crop_bgr.shape[:2]
-    # 3배 확대 (30px 높이 → 90px, OCR 인식률 향상)
-    enlarged = cv2.resize(crop_bgr, (w * 3, h * 3),
-                          interpolation=cv2.INTER_LINEAR)
-
     # 그레이스케일
-    gray = cv2.cvtColor(enlarged, cv2.COLOR_BGR2GRAY)
-
-    # CLAHE 대비 향상
-    clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(4, 4))
-    enhanced = clahe.apply(gray)
+    gray = cv2.cvtColor(crop_bgr, cv2.COLOR_BGR2GRAY)
 
     # OTSU 이진화: 흰 텍스트(밝음)=255, 주황/갈색 배경(어두움)=0
-    _, binary = cv2.threshold(enhanced, 0, 255,
+    _, binary = cv2.threshold(gray, 0, 255,
                                cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
     # easyocr 최적: 흰 배경 + 검정 텍스트로 반전
@@ -302,7 +292,7 @@ class LevelDetector:
         if crop is None:
             return self._last_level
 
-        # 전처리 (2배 확대 + CLAHE + OTSU)
+        # 전처리 (OTSU 이진화만 — 확대 없음)
         processed = _preprocess_for_ocr(crop)
 
         # OCR — 1회 실패 시 즉시 재시도 1회 (easyocr 비결정성 대응)
