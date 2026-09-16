@@ -195,10 +195,17 @@ class PicoController:
             # 1. 클로즈드루프 이동
             self._move_to(x, y)
 
-            # 2. CLICK 원자 명령 (Pico 내부 처리)
-            self._click(hold_ms)
+            # 2. 클릭 드래그 (PRESS → 왼쪽 10px 이동 → RELEASE)
+            #    리니지 자동공격 모드 진입용
+            self._write_line("PRESS")
+            self._wait_ack("OK:PRESS", "ERR:PRESS")
+            time.sleep(hold_ms / 1000.0)
+            self._write_line("MOVE:-10:0")   # 왼쪽 10px
+            self._wait_ack("OK:MOVE", "ERR:MOVE")
+            self._write_line("RELEASE")
+            self._wait_ack("OK:RELEASE", "ERR:RELEASE")
 
-            print(f"[Pico] 공격 완료: ({x},{y})")
+            print(f"[Pico] 공격 완료 (드래그): ({x},{y})")
 
         except Exception as e:
             print(f"[Pico] 오류: {e}")
