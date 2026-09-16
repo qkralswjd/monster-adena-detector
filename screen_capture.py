@@ -89,12 +89,15 @@ class ScreenCapture:
         self._thread.start()
 
     def _bg_loop(self):
-        """백그라운드에서 계속 캡처."""
+        """백그라운드에서 계속 캡처. 메인루프보다 빠르게 돌며 최신 프레임 유지."""
         with mss.mss() as sct:
             while self._running:
                 try:
                     raw   = sct.grab(self._capture_region)
-                    frame = np.array(raw)[:, :, :3]  # BGRA → BGR
+                    frame = np.frombuffer(raw.rgb, dtype=np.uint8)
+                    frame = frame.reshape((raw.height, raw.width, 3))
+                    # RGB → BGR 변환 (mss.rgb는 RGB 순서)
+                    frame = frame[:, :, ::-1].copy()
                     with self._lock:
                         self._latest_frame = frame
                     self._tick_fps()
