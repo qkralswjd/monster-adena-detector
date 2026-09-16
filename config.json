@@ -30,7 +30,7 @@
   "target": {
     "max_dist": 150,
     "miss_timeout_sec": 3.5,
-    "min_conf": 0.15,
+    "min_conf": 0.25,
     "min_cy": 150,
     "_note": "miss_timeout_sec: 2.5초. max_dist: 150px. iou_thresh 제거됨(거리 기반 추적으로 통일)."
   },
@@ -55,7 +55,9 @@
       "height": 500
     },
     "scan_interval_s": 0.3,
-    "_note": "scan_region: LootDetector HSV 스캔 ROI. scan_interval_s: HSV 스캔 최소 간격(초). search_radius_px: 사망 위치 주변 탐색 반경(px)."
+    "_note": "scan_region: LootDetector HSV 스캔 ROI. scan_interval_s: HSV 스캔 최소 간격(초). search_radius_px: 사망 위치 주변 탐색 반경(px).",
+    "loot_cooldown_sec": 3.0,
+    "loot_revisit_radius_px": 180
   },
   "dummy": {
     "pos": null,
@@ -154,7 +156,10 @@
       }
     ],
     "patrol_mode": "random",
-    "patrol_center": {"x": 1300, "y": 250},
+    "patrol_center": {
+      "x": 1300,
+      "y": 250
+    },
     "patrol_radius": 300,
     "patrol_interval_sec": 3.0,
     "_note": "hunt_waypoints: 허수아비->사냥터 이동 경유 7개 좌표 (loop=False). patrol_waypoints: patrol_mode=waypoint 일 때만 사용. patrol_mode=random: 중심점+반경 랜덤 순찰. move_timeout_ms: 웨이포인트 도착 판정 타임아웃(ms)."

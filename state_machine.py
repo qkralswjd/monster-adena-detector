@@ -36,6 +36,7 @@
 """
 
 import logging
+import math
 import time
 from enum import Enum, auto
 from typing import Optional
@@ -194,6 +195,10 @@ class StateMachine:
         self.loot_click_delay = adcfg.get("click_delay_sec", 0.5)
         self.loot_timeout     = adcfg.get("check_timeout_sec", 4.0)
 
+        # LOOTING 재진입 방지 파라미터
+        self.loot_cooldown_sec      = adcfg.get("loot_cooldown_sec", 3.0)
+        self.loot_revisit_radius_px = adcfg.get("loot_revisit_radius_px", 180)
+
         # ── 내부 상태 변수 ───────────────────────────────────────────────
         self._dummy_drag_done    = False
         self._last_dummy_atk     = 0.0
@@ -202,6 +207,11 @@ class StateMachine:
         self._loot_idx           = 0
         self._loot_start_t       = 0.0
         self._last_loot_click    = 0.0
+
+        # LOOTING 재진입 방지용 상태변수
+        self._last_loot_done_t   = 0.0   # 마지막 LOOTING 완료 시각
+        self._last_loot_cx       = -1    # 마지막 루팅 아데나 평균 cx (-1=미설정)
+        self._last_loot_cy       = -1    # 마지막 루팅 아데나 평균 cy (-1=미설정)
 
         # ── 아이템 타이머 ────────────────────────────────────────────────
         speed1_key      = icfg.get("speed1_key", "F6")
@@ -408,16 +418,9 @@ class StateMachine:
         else:
             # 몬스터 없을 때만 아데나 탐지 & 순찰 이동
             if adenas:
-                # 아데나 탐지 → LOOTING
-                # combat_active=False 이미 확인됨 → 정상 전투 종료 후 전환
-                self._loot_targets  = [(d.cx, d.cy) for d in adenas]
-                self._loot_idx      = 0
-                self._loot_start_t  = now
-                self.loot_detector.invalidate()
-                print(f"[SM] 아데나 {len(adenas)}개 감지 → LOOTING")
-                print("[LOOT] START")
-                self._enter(BotState.LOOTING)
-                return
+                self._trigger_looting(adenas, now)
+                if self.state == BotState.LOOTING:
+                    return
 
             # 순찰 이동 (combat_active=False 확인됨 → 전투 중 차단 없음)
             if self.patrol_mover:
@@ -426,6 +429,43 @@ class StateMachine:
                     # RandomPatrolMover는 current_label 없음
                     label = getattr(self.patrol_mover, "current_label", "랜덤")
                     print(f"[SM] 순찰 '{label}' 도착")
+
+    def _trigger_looting(self, adenas: list, now: float) -> None:
+        """아데나 감지 시 LOOTING 진입 여부를 판단하고 진입.
+
+        LOOTING 재진입 방지 로직:
+          1. 루팅 완료 후 loot_cooldown_sec 이내  → 무시
+          2. 쿨타임 지났어도 이전 루팅 좌표 반경
+             loot_revisit_radius_px 이내         → 같은 아데나로 판단, 무시
+          3. 위 조건에 해당 안 되면               → LOOTING 진입
+        """
+        # ── 1. 쿨타임 체크 ──────────────────────────────────────────
+        elapsed_since_loot = now - self._last_loot_done_t
+        if self._last_loot_done_t > 0 and elapsed_since_loot < self.loot_cooldown_sec:
+            remaining = self.loot_cooldown_sec - elapsed_since_loot
+            print(f"[SM] 아데나 감지됐으나 쿨타임 중 → 무시 "
+                  f"({remaining:.1f}s 남음)")
+            return
+
+        # ── 2. 좌표 비교 (쿨타임 지난 후에도 같은 위치 재감지 방지) ─
+        if self._last_loot_cx >= 0:
+            adena_cx = sum(d.cx for d in adenas) // len(adenas)
+            adena_cy = sum(d.cy for d in adenas) // len(adenas)
+            dist = math.hypot(adena_cx - self._last_loot_cx,
+                              adena_cy - self._last_loot_cy)
+            if dist < self.loot_revisit_radius_px:
+                print(f"[SM] 아데나 감지됐으나 직전 루팅 위치와 동일한 것으로 판단 → 무시 "
+                      f"(dist={dist:.0f}px < {self.loot_revisit_radius_px}px, "
+                      f"기준=({self._last_loot_cx},{self._last_loot_cy}))")
+                return
+
+        # ── 3. LOOTING 진입 ──────────────────────────────────────────
+        self._loot_targets = [(d.cx, d.cy) for d in adenas]
+        self._loot_idx     = 0
+        self._loot_start_t = now
+        self.loot_detector.invalidate()
+        print(f"[SM] 아데나 {len(adenas)}개 감지 → LOOTING")
+        self._enter(BotState.LOOTING)
 
     # ── LOOTING ───────────────────────────────────────────────────────────
 
@@ -481,7 +521,18 @@ class StateMachine:
                 self._patrol_started = False
             else:
                 # LOOTING → HUNTING 복귀: patrol_mover 상태 유지 (재시작 안 함)
-                print("[HUNT] RESUME (순찰 상태 유지)")
+                # 루팅 완료 시각 및 좌표 기록 (LOOTING 재진입 방지용)
+                self._last_loot_done_t = time.time()
+                if self._loot_targets:
+                    xs = [c[0] for c in self._loot_targets]
+                    ys = [c[1] for c in self._loot_targets]
+                    self._last_loot_cx = sum(xs) // len(xs)
+                    self._last_loot_cy = sum(ys) // len(ys)
+                    print(f"[HUNT] RESUME (순찰 상태 유지) "
+                          f"루팅좌표=({self._last_loot_cx},{self._last_loot_cy}) "
+                          f"쿨타임={self.loot_cooldown_sec}s")
+                else:
+                    print("[HUNT] RESUME (순찰 상태 유지)")
 
         elif new_state == BotState.LOOTING:
             print("[LOOT] START (SM 진입)")

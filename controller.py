@@ -27,7 +27,7 @@ import ctypes.wintypes
 
 # ── 클로즈드루프 파라미터 (pico_image_autoclicker 동일 값) ────────────
 CORRECTION_TOLERANCE_PX = 4    # 이 이내면 수렴 완료
-MAX_CORRECTION_ITERS    = 20   # 최대 반복 횟수
+MAX_CORRECTION_ITERS    = 25   # 최대 반복 횟수
 CORRECTION_DAMPING      = 0.35 # 35% 감쇠: Windows 포인터 가속 발산 방지
 ACK_TIMEOUT_S           = 0.3  # ACK 대기 타임아웃
 
@@ -150,7 +150,7 @@ class PicoController:
 
             self._write_line(f"MOVE:{sdx}:{sdy}")
             self._wait_ack("OK:MOVE", "ERR:MOVE")
-            time.sleep(0.02)  # OS 커서 위치 안정화 대기
+            time.sleep(0.03)  # OS 커서 위치 안정화 대기 (30ms: 안정화 여유 확보)
 
         # 수렴 실패 (드물게 발생)
         cur_x, cur_y = _get_cursor_pos()
@@ -193,17 +193,46 @@ class PicoController:
         self._attacking = True
         try:
             # 1. 클로즈드루프 이동
-            self._move_to(x, y)
+            moved = self._move_to(x, y)
+            if not moved:
+                # 수렴 실패 → PRESS 전송하지 않고 중단
+                print(f"[Pico] 이동 수렴 실패 → 공격 중단 ({x},{y})")
+                return
 
-            # 2. 클릭 드래그 (PRESS → 왼쪽 10px 이동 → RELEASE)
-            #    리니지 자동공격 모드 진입용
+            # 2. PRESS
             self._write_line("PRESS")
-            self._wait_ack("OK:PRESS", "ERR:PRESS")
+            ok_press = self._wait_ack("OK:PRESS", "ERR:PRESS")
+            if not ok_press:
+                # PRESS 전달 여부 불명 → 즉시 RELEASE 강제 전송 후 중단
+                print("[Pico] PRESS ACK 실패 → RELEASE 강제 전송 후 공격 중단")
+                self._write_line("RELEASE")
+                self._wait_ack("OK:RELEASE", "ERR:RELEASE")  # 결과 무관
+                return
+
+            # 3. hold 대기
             time.sleep(hold_ms / 1000.0)
-            self._write_line("MOVE:-10:0")   # 왼쪽 10px
-            self._wait_ack("OK:MOVE", "ERR:MOVE")
+
+            # 4. MOVE:-10:0 (왼쪽 10px 드래그 → 리니지 자동공격 진입)
+            self._write_line("MOVE:-10:0")
+            ok_move = self._wait_ack("OK:MOVE", "ERR:MOVE")
+            if not ok_move:
+                # MOVE 실패 → RELEASE 후 중단
+                print("[Pico] MOVE ACK 실패 → RELEASE 후 공격 중단")
+                self._write_line("RELEASE")
+                self._wait_ack("OK:RELEASE", "ERR:RELEASE")  # 결과 무관
+                return
+
+            # 5. RELEASE
             self._write_line("RELEASE")
-            self._wait_ack("OK:RELEASE", "ERR:RELEASE")
+            ok_release = self._wait_ack("OK:RELEASE", "ERR:RELEASE")
+            if not ok_release:
+                # RELEASE 실패 → 1회 재시도
+                print("[Pico] RELEASE ACK timeout → RELEASE 재시도")
+                self._write_line("RELEASE")
+                ok_retry = self._wait_ack("OK:RELEASE", "ERR:RELEASE")
+                if not ok_retry:
+                    print("[Pico] RELEASE ACK 재시도 실패 — 버튼 상태 확인 필요")
+                    return
 
             print(f"[Pico] 공격 완료 (드래그): ({x},{y})")
 
