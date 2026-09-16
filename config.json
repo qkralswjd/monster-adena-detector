@@ -4,8 +4,8 @@
     "_note": "mss 인덱스. monitors[1] = 첫 번째 물리 모니터. 1920x1080 전체 화면."
   },
   "detector": {
-    "model": "runs/detect/monster_v1/weights/best.pt",
-    "confidence": 0.25,
+    "model": "runs/detect/monster_v2/weights/best.pt",
+    "confidence": 0.15,
     "iou_threshold": 0.45,
     "device": "cuda",
     "img_size": 640,
@@ -30,7 +30,7 @@
   "target": {
     "max_dist": 150,
     "miss_timeout_sec": 3.5,
-    "min_conf": 0.25,
+    "min_conf": 0.15,
     "min_cy": 150,
     "_note": "miss_timeout_sec: 2.5초. max_dist: 150px. iou_thresh 제거됨(거리 기반 추적으로 통일)."
   },
