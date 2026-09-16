@@ -198,7 +198,10 @@ def main():
     print(f"\n[Start] 자동 레벨링 시작. Ctrl+C 로 종료.")
     print(f"  허수아비 드래그: {sm.dummy_drag_from} → {sm.dummy_drag_to}")
     print(f"  hunt_waypoints : {len(sm.hunt_mover.waypoints) if sm.hunt_mover else 0}개")
-    print(f"  patrol_wps     : {len(sm.patrol_mover.waypoints) if sm.patrol_mover else 0}개")
+    if sm.patrol_mover and hasattr(sm.patrol_mover, 'waypoints'):
+        print(f"  patrol_wps     : {len(sm.patrol_mover.waypoints)}개")
+    elif sm.patrol_mover:
+        print(f"  patrol_wps     : 랜덤 순찰 모드")
 
     # ── 하트비트 ────────────────────────────────────────────────────
     last_ping_t     = time.time()
