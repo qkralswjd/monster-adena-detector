@@ -100,8 +100,8 @@ class YOLODetector:
                       f"{self._model_class_names.get(1)} → 확인 필요")
 
             # GPU 워밍업
-            dummy = np.zeros((640, 640, 3), dtype=np.uint8)
-            self._model(dummy, verbose=False, device=self._device)
+            dummy = np.zeros((self._img_size, self._img_size, 3), dtype=np.uint8)
+            self._model(dummy, imgsz=self._img_size, verbose=False, device=self._device)
             print(f"[Detector] 워밍업 완료 - 준비됨")
         except Exception as e:
             print(f"[Detector] 모델 로드 실패: {e}")
