@@ -12,8 +12,9 @@
        │   OCR 레벨 >= target_level_dummy → MOVE_TO_HUNT_ZONE
        ▼
     [MOVE_TO_HUNT_ZONE]
-       │ hunt_waypoints 순서대로 클릭 이동
+       │ hunt_waypoints 순서대로 클릭 이동 (몬스터 감지 무시)
        │ 이동 중에도 HP 체크 → 물약
+       │ 웨이포인트 전부 완주 후 → HUNTING
        ▼
     [HUNTING]
        │ YOLO 몬스터 탐지 + 공격
@@ -337,13 +338,7 @@ class StateMachine:
     # ── MOVE_TO_HUNT_ZONE ─────────────────────────────────────────────────
 
     def _update_move_to_hunt_zone(self, detections: list) -> None:
-        # 적 발견 시 즉시 HUNTING 전환
-        monsters = [d for d in detections if d.class_id == 0]
-        if monsters:
-            print(f"[SM] 이동 중 적 {len(monsters)}명 발견 → HUNTING")
-            self._enter(BotState.HUNTING)
-            return
-
+        # 이동 중 몬스터 감지 무시 — 웨이포인트 완주 후 HUNTING 전환
         if self.hunt_mover is None:
             print("[SM] hunt_waypoints 없음 → HUNTING")
             self._enter(BotState.HUNTING)
