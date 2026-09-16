@@ -75,9 +75,9 @@ class TargetTracker:
             return self._target, 0.0
 
         # ── 타겟 있음 → 속도 기반으로 같은 몬스터 탐색 ──────
-        # 마지막 탐지 이후 경과 시간만큼 이동 허용
+        # 마지막 탐지 이후 경과 시간만큼 이동 허용 (최대 1초치만 허용)
         elapsed_since_seen = now - self._last_seen
-        max_allowed_dist   = self._max_speed * max(elapsed_since_seen, 0.05)
+        max_allowed_dist   = self._max_speed * min(max(elapsed_since_seen, 0.05), 1.0)
 
         best      = None
         best_dist = max_allowed_dist
