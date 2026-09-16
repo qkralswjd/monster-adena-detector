@@ -28,11 +28,11 @@
     "_note": "hold_ms: 공격 쿨다운용 대기. click_pulse_ms: Pico CLICK 명령의 버튼 누름 지속시간(ms). drag_dx/dy 제거됨(클로즈드루프 단순 클릭으로 통일)."
   },
   "target": {
-    "max_dist": 350,
-    "miss_timeout_sec": 4.0,
+    "max_dist": 150,
+    "miss_timeout_sec": 2.5,
     "min_conf": 0.4,
     "min_cy": 150,
-    "_note": "miss_timeout_sec: 4초. max_dist: 350px. iou_thresh 제거됨(거리 기반 추적으로 통일)."
+    "_note": "miss_timeout_sec: 2.5초. max_dist: 150px. iou_thresh 제거됨(거리 기반 추적으로 통일)."
   },
   "roi": {
     "enabled": true,
