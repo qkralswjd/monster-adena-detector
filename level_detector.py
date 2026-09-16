@@ -48,6 +48,11 @@ class LevelDetector:
         self._level_interval = 2.0   # 레벨은 2초마다
         self._hp_interval    = 0.5   # HP는 0.5초마다
 
+        # HP바 HSV 범위 (파란색 게이지)
+        self._hp_hsv_ranges = [
+            ((95, 80, 60), (135, 255, 255)),
+        ]
+
     # ─────────────────────────────────────────────────────────
     #  OCR 초기화
     # ─────────────────────────────────────────────────────────
@@ -208,7 +213,7 @@ class LevelDetector:
 
     def read_hp(self, frame_bgr: np.ndarray) -> float:
         """
-        HP ROI OCR → "HP:115/115" 에서 현재HP/최대HP 비율 계산.
+        HP ROI에서 파란색 픽셀 열 비율로 HP% 계산.
         캐시: 0.5초
         """
         now = time.monotonic()
@@ -223,30 +228,39 @@ class LevelDetector:
         if crop is None:
             return None
 
-        text = self._ocr_text(crop)
-        hp   = self._parse_hp(text)
-
+        hp = self._calc_hp_ratio(crop)
         if hp is not None:
             self._last_hp = hp
-            print(f"[LevelDetector] HP 인식: {hp*100:.0f}%  (OCR: '{text}')")
+            print(f"[LevelDetector] HP 인식: {hp*100:.0f}%")
 
         return self._last_hp
 
-    def _parse_hp(self, text: str) -> float:
+    def _calc_hp_ratio(self, crop_bgr: np.ndarray) -> float:
         """
-        "HP:115/115", "115/115", "115 / 115" 등에서 현재HP/최대HP 비율 반환.
+        파란색(HSV 95~135) 픽셀 열 비율로 HP% 계산.
+        HP바가 왼쪽→오른쪽으로 채워지는 구조.
         """
-        if not text:
+        hsv  = cv2.cvtColor(crop_bgr, cv2.COLOR_BGR2HSV)
+        mask = np.zeros(hsv.shape[:2], dtype=np.uint8)
+        for lo, hi in self._hp_hsv_ranges:
+            mask |= cv2.inRange(hsv, np.array(lo, dtype=np.uint8),
+                                     np.array(hi, dtype=np.uint8))
+
+        total_cols = mask.shape[1]
+        if total_cols == 0:
             return None
-        # "숫자/숫자" 패턴
-        m = re.search(r'(\d+)\s*/\s*(\d+)', text)
-        if m:
-            cur = int(m.group(1))
-            mx  = int(m.group(2))
-            if mx > 0:
-                ratio = max(0.0, min(1.0, cur / mx))
-                return ratio
-        return None
+
+        # 왼쪽부터 연속으로 파란 픽셀 있는 열 수
+        col_has = np.any(mask > 0, axis=0)
+        filled  = 0
+        for has in col_has:
+            if has:
+                filled += 1
+            else:
+                break
+
+        ratio = filled / total_cols
+        return max(0.0, min(1.0, ratio))
 
     def is_hp_low(self, frame_bgr: np.ndarray, threshold: float = 0.5) -> bool:
         hp = self.read_hp(frame_bgr)
