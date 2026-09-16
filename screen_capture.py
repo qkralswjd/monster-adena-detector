@@ -1,20 +1,18 @@
 """
 screen_capture.py
 -----------------
-mss 로 모니터 전체 화면을 1920x1080 BGR numpy 배열로 캡처.
-
-좌표 원칙:
-  캡처 이미지 (0,0) = 모니터 좌상단 (0,0)
-  캡처 이미지 (cx, cy) = 화면 절대좌표 (cx, cy)
-  → 좌표 변환 없음.
+mss 로 모니터 화면을 BGR numpy 배열로 캡처.
+백그라운드 스레드가 계속 캡처 → 메인루프는 최신 프레임을 즉시 가져감.
+캡처와 추론이 병렬로 동작해 FPS 향상.
 
 사용:
-  cap = ScreenCapture(monitor=1)
-  frame = cap.capture()   # numpy BGR (H, W, 3)
+  cap = ScreenCapture(monitor=1, roi=cfg.get("roi"))
+  frame = cap.capture()   # numpy BGR (H, W, 3) - 항상 최신 프레임
   print(cap.width, cap.height)
 """
 
 import time
+import threading
 import numpy as np
 
 try:
@@ -28,18 +26,15 @@ class ScreenCapture:
     def __init__(self, monitor: int = 1, roi: dict = None):
         """
         monitor: mss monitors 인덱스.
-          monitors[0] = 전체 가상 화면
-          monitors[1] = 첫 번째 물리 모니터 (보통 1920x1080)
         roi: {"enabled": true, "x": 300, "y": 50, "width": 1300, "height": 850}
-          enabled=True 면 해당 영역만 캡처 → FPS 향상
-          enabled=False 면 전체 화면 캡처
         """
-        self._sct     = mss.mss()
         self._mon_idx = monitor
-        self._monitor = self._sct.monitors[monitor]
 
-        mon_left = self._monitor["left"]
-        mon_top  = self._monitor["top"]
+        # 좌표 계산용으로만 mss 한 번 사용
+        with mss.mss() as sct:
+            mon = sct.monitors[monitor]
+            mon_left = mon["left"]
+            mon_top  = mon["top"]
 
         # ROI 적용 여부
         if roi and roi.get("enabled", False):
@@ -56,43 +51,76 @@ class ScreenCapture:
             print(f"[Capture] ROI 모드: x={roi['x']} y={roi['y']} "
                   f"{roi['width']}x{roi['height']}")
         else:
-            self._capture_region = self._monitor
+            self._capture_region = {
+                "left":   mon_left,
+                "top":    mon_top,
+                "width":  1920,
+                "height": 1080,
+            }
             self._roi_x = 0
             self._roi_y = 0
-            self.width  = self._monitor["width"]
-            self.height = self._monitor["height"]
+            self.width  = 1920
+            self.height = 1080
 
         self.left = mon_left + self._roi_x
         self.top  = mon_top  + self._roi_y
 
+        # 백그라운드 캡처용
+        self._lock         = threading.Lock()
+        self._latest_frame = None
+        self._running      = False
+        self._thread       = None
+
         self._fps_ticks = []
-        self._fps = 0.0
+        self._fps       = 0.0
 
         print(f"[Capture] monitors[{monitor}] "
               f"left={self.left} top={self.top} "
               f"{self.width}x{self.height}")
         print(f"[Capture] 캡처 좌표 (0,0) = 화면 ({self.left},{self.top})")
 
+        # 백그라운드 캡처 스레드 시작
+        self._start_bg()
+
+    def _start_bg(self):
+        """백그라운드 캡처 스레드 시작."""
+        self._running = True
+        self._thread  = threading.Thread(target=self._bg_loop, daemon=True)
+        self._thread.start()
+
+    def _bg_loop(self):
+        """백그라운드에서 계속 캡처."""
+        with mss.mss() as sct:
+            while self._running:
+                try:
+                    raw   = sct.grab(self._capture_region)
+                    frame = np.array(raw)[:, :, :3]  # BGRA → BGR
+                    with self._lock:
+                        self._latest_frame = frame
+                    self._tick_fps()
+                except Exception as e:
+                    print(f"[Capture] 캡처 실패: {e}")
+                    time.sleep(0.01)
+
     def capture(self) -> np.ndarray:
         """
-        화면 캡처 (전체 or ROI).
-        반환: BGR numpy (H, W, 3)
-        실패 시: None
+        최신 캡처 프레임 반환 (블로킹 없음).
+        백그라운드 스레드가 계속 캡처 중.
+        반환: BGR numpy (H, W, 3) 또는 None
         """
-        try:
-            raw = self._sct.grab(self._capture_region)
-            frame = np.array(raw)           # BGRA
-            frame = frame[:, :, :3]         # BGR
-            self._tick_fps()
-            return frame
-        except Exception as e:
-            print(f"[Capture] 캡처 실패: {e}")
-            return None
+        with self._lock:
+            return self._latest_frame
+
+    def stop(self):
+        """백그라운드 캡처 스레드 종료."""
+        self._running = False
+        if self._thread:
+            self._thread.join(timeout=1.0)
 
     def _tick_fps(self):
         now = time.time()
         self._fps_ticks.append(now)
-        if len(self._fps_ticks) > 30:
+        if len(self._fps_ticks) > 60:
             self._fps_ticks.pop(0)
         if len(self._fps_ticks) >= 2:
             elapsed = self._fps_ticks[-1] - self._fps_ticks[0]
@@ -107,13 +135,16 @@ class ScreenCapture:
 # ── 단독 실행: 캡처 확인 ──────────────────────────────────
 if __name__ == "__main__":
     cap = ScreenCapture(monitor=1)
+    time.sleep(0.5)  # 백그라운드 스레드 안정화
     print(f"모니터 크기: {cap.width}x{cap.height}")
     print(f"모니터 위치: left={cap.left}, top={cap.top}")
 
     frame = cap.capture()
     if frame is not None:
         print(f"캡처 성공: shape={frame.shape}")
-        print(f"좌상단 픽셀 BGR: {frame[0][0]}")
-        print(f"중앙 픽셀 BGR:   {frame[cap.height//2][cap.width//2]}")
     else:
         print("캡처 실패")
+
+    time.sleep(1.0)
+    print(f"캡처 FPS: {cap.fps}")
+    cap.stop()

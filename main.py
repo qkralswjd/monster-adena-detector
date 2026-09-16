@@ -212,6 +212,7 @@ def main():
     except KeyboardInterrupt:
         print("\n[Stop] Ctrl+C")
     finally:
+        cap.stop()
         ctrl.stop()
         ctrl.disconnect()
         ov.stop()
