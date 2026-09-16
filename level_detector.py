@@ -92,16 +92,17 @@ def _preprocess_for_ocr(crop_bgr: np.ndarray) -> np.ndarray:
     """레벨 OCR 인식률을 높이기 위한 전처리.
 
     실측 기반:
-      - 배경: 파란색 그라데이션 (HSV Hue≈220~230°)
-      - 텍스트: 흰색 (RGB≈240,245,255)
-      → 그레이스케일 시 텍스트(밝음)가 배경(중간)보다 밝음
-      → OTSU 이진화 후 반전(THRESH_BINARY_INV)으로 텍스트=흰, 배경=검정 만들기
+      - 배경: 주황/갈색 그라데이션 (어두운 계열)
+      - 텍스트: 흰색 (RGB≈240,245,255) → 그레이스케일 시 배경보다 밝음
+      → OTSU 이진화(THRESH_BINARY)로 흰 텍스트=255, 어두운 배경=0
+      → easyocr은 밝은 배경+어두운 텍스트를 선호하므로 추가 반전
 
     처리 순서:
       1) 3배 확대 (작은 텍스트 인식률 향상)
       2) 그레이스케일
       3) CLAHE 대비 향상
-      4) OTSU 이진화 + 반전 (흰 배경에 검정 텍스트 → easyocr 인식률 향상)
+      4) OTSU 이진화 (흰 텍스트 추출)
+      5) bitwise_not 반전 → 흰 배경 + 검정 텍스트 (easyocr 최적)
     """
     h, w = crop_bgr.shape[:2]
     # 3배 확대 (30px 높이 → 90px, OCR 인식률 향상)
@@ -115,11 +116,12 @@ def _preprocess_for_ocr(crop_bgr: np.ndarray) -> np.ndarray:
     clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(4, 4))
     enhanced = clahe.apply(gray)
 
-    # OTSU 이진화 + 반전
-    # 파란 배경(중간 밝기) + 흰 텍스트(밝음) → 반전하면 흰 배경 + 검정 텍스트
+    # OTSU 이진화: 흰 텍스트(밝음)=255, 주황/갈색 배경(어두움)=0
     _, binary = cv2.threshold(enhanced, 0, 255,
-                               cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-    return binary
+                               cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+    # easyocr 최적: 흰 배경 + 검정 텍스트로 반전
+    return cv2.bitwise_not(binary)
 
 
 def _parse_level(text: str):
