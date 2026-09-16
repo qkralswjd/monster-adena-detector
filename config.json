@@ -48,17 +48,112 @@
     "search_radius_px": 250,
     "click_delay_sec": 0.5,
     "min_conf": 0.2,
-    "_note": "몬스터 사망 후 아데나 줍기 설정. search_radius_px: 사망 위치 주변 탐색 반경(px). check_timeout_sec: 아데나 탐색 최대 시간(초). click_delay_sec: 아데나 클릭 간격(초)."
+    "scan_region": {
+      "x": 360,
+      "y": 240,
+      "width": 1200,
+      "height": 500
+    },
+    "scan_interval_s": 0.3,
+    "_note": "scan_region: LootDetector HSV 스캔 ROI. scan_interval_s: HSV 스캔 최소 간격(초). search_radius_px: 사망 위치 주변 탐색 반경(px)."
   },
   "dummy": {
     "pos": null,
+    "drag_from": {
+      "x": 1184,
+      "y": 171
+    },
+    "drag_to": {
+      "x": 1109,
+      "y": 201
+    },
+    "drag_steps": 8,
+    "attack_interval_ms": 800,
+    "attack_duration_s": 0.0,
     "cooldown_sec": 0.8,
-    "_note": "pos: [x,y] 허수아비 절대 화면 좌표. setup_tool.py 에서 등록."
+    "_note": "drag_from/drag_to: 허수아비 드래그 공격 좌표 (레퍼런스 기준). attack_duration_s=0 -> 레벨 달성까지 무한 공격. pos: 구형 단순 클릭 좌표 (미사용)."
   },
   "movement": {
     "waypoints": [],
     "click_interval_sec": 1.5,
-    "_note": "waypoints: [[x,y],...] 사냥터 이동 경유 좌표. setup_tool.py 에서 등록. 최대 10개."
+    "move_timeout_ms": 8000,
+    "hunt_waypoints": [
+      {
+        "x": 993,
+        "y": 701,
+        "label": "WP1_사냥터진입",
+        "wait_ms": 1000
+      },
+      {
+        "x": 294,
+        "y": 590,
+        "label": "WP2",
+        "wait_ms": 1000
+      },
+      {
+        "x": 898,
+        "y": 761,
+        "label": "WP3",
+        "wait_ms": 1000
+      },
+      {
+        "x": 1192,
+        "y": 802,
+        "label": "WP4",
+        "wait_ms": 1000
+      },
+      {
+        "x": 1075,
+        "y": 762,
+        "label": "WP5",
+        "wait_ms": 1000
+      },
+      {
+        "x": 1391,
+        "y": 720,
+        "label": "WP6",
+        "wait_ms": 1000
+      },
+      {
+        "x": 1604,
+        "y": 357,
+        "label": "WP7_사냥터도착",
+        "wait_ms": 2000
+      }
+    ],
+    "patrol_waypoints": [
+      {
+        "x": 1521,
+        "y": 353,
+        "label": "순찰1",
+        "wait_ms": 500
+      },
+      {
+        "x": 1497,
+        "y": 404,
+        "label": "순찰2",
+        "wait_ms": 500
+      },
+      {
+        "x": 1131,
+        "y": 35,
+        "label": "순찰3",
+        "wait_ms": 500
+      },
+      {
+        "x": 1395,
+        "y": 133,
+        "label": "순찰4",
+        "wait_ms": 500
+      },
+      {
+        "x": 1470,
+        "y": 90,
+        "label": "순찰5",
+        "wait_ms": 500
+      }
+    ],
+    "_note": "hunt_waypoints: 허수아비->사냥터 이동 경유 7개 좌표 (loop=False). patrol_waypoints: 사냥터 내 순찰 5개 좌표 (loop=True). move_timeout_ms: 웨이포인트 도착 판정 타임아웃(ms)."
   },
   "level_detector": {
     "target_level": 5,
@@ -75,7 +170,9 @@
       "w": 335,
       "h": 53
     },
-    "_note": "level_roi/hp_roi: {x,y,w,h} 절대 화면 좌표. setup_tool.py 에서 드래그로 등록. 현재값은 레퍼런스 기준 기본값 (x=238,y=863,w=109,h=30 / x=548,y=842,w=335,h=53). 화면 해상도/UI 위치가 다르면 setup_tool.py 로 재등록 필요."
+    "_note": "level_roi/hp_roi: {x,y,w,h} 절대 화면 좌표. setup_tool.py 에서 드래그로 등록. 현재값은 레퍼런스 기준 기본값 (x=238,y=863,w=109,h=30 / x=548,y=842,w=335,h=53). 화면 해상도/UI 위치가 다르면 setup_tool.py 로 재등록 필요.",
+    "target_level_dummy": 5,
+    "target_level_hunt": 10
   },
   "items": {
     "hp_potion_key": "F4",
