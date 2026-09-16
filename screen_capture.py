@@ -25,20 +25,45 @@ except ImportError:
 
 class ScreenCapture:
 
-    def __init__(self, monitor: int = 1):
+    def __init__(self, monitor: int = 1, roi: dict = None):
         """
         monitor: mss monitors 인덱스.
           monitors[0] = 전체 가상 화면
           monitors[1] = 첫 번째 물리 모니터 (보통 1920x1080)
+        roi: {"enabled": true, "x": 300, "y": 50, "width": 1300, "height": 850}
+          enabled=True 면 해당 영역만 캡처 → FPS 향상
+          enabled=False 면 전체 화면 캡처
         """
         self._sct     = mss.mss()
         self._mon_idx = monitor
         self._monitor = self._sct.monitors[monitor]
 
-        self.width  = self._monitor["width"]
-        self.height = self._monitor["height"]
-        self.left   = self._monitor["left"]
-        self.top    = self._monitor["top"]
+        mon_left = self._monitor["left"]
+        mon_top  = self._monitor["top"]
+
+        # ROI 적용 여부
+        if roi and roi.get("enabled", False):
+            self._capture_region = {
+                "left":   mon_left + roi["x"],
+                "top":    mon_top  + roi["y"],
+                "width":  roi["width"],
+                "height": roi["height"],
+            }
+            self._roi_x = roi["x"]
+            self._roi_y = roi["y"]
+            self.width  = roi["width"]
+            self.height = roi["height"]
+            print(f"[Capture] ROI 모드: x={roi['x']} y={roi['y']} "
+                  f"{roi['width']}x{roi['height']}")
+        else:
+            self._capture_region = self._monitor
+            self._roi_x = 0
+            self._roi_y = 0
+            self.width  = self._monitor["width"]
+            self.height = self._monitor["height"]
+
+        self.left = mon_left + self._roi_x
+        self.top  = mon_top  + self._roi_y
 
         self._fps_ticks = []
         self._fps = 0.0
@@ -50,12 +75,12 @@ class ScreenCapture:
 
     def capture(self) -> np.ndarray:
         """
-        1920x1080 전체 화면 캡처.
+        화면 캡처 (전체 or ROI).
         반환: BGR numpy (H, W, 3)
         실패 시: None
         """
         try:
-            raw = self._sct.grab(self._monitor)
+            raw = self._sct.grab(self._capture_region)
             frame = np.array(raw)           # BGRA
             frame = frame[:, :, :3]         # BGR
             self._tick_fps()

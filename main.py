@@ -65,7 +65,7 @@ def main():
     ping_fail_limit = ccfg.get("ping_fail_limit", 3)
 
     # ── 초기화 ────────────────────────────────────────────────
-    cap = ScreenCapture(monitor=cfg["capture"]["monitor"])
+    cap = ScreenCapture(monitor=cfg["capture"]["monitor"], roi=cfg.get("roi"))
     print(f"[Init] 캡처: {cap.width}x{cap.height}  left={cap.left} top={cap.top}")
 
     dcfg = cfg["detector"]

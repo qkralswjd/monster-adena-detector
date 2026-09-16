@@ -35,11 +35,11 @@
     "_note": "miss_timeout_sec: 4초. max_dist: 350px. iou_thresh 제거됨(거리 기반 추적으로 통일)."
   },
   "roi": {
-    "enabled": false,
-    "x": 0,
-    "y": 0,
-    "width": 0,
-    "height": 0,
-    "_note": "enabled=false 면 전체 화면 탐지. enabled=true 면 해당 영역만 탐지."
+    "enabled": true,
+    "x": 300,
+    "y": 50,
+    "width": 1300,
+    "height": 850,
+    "_note": "enabled=true 면 해당 영역만 캡처 → FPS 향상. 게임 화면에 맞게 조정 필요."
   }
 }
