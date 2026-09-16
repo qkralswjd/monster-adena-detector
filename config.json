@@ -41,5 +41,13 @@
     "width": 1135,
     "height": 472,
     "_note": "enabled=true 면 해당 영역만 캡처 → FPS 향상. set_roi.py 로 설정."
+  },
+  "adena": {
+    "enabled": true,
+    "check_timeout_sec": 4.0,
+    "search_radius_px": 250,
+    "click_delay_sec": 0.5,
+    "min_conf": 0.20,
+    "_note": "몬스터 사망 후 아데나 줍기 설정. search_radius_px: 사망 위치 주변 탐색 반경(px). check_timeout_sec: 아데나 탐색 최대 시간(초). click_delay_sec: 아데나 클릭 간격(초)."
   }
 }

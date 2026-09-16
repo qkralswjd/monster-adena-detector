@@ -32,6 +32,7 @@ CLR_BOX       = "#FF6600"   # 몬스터 박스 (주황)
 CLR_TARGET    = "#00FF44"   # 현재 타겟 (초록)
 CLR_DEAD      = "#FF2222"   # 소실/사망 (빨강)
 CLR_ADENA     = "#FFD700"   # 아데나 (금색)
+CLR_ADENA_TGT = "#FF44FF"   # 아데나 탐색 중 (보라)
 CLR_HUD_BG    = "#000000"   # HUD 배경
 CLR_TEXT      = "#FFFFFF"   # 텍스트 흰색
 CLR_TARGET_TXT= "#00FF44"
@@ -95,6 +96,7 @@ class OverlayWindow:
         self._miss_t     = 0.0
         self._det_fps    = 0.0
         self._cap_fps    = 0.0
+        self._state      = "HUNTING"
 
         self._running    = False
         self._root       = None
@@ -110,7 +112,7 @@ class OverlayWindow:
     # ─────────────────────────────────────────────────────────
 
     def update(self, detections, target=None, miss_elapsed=0.0,
-               det_fps=0.0, cap_fps=0.0):
+               det_fps=0.0, cap_fps=0.0, state="HUNTING"):
         """메인루프에서 매 프레임 호출. 탐지 결과 갱신."""
         with self._lock:
             self._detections = list(detections)
@@ -118,6 +120,7 @@ class OverlayWindow:
             self._miss_t     = miss_elapsed
             self._det_fps    = det_fps
             self._cap_fps    = cap_fps
+            self._state      = state
 
     def start(self):
         """별도 스레드에서 tkinter 루프 시작."""
@@ -232,6 +235,7 @@ class OverlayWindow:
             miss_t  = self._miss_t
             det_fps = self._det_fps
             cap_fps = self._cap_fps
+            state   = self._state
 
         # ── ROI 박스 그리기 ───────────────────────────────────
         if self._roi:
@@ -282,10 +286,13 @@ class OverlayWindow:
                 continue  # 타겟은 아래서 따로
 
             if d.class_id == 1:  # adena
+                # ADENA_CHECK 상태일 때 더 굵게 + 색 변경
+                adena_clr = CLR_ADENA_TGT if state == "ADENA_CHECK" else CLR_ADENA
+                adena_w   = 2             if state == "ADENA_CHECK" else 1
                 c.create_rectangle(ox, oy, ox2, oy2,
-                                   outline=CLR_ADENA, width=1)
+                                   outline=adena_clr, width=adena_w)
                 self._text(c, f"adena {d.confidence:.2f}",
-                           ox, oy - 4, CLR_ADENA, size=9)
+                           ox, oy - 4, adena_clr, size=9)
             else:  # monster
                 c.create_rectangle(ox, oy, ox2, oy2,
                                    outline=CLR_BOX, width=1)
@@ -330,18 +337,23 @@ class OverlayWindow:
             self._text(c, label, ox, oy - 10, color, size=10)
 
         # ── HUD (좌상단) ──────────────────────────────────────
+        state_color = CLR_ADENA_TGT if state == "ADENA_CHECK" else CLR_TARGET
+        adena_count = len([d for d in dets if d.class_id == 1])
         hud = [
+            f"State    : {state}",
             f"Monsters : {len([d for d in dets if d.class_id==0])}",
+            f"Adenas   : {adena_count}",
             f"Det FPS  : {det_fps:.1f}",
             f"Cap FPS  : {cap_fps:.1f}",
             f"Target   : {'YES' if target else 'NONE'}",
             f"ROI      : {'ON' if self._roi else 'OFF'}",
         ]
         hud_h = len(hud) * 18 + 8
-        c.create_rectangle(6, 6, 185, 6 + hud_h,
+        c.create_rectangle(6, 6, 195, 6 + hud_h,
                            fill="#000000", outline="", stipple="gray50")
         for i, line in enumerate(hud):
-            self._text(c, line, 10, 16 + i * 18, CLR_TEXT, size=9)
+            clr = state_color if i == 0 else CLR_TEXT
+            self._text(c, line, 10, 16 + i * 18, clr, size=9)
 
         # ── 조작 안내 (우하단) ────────────────────────────────
         tips = ["클릭: 해당 위치 피코 클릭", "Q: 종료"]
