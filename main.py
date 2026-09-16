@@ -92,16 +92,25 @@ def main():
             ctrl = DummyController()
             ctrl.connect()
 
+    # 오버레이는 항상 모니터 전체 기준 (0,0)에서 시작
+    import mss as _mss
+    with _mss.mss() as _sct:
+        _mon = _sct.monitors[cfg["capture"]["monitor"]]
+        _mon_left = _mon["left"]
+        _mon_top  = _mon["top"]
+        _mon_w    = _mon["width"]
+        _mon_h    = _mon["height"]
+
     ov = OverlayWindow(
-        mon_left = cap.left - cap._roi_x if cfg.get("roi", {}).get("enabled") else cap.left,
-        mon_top  = cap.top  - cap._roi_y if cfg.get("roi", {}).get("enabled") else cap.top,
+        mon_left = _mon_left,
+        mon_top  = _mon_top,
         game_w   = cap.width,
         game_h   = cap.height,
         lb_x     = 0,
         ctrl     = ctrl,
         roi      = cfg.get("roi"),
-        mon_w    = 1920,
-        mon_h    = 1080,
+        mon_w    = _mon_w,
+        mon_h    = _mon_h,
     )
     ov.start()
 
