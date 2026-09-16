@@ -4,11 +4,11 @@
     "_note": "mss 인덱스. monitors[1] = 첫 번째 물리 모니터. 1920x1080 전체 화면."
   },
   "detector": {
-    "model": "runs/detect/monster_v1/weights/best.pt",
+    "model": "runs/detect/runs/detect/monster_v5_nano/weights/best.pt",
     "confidence": 0.25,
     "iou_threshold": 0.45,
     "device": "cuda",
-    "img_size": 640,
+    "img_size": 320,
     "_note": "detector.py 에 전달되는 값. 좌표 변환 없음."
   },
   "controller": {
@@ -30,16 +30,16 @@
   "target": {
     "max_dist": 350,
     "miss_timeout_sec": 4.0,
-    "min_conf": 0.35,
+    "min_conf": 0.4,
     "min_cy": 150,
     "_note": "miss_timeout_sec: 4초. max_dist: 350px. iou_thresh 제거됨(거리 기반 추적으로 통일)."
   },
   "roi": {
     "enabled": true,
-    "x": 300,
-    "y": 50,
-    "width": 1300,
-    "height": 850,
-    "_note": "enabled=true 면 해당 영역만 캡처 → FPS 향상. 게임 화면에 맞게 조정 필요."
+    "x": 372,
+    "y": 259,
+    "width": 1135,
+    "height": 472,
+    "_note": "enabled=true 면 해당 영역만 캡처 → FPS 향상. set_roi.py 로 설정."
   }
 }
