@@ -93,12 +93,15 @@ def main():
             ctrl.connect()
 
     ov = OverlayWindow(
-        mon_left = cap.left,
-        mon_top  = cap.top,
+        mon_left = cap.left - cap._roi_x if cfg.get("roi", {}).get("enabled") else cap.left,
+        mon_top  = cap.top  - cap._roi_y if cfg.get("roi", {}).get("enabled") else cap.top,
         game_w   = cap.width,
         game_h   = cap.height,
         lb_x     = 0,
         ctrl     = ctrl,
+        roi      = cfg.get("roi"),
+        mon_w    = 1920,
+        mon_h    = 1080,
     )
     ov.start()
 

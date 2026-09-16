@@ -7,12 +7,14 @@ overlay_window.py
   - 항상 게임화면 위에 표시 (topmost)
   - 배경 완전 투명 → 게임화면이 비쳐 보임
   - 탐지된 몬스터 박스 / 원 / 텍스트 표시
+  - ROI 영역을 시안색 점선 박스로 표시 (전체화면 기준)
   - 오버레이 클릭 → 피코 HID로 게임에 전달
   - WS_EX_LAYERED + WS_EX_TRANSPARENT 로 클릭 통과 (표시 전용 모드)
     클릭 받는 모드는 별도 플래그로 전환
 
 사용:
-    ov = OverlayWindow(mon_left, mon_top, game_w, game_h, lb_x, ctrl)
+    ov = OverlayWindow(mon_left, mon_top, game_w, game_h, lb_x, ctrl,
+                       roi=cfg.get("roi"))
     ov.update(detections)   # 매 프레임 호출
     ov.start()              # 별도 스레드에서 tkinter 루프 실행
     ov.stop()
@@ -33,6 +35,7 @@ CLR_ADENA     = "#FFD700"   # 아데나 (금색)
 CLR_HUD_BG    = "#000000"   # HUD 배경
 CLR_TEXT      = "#FFFFFF"   # 텍스트 흰색
 CLR_TARGET_TXT= "#00FF44"
+CLR_ROI       = "#00FFFF"   # ROI 테두리 (시안)
 
 TRANSPARENT_KEY = "#010101"  # 투명 처리할 색 (완전 검정에 가까운 값)
 
@@ -42,9 +45,9 @@ class OverlayWindow:
     게임화면 위 투명 오버레이.
 
     좌표계:
-        오버레이 창 = 게임 영역 (mon_left+lb_x, mon_top) 에서 (game_w x game_h)
-        탐지 좌표 (det.cx, det.cy) = 1920x1080 프레임 기준
-        → 오버레이 상의 좌표 = det.cx - lb_x, det.cy
+        오버레이 창 = 전체 모니터 크기 (mon_left, mon_top) 에서 (mon_w x mon_h)
+        탐지 좌표 (det.cx, det.cy) = ROI 캡처 기준 → roi_x/roi_y 오프셋 적용
+        ROI 박스 = 오버레이 위에 시안색 점선으로 표시
     """
 
     def __init__(self,
@@ -53,12 +56,17 @@ class OverlayWindow:
                  game_w: int,
                  game_h: int,
                  lb_x: int,
-                 ctrl=None):
+                 ctrl=None,
+                 roi: dict = None,
+                 mon_w: int = 1920,
+                 mon_h: int = 1080):
         """
         mon_left, mon_top : mss 모니터의 left/top (전체화면 기준)
-        game_w, game_h    : 실제 게임 영역 크기 (letterbox 제외)
+        game_w, game_h    : 캡처 영역 크기 (ROI 사용 시 ROI 크기)
         lb_x              : 좌측 letterbox 너비 (픽셀)
         ctrl              : PicoController 또는 DummyController
+        roi               : config.json 의 roi 딕셔너리 (없으면 None)
+        mon_w, mon_h      : 전체 모니터 해상도 (기본 1920x1080)
         """
         self._mon_left = mon_left
         self._mon_top  = mon_top
@@ -66,10 +74,19 @@ class OverlayWindow:
         self._game_h   = game_h
         self._lb_x     = lb_x
         self._ctrl     = ctrl
+        self._mon_w    = mon_w
+        self._mon_h    = mon_h
 
-        # 오버레이 창의 Windows 절대 좌표
-        self._win_x = mon_left + lb_x
+        # ROI 설정
+        self._roi = None
+        if roi and roi.get("enabled", False):
+            self._roi = roi  # {"x", "y", "width", "height"}
+
+        # 오버레이 창 = 전체 모니터 크기로 확장
+        self._win_x = mon_left
         self._win_y = mon_top
+        self._ov_w  = mon_w
+        self._ov_h  = mon_h
 
         # 공유 데이터 (메인 스레드 → tkinter 스레드)
         self._lock       = threading.Lock()
@@ -131,14 +148,14 @@ class OverlayWindow:
         root.attributes("-alpha", 1.0)
         root.configure(bg=TRANSPARENT_KEY)
 
-        # 오버레이 위치 = 게임 영역 좌상단
-        root.geometry(f"{self._game_w}x{self._game_h}+{self._win_x}+{self._win_y}")
+        # 오버레이 위치 = 전체 모니터 크기
+        root.geometry(f"{self._ov_w}x{self._ov_h}+{self._win_x}+{self._win_y}")
 
         # ── 캔버스 ────────────────────────────────────────────
         self._canvas = tk.Canvas(
             root,
-            width=self._game_w,
-            height=self._game_h,
+            width=self._ov_w,
+            height=self._ov_h,
             bg=TRANSPARENT_KEY,
             highlightthickness=0
         )
@@ -166,26 +183,37 @@ class OverlayWindow:
     def _on_click(self, event):
         """
         오버레이 캔버스 클릭 → 게임 좌표로 변환 → 피코 전달.
-        event.x, event.y = 오버레이 창 기준 (= 게임 영역 기준)
+        event.x, event.y = 오버레이 창 기준 (= 전체 모니터 기준)
         """
         now = time.time()
         if now - self._last_click < self._click_cooldown:
             return
         self._last_click = now
 
-        # 오버레이 좌표 → Windows 전체화면 좌표
-        # 오버레이(0,0) = 게임영역 좌상단 = Windows(mon_left+lb_x, mon_top)
         ov_x = event.x
         ov_y = event.y
 
         # 전체화면 기준 절대 좌표
-        sc_x = self._win_x + ov_x   # = mon_left + lb_x + ov_x
-        sc_y = self._win_y + ov_y   # = mon_top  + ov_y
+        sc_x = self._win_x + ov_x
+        sc_y = self._win_y + ov_y
 
         print(f"[오버레이클릭] 오버레이({ov_x},{ov_y}) → 전체화면({sc_x},{sc_y})")
 
         if self._ctrl and self._ctrl.is_connected:
             self._ctrl.drag_attack(sc_x, sc_y)
+
+    # ─────────────────────────────────────────────────────────
+    #  좌표 변환 헬퍼
+    # ─────────────────────────────────────────────────────────
+
+    def _det_to_ov(self, dx, dy):
+        """
+        탐지 좌표(ROI 기준) → 오버레이 좌표(전체 모니터 기준) 변환.
+        ROI 사용 중이면 roi_x/roi_y 오프셋 적용.
+        """
+        if self._roi:
+            return dx + self._roi["x"], dy + self._roi["y"]
+        return dx - self._lb_x, dy
 
     # ─────────────────────────────────────────────────────────
     #  그리기
@@ -205,18 +233,50 @@ class OverlayWindow:
             det_fps = self._det_fps
             cap_fps = self._cap_fps
 
+        # ── ROI 박스 그리기 ───────────────────────────────────
+        if self._roi:
+            rx  = self._roi["x"]
+            ry  = self._roi["y"]
+            rw  = self._roi["width"]
+            rh  = self._roi["height"]
+            rx2 = rx + rw
+            ry2 = ry + rh
+
+            # 바깥 어둠 처리 (반투명 회색 영역 4개)
+            # 위쪽
+            if ry > 0:
+                c.create_rectangle(0, 0, self._ov_w, ry,
+                                   fill="#000000", outline="", stipple="gray25")
+            # 아래쪽
+            if ry2 < self._ov_h:
+                c.create_rectangle(0, ry2, self._ov_w, self._ov_h,
+                                   fill="#000000", outline="", stipple="gray25")
+            # 왼쪽
+            if rx > 0:
+                c.create_rectangle(0, ry, rx, ry2,
+                                   fill="#000000", outline="", stipple="gray25")
+            # 오른쪽
+            if rx2 < self._ov_w:
+                c.create_rectangle(rx2, ry, self._ov_w, ry2,
+                                   fill="#000000", outline="", stipple="gray25")
+
+            # ROI 테두리 (시안색 점선)
+            c.create_rectangle(rx, ry, rx2, ry2,
+                               outline=CLR_ROI, width=2, dash=(8, 4))
+
+            # ROI 라벨
+            self._text(c, f"ROI  {rw}x{rh}  ({rx},{ry})",
+                       rx + 4, ry + 16, CLR_ROI, size=9)
+
         # ── 탐지 박스 ─────────────────────────────────────────
         for d in dets:
             is_tgt = (target is not None and
                       d.x == target.x and d.y == target.y)
 
-            # 오버레이 좌표 = 프레임 좌표 - lb_x
-            ox  = d.x  - self._lb_x
-            oy  = d.y
-            ox2 = d.x + d.w - self._lb_x
-            oy2 = d.y + d.h
-            ocx = d.cx - self._lb_x
-            ocy = d.cy
+            # ROI 오프셋 적용한 오버레이 좌표
+            ox,  oy  = self._det_to_ov(d.x,  d.y)
+            ox2, oy2 = self._det_to_ov(d.x + d.w, d.y + d.h)
+            ocx, ocy = self._det_to_ov(d.cx, d.cy)
 
             if is_tgt:
                 continue  # 타겟은 아래서 따로
@@ -237,12 +297,9 @@ class OverlayWindow:
 
         # ── 타겟 박스 ─────────────────────────────────────────
         if target is not None:
-            ox  = target.x  - self._lb_x
-            oy  = target.y
-            ox2 = target.x + target.w - self._lb_x
-            oy2 = target.y + target.h
-            ocx = target.cx - self._lb_x
-            ocy = target.cy
+            ox,  oy  = self._det_to_ov(target.x,          target.y)
+            ox2, oy2 = self._det_to_ov(target.x + target.w, target.y + target.h)
+            ocx, ocy = self._det_to_ov(target.cx, target.cy)
 
             color = CLR_DEAD if miss_t > 0 else CLR_TARGET
             label = (f"MISSING {miss_t:.1f}s" if miss_t > 0
@@ -278,11 +335,10 @@ class OverlayWindow:
             f"Det FPS  : {det_fps:.1f}",
             f"Cap FPS  : {cap_fps:.1f}",
             f"Target   : {'YES' if target else 'NONE'}",
-            f"LB offset: {self._lb_x}px",
+            f"ROI      : {'ON' if self._roi else 'OFF'}",
         ]
-        # 반투명 HUD 배경
         hud_h = len(hud) * 18 + 8
-        c.create_rectangle(6, 6, 180, 6 + hud_h,
+        c.create_rectangle(6, 6, 185, 6 + hud_h,
                            fill="#000000", outline="", stipple="gray50")
         for i, line in enumerate(hud):
             self._text(c, line, 10, 16 + i * 18, CLR_TEXT, size=9)
@@ -290,8 +346,8 @@ class OverlayWindow:
         # ── 조작 안내 (우하단) ────────────────────────────────
         tips = ["클릭: 해당 위치 피코 클릭", "Q: 종료"]
         for i, t in enumerate(reversed(tips)):
-            self._text(c, t, self._game_w - 200,
-                       self._game_h - 12 - i * 16,
+            self._text(c, t, self._ov_w - 200,
+                       self._ov_h - 12 - i * 16,
                        "#AAAAAA", size=8)
 
     @staticmethod
