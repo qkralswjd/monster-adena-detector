@@ -11,7 +11,7 @@ tools/train_v2.py
 해결 전략:
   1. adena 이미지를 val에 강제 포함 (stratified split)
   2. adena 이미지를 train에 N배 복제 → 실질적 데이터 증량
-  3. fl_gamma=2.0 focal loss → 어려운 샘플(adena) 집중 학습
+  3. augmentation 강화로 adena 다양성 확보
   4. augmentation 강화 (mosaic, mixup, copy_paste)
   5. monster_v1 best.pt 에서 fine-tune (전이학습)
   6. 기존 monster_v1 덮어쓰지 않고 monster_v2 로 저장
@@ -221,7 +221,7 @@ def train(yaml_path):
     print(f"  epochs   : {EPOCHS}")
     print(f"  img_size : {IMG_SIZE}")
     print(f"  batch    : {BATCH}")
-    print(f"  adena 복제배수: {ADENA_REPEAT}x  fl_gamma: 2.0")
+    print(f"  adena 복제배수: {ADENA_REPEAT}x")
     print(f"  저장     : {os.path.join(PROJECT, NAME)}\n")
 
     model = YOLO(model_src)
@@ -234,10 +234,6 @@ def train(yaml_path):
         project   = PROJECT,
         name      = NAME,
         patience  = 20,
-
-        # ── Focal Loss (어려운 샘플 집중) ───────────────
-        # fl_gamma=2.0: adena처럼 잘 못 잡는 객체에 손실 더 집중
-        fl_gamma  = 2.0,
 
         # ── Augmentation 강화 ───────────────────────────
         mosaic    = 1.0,       # mosaic 항상 ON
@@ -285,16 +281,25 @@ def main():
     # 3. dataset.yaml
     yaml_path = make_yaml()
 
-    # 4. 학습
+    # 4. 학습 (오류 시 복제본이 남아있어도 재실행 시 중복 방지됨)
+    success = False
     try:
         train(yaml_path)
+        success = True
+    except Exception as e:
+        print(f"\n[오류] 학습 중 예외 발생: {e}")
+        raise
     finally:
-        # 5. 복제본 정리 (학습 성공/실패 무관하게)
-        print("\n[cleanup] 복제본 정리 중...")
-        cleanup_duplicates()
+        # 5. 복제본 정리 (학습 성공한 경우에만)
+        if success:
+            print("\n[cleanup] 복제본 정리 중...")
+            cleanup_duplicates()
+        else:
+            print("\n[cleanup] 학습 실패 → 복제본 유지 (재실행 시 자동 스킵)")
 
     # 6. 결과 안내
-    print_summary()
+    if success:
+        print_summary()
 
 
 if __name__ == "__main__":
