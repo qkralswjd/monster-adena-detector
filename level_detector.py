@@ -309,7 +309,14 @@ class LevelDetector:
         def _run_ocr(img):
             try:
                 self._ensure_ocr()
-                return self._ocr.readtext(img, detail=1, paragraph=False)
+                return self._ocr.readtext(
+                    img,
+                    detail=1,
+                    paragraph=False,
+                    allowlist="LEVlev:;. 0123456789",  # 레벨 관련 문자만 허용
+                    text_threshold=0.5,   # 글자 신뢰도 기준 상향 (기본 0.7→0.5로 완화)
+                    low_text=0.3,         # 텍스트 영역 탐지 민감도
+                )
             except Exception as e:
                 print(f"[LevelDetector] easyocr 오류: {e}")
                 return []
