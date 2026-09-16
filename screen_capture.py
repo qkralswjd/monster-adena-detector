@@ -68,6 +68,8 @@ class ScreenCapture:
         # 백그라운드 캡처용
         self._lock         = threading.Lock()
         self._latest_frame = None
+        self._frame_id     = 0   # 새 프레임마다 증가
+        self._last_read_id = -1  # 마지막으로 읽은 프레임 ID
         self._running      = False
         self._thread       = None
 
@@ -100,19 +102,24 @@ class ScreenCapture:
                     frame = frame[:, :, ::-1].copy()
                     with self._lock:
                         self._latest_frame = frame
+                        self._frame_id    += 1
                     self._tick_fps()
                 except Exception as e:
                     print(f"[Capture] 캡처 실패: {e}")
                     time.sleep(0.01)
 
-    def capture(self) -> np.ndarray:
+    def capture(self):
         """
         최신 캡처 프레임 반환 (블로킹 없음).
-        백그라운드 스레드가 계속 캡처 중.
-        반환: BGR numpy (H, W, 3) 또는 None
+        반환: (frame, is_new)
+          - frame  : BGR numpy (H, W, 3) 또는 None
+          - is_new : 이전 호출 이후 새 프레임이면 True
         """
         with self._lock:
-            return self._latest_frame
+            is_new = (self._frame_id != self._last_read_id)
+            if is_new:
+                self._last_read_id = self._frame_id
+            return self._latest_frame, is_new
 
     def stop(self):
         """백그라운드 캡처 스레드 종료."""

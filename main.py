@@ -153,9 +153,14 @@ def main():
                         break
 
             # ── 캡처 + 탐지 ───────────────────────────────────
-            frame = cap.capture()
+            frame, is_new = cap.capture()
             if frame is None:
-                time.sleep(0.01)
+                time.sleep(0.001)
+                continue
+
+            # 새 프레임일 때만 추론 (같은 프레임 중복 추론 방지)
+            if not is_new:
+                time.sleep(0.001)
                 continue
 
             detections = det.detect(frame)
