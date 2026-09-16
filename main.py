@@ -209,8 +209,6 @@ def main():
                     else:
                         print(f"  탐지 없음  DET {det.fps:.1f}fps")
 
-            time.sleep(0.01)
-
     except KeyboardInterrupt:
         print("\n[Stop] Ctrl+C")
     finally:
