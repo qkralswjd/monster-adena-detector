@@ -4,7 +4,7 @@
     "_note": "mss 인덱스. monitors[1] = 첫 번째 물리 모니터. 1920x1080 전체 화면."
   },
   "detector": {
-    "model": "runs/detect/runs/detect/monster_v5_nano/weights/best.pt",
+    "model": "runs/detect/monster_v1/weights/best.pt",
     "confidence": 0.25,
     "iou_threshold": 0.45,
     "device": "cuda",
