@@ -95,10 +95,10 @@ if hp_roi is not None:
         crop_hp = frame[y:y2, x:x2]
         print(f"crop shape: {crop_hp.shape}")
 
-        # HSV 빨간색 마스크 (레퍼런스 hp_reader.py _HP_HSV_RANGES)
+        # HSV 파란색 마스크 (실측: RGB≈(0,36~43,175~212) → HSV Hue≈110~115)
+        # OpenCV HSV Hue: 0~180 스케일 (실제각도/2)
         HP_HSV_RANGES = [
-            ((0,  80, 40), (10,  255, 255)),   # 빨간색 영역 1
-            ((170, 80, 40), (180, 255, 255)),   # 빨간색 영역 2 (wrap-around)
+            ((100, 60, 30), (140, 255, 255)),   # 파란색 (H=100~140)
         ]
         hsv = cv2.cvtColor(crop_hp, cv2.COLOR_BGR2HSV)
         mask = np.zeros(hsv.shape[:2], dtype=np.uint8)
@@ -132,7 +132,7 @@ if hp_roi is not None:
         print(f"전체 빨간 픽셀      : {total_red} / {total_cols * total_rows}")
         print(f"빨간 열 수(전체)    : {red_cols_total} / {total_cols}")
         print(f"연속 채워진 열      : {filled_cols} / {total_cols}")
-        print(f"★ HP% (전체열합계) : {hp_pct_main}%   ← level_detector.py 실제 사용값")
+        print(f"★ HP% (전체열합계) : {hp_pct_main}%   ← level_detector.py 실제 사용값 (파란열)")
         print(f"  HP% (연속열)      : {hp_pct_seq}%   ← 참고 (텍스트 끊김으로 부정확)")
         print(f"  HP% (픽셀비율)    : {hp_pct_pixel}%   ← 참고")
 
@@ -167,7 +167,7 @@ if hp_roi is not None:
         if hp_pct_main < 1.0:
             print(f"\n⚠️  HP% 가 {hp_pct_main}% 로 매우 낮습니다.")
             print(f"   → debug_hp_crop.png 를 확인해서 HP 바 ROI 가 올바른지 점검하세요.")
-            print(f"   → HP 바가 파란색이면 HSV 범위 조정이 필요합니다.")
+            print(f"   → HP 바 색상이 달라 감지 안 될 수 있습니다.")
 
 else:
     print("\n⚠️  hp_roi 가 null — HP 진단 건너뜀")
@@ -198,16 +198,17 @@ if level_roi is not None:
         cv2.imwrite('debug_level_crop.png', crop_lv)
         print("→ debug_level_crop.png 저장됨 (실제로 뭘 보고 있는지 확인)")
 
-        # 전처리 (레퍼런스 level_reader.py _preprocess 와 동일)
+        # 전처리 (파란배경+흰텍스트 → 반전이진화)
+        # 배경: 파란색, 텍스트: 흰색 → THRESH_BINARY_INV로 흰배경+검정텍스트
         h2, w2 = crop_lv.shape[:2]
-        enlarged = cv2.resize(crop_lv, (w2 * 2, h2 * 2), interpolation=cv2.INTER_LINEAR)
+        enlarged = cv2.resize(crop_lv, (w2 * 3, h2 * 3), interpolation=cv2.INTER_LINEAR)
         gray     = cv2.cvtColor(enlarged, cv2.COLOR_BGR2GRAY)
         clahe    = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(4, 4))
         enhanced = clahe.apply(gray)
-        _, binary = cv2.threshold(enhanced, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        _, binary = cv2.threshold(enhanced, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
 
         cv2.imwrite('debug_level_processed.png', binary)
-        print("→ debug_level_processed.png 저장됨 (전처리: 2배확대+CLAHE+OTSU)")
+        print("→ debug_level_processed.png 저장됨 (전처리: 3배확대+CLAHE+OTSU반전)")
 
         # ── easyocr ──────────────────────────────────────────────────────
         try:

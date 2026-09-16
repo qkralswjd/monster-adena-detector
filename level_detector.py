@@ -6,11 +6,12 @@ level_detector.py
 인식 구조 (레퍼런스 hp_reader.py / level_reader.py 기반):
 
 [HP 인식]
-  - HP 바 색상: 빨간색 (리니지 클래식 실측 center_HSV=[0, 252, 87])
-  - HSV 범위: H=0~10 + H=170~180 (색상환 wrap-around 처리)
-  - 핵심: "HP : 109 / 109" 텍스트가 바 중간을 가로막아 연속 열이 끊김
+  - HP 바 색상: 파란색 (실측 RGB≈(0,36~43,175~212) → HSV Hue≈220~230°)
+    OpenCV HSV에서 Hue는 0~180 스케일이므로 220~230° → H=110~130
+  - HSV 범위: H=100~140 (파란색 계열, S/V 하한으로 배경 제외)
+  - 핵심: "HP : 115 / 115" 텍스트가 바 중간을 가로막아 연속 열이 끊김
     → 연속 열(break at first gap) 방식 사용 불가
-    → 전체 빨간 열 합계 비율 방식 사용 (np.count_nonzero)
+    → 전체 파란 열 합계 비율 방식 사용 (np.count_nonzero)
   - 결과: 0.0 ~ 100.0 (%)
 
 [레벨 인식]
@@ -34,25 +35,25 @@ import numpy as np
 import cv2
 
 # ─────────────────────────────────────────────────────────────
-#  HP 바 HSV 범위 (레퍼런스 hp_reader.py 그대로)
-#  리니지 클래식 HP 바: 빨간색, 실측 center_HSV=[0, 252, 87]
+#  HP 바 HSV 범위
+#  실측: RGB≈(0, 36~43, 175~212) → HSV Hue≈220~230°
+#  OpenCV HSV: Hue는 0~180 스케일 (실제각도 /2)
+#  → 220~230° / 2 = 110~115 → 여유분 포함 H=100~140
 # ─────────────────────────────────────────────────────────────
 _HP_HSV_RANGES = [
-    # 빨간색 영역 1 (H=0~10, V 하한 40 — 어두운 빨간도 포함)
-    ((0, 80, 40), (10, 255, 255)),
-    # 빨간색 영역 2 (H=170~180, 색상환 반대편 wrap-around)
-    ((170, 80, 40), (180, 255, 255)),
+    # 파란색 (H=100~140, S=60+, V=30+ — 어두운 파란도 포함)
+    ((100, 60, 30), (140, 255, 255)),
 ]
 
 
 def _calc_hp_pct(crop_bgr: np.ndarray) -> float:
     """HP 바 크롭 이미지에서 HP%를 계산합니다.
 
-    레퍼런스 구조 (hp_reader.py _calc_hp_pct):
-      - 각 열에 빨간 픽셀이 하나라도 있으면 "채워진 열"로 판단
-      - HP 바 중간에 텍스트("HP : 109 / 109")가 있어 연속 열이 끊김
+    실측 기반:
+      - 각 열에 파란 픽셀이 하나라도 있으면 "채워진 열"로 판단
+      - HP 바 중간에 텍스트("HP : 115 / 115")가 있어 연속 열이 끊김
         → 왼쪽부터 연속 방식(break)은 사용 불가
-        → 전체 빨간 열 합계(count_nonzero) 비율로 계산
+        → 전체 파란 열 합계(count_nonzero) 비율로 계산
 
     Args:
         crop_bgr: BGR 이미지 (HP 바 영역)
@@ -77,12 +78,12 @@ def _calc_hp_pct(crop_bgr: np.ndarray) -> float:
     if total_cols == 0:
         return 100.0
 
-    # 각 열에 빨간 픽셀이 하나라도 있으면 True (axis=0 → 열 방향 축소)
-    col_has_red = np.any(mask > 0, axis=0)   # shape: (width,)
+    # 각 열에 파란 픽셀이 하나라도 있으면 True (axis=0 → 열 방향 축소)
+    col_has_blue = np.any(mask > 0, axis=0)   # shape: (width,)
 
-    # ★ 핵심: 연속이 아닌 전체 빨간 열 합계 비율
-    red_cols = int(np.count_nonzero(col_has_red))
-    hp_pct = round((red_cols / total_cols) * 100.0, 1)
+    # ★ 핵심: 연속이 아닌 전체 파란 열 합계 비율
+    blue_cols = int(np.count_nonzero(col_has_blue))
+    hp_pct = round((blue_cols / total_cols) * 100.0, 1)
 
     return hp_pct
 
@@ -90,26 +91,34 @@ def _calc_hp_pct(crop_bgr: np.ndarray) -> float:
 def _preprocess_for_ocr(crop_bgr: np.ndarray) -> np.ndarray:
     """레벨 OCR 인식률을 높이기 위한 전처리.
 
-    레퍼런스 구조 (level_reader.py _preprocess):
-      - 2배 확대 (레퍼런스는 2배; 작은 텍스트 인식률 향상)
-      - CLAHE clipLimit=3.0, tileGridSize=(4,4)
-      - OTSU 이진화
+    실측 기반:
+      - 배경: 파란색 그라데이션 (HSV Hue≈220~230°)
+      - 텍스트: 흰색 (RGB≈240,245,255)
+      → 그레이스케일 시 텍스트(밝음)가 배경(중간)보다 밝음
+      → OTSU 이진화 후 반전(THRESH_BINARY_INV)으로 텍스트=흰, 배경=검정 만들기
+
+    처리 순서:
+      1) 3배 확대 (작은 텍스트 인식률 향상)
+      2) 그레이스케일
+      3) CLAHE 대비 향상
+      4) OTSU 이진화 + 반전 (흰 배경에 검정 텍스트 → easyocr 인식률 향상)
     """
     h, w = crop_bgr.shape[:2]
-    # 2배 확대 (레퍼런스와 동일)
-    enlarged = cv2.resize(crop_bgr, (w * 2, h * 2),
+    # 3배 확대 (30px 높이 → 90px, OCR 인식률 향상)
+    enlarged = cv2.resize(crop_bgr, (w * 3, h * 3),
                           interpolation=cv2.INTER_LINEAR)
 
     # 그레이스케일
     gray = cv2.cvtColor(enlarged, cv2.COLOR_BGR2GRAY)
 
-    # CLAHE 대비 향상 (레퍼런스: clipLimit=3.0, tileGridSize=(4,4))
+    # CLAHE 대비 향상
     clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(4, 4))
     enhanced = clahe.apply(gray)
 
-    # OTSU 이진화
+    # OTSU 이진화 + 반전
+    # 파란 배경(중간 밝기) + 흰 텍스트(밝음) → 반전하면 흰 배경 + 검정 텍스트
     _, binary = cv2.threshold(enhanced, 0, 255,
-                               cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+                               cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
     return binary
 
 
