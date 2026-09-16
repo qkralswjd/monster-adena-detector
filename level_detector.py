@@ -214,6 +214,10 @@ class LevelDetector:
         self._level_interval = 2.0   # 레벨: 2초마다 OCR
         self._hp_interval    = 0.5   # HP: 0.5초마다
 
+        # 실패 로그 억제 (연속 실패 5회마다 1번만 출력)
+        self._level_fail_count = 0
+        self._level_fail_log_interval = 5
+
         print("[LevelDetector] 초기화 완료 (HP: 빨간색 HSV H=0~10+170~180, ROI 직접 캡처)")
 
     def _ensure_ocr(self):
@@ -301,29 +305,50 @@ class LevelDetector:
         # 전처리 (2배 확대 + CLAHE + OTSU)
         processed = _preprocess_for_ocr(crop)
 
-        # OCR (detail=1 → (bbox, text, confidence) 형태)
-        try:
-            self._ensure_ocr()
-            results = self._ocr.readtext(processed, detail=1, paragraph=False)
-        except Exception as e:
-            print(f"[LevelDetector] easyocr 오류: {e}")
-            return self._last_level
+        # OCR — 1회 실패 시 즉시 재시도 1회 (easyocr 비결정성 대응)
+        def _run_ocr(img):
+            try:
+                self._ensure_ocr()
+                return self._ocr.readtext(img, detail=1, paragraph=False)
+            except Exception as e:
+                print(f"[LevelDetector] easyocr 오류: {e}")
+                return []
 
-        # 결과 파싱 (레퍼런스: confidence < 0.1 무시)
-        for (_, text, confidence) in results:
-            if confidence < 0.1:   # ← 레퍼런스와 동일, 완화된 임계값
-                continue
-            level = _parse_level(text)
-            if level is not None and 1 <= level <= 99:
-                if level != self._last_level:
-                    print(f"[LevelDetector] 레벨: {self._last_level} → {level}"
-                          f"  (OCR='{text}', conf={confidence:.2f})")
-                self._last_level = level
-                return level
+        def _try_parse(results):
+            for (_, text, confidence) in results:
+                if confidence < 0.1:
+                    continue
+                level = _parse_level(text)
+                if level is not None and 1 <= level <= 99:
+                    return level, text, confidence
+            return None, None, None
 
-        # 인식 실패 → 캐시 유지
-        debug_list = [(t, f"{c:.2f}") for (_, t, c) in results]
-        print(f"[LevelDetector] 레벨 인식 실패. OCR={debug_list}")
+        results = _run_ocr(processed)
+        level, text, conf = _try_parse(results)
+
+        # 1차 실패 → 즉시 재캡처 후 재시도
+        if level is None:
+            crop2 = self._grab_roi(self._level_roi)
+            if crop2 is not None:
+                processed2 = _preprocess_for_ocr(crop2)
+                results2 = _run_ocr(processed2)
+                level, text, conf = _try_parse(results2)
+                if level is not None:
+                    results = results2  # 로그용
+
+        if level is not None:
+            if level != self._last_level:
+                print(f"[LevelDetector] 레벨: {self._last_level} → {level}"
+                      f"  (OCR='{text}', conf={conf:.2f})")
+            self._last_level = level
+            self._level_fail_count = 0
+            return level
+
+        # 최종 실패 → 캐시 유지, 로그는 N회마다 1번만
+        self._level_fail_count += 1
+        if self._level_fail_count % self._level_fail_log_interval == 1:
+            debug_list = [(t, f"{c:.2f}") for (_, t, c) in results]
+            print(f"[LevelDetector] 레벨 인식 실패({self._level_fail_count}회). OCR={debug_list}")
         return self._last_level
 
     def is_target_level_reached(self, frame_bgr: np.ndarray) -> bool:
