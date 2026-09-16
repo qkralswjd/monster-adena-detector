@@ -1,34 +1,27 @@
 """
 level_detector.py
 -----------------
-레벨 UI / HP바 영역을 픽셀 분석으로 인식.
+레벨 / HP 텍스트 OCR 인식.
 
 동작 원리:
-  - 레벨 ROI: OCR(pytesseract) 또는 숫자 이미지 템플릿 매칭으로 레벨 숫자 읽기
-    → pytesseract 없으면 easyocr fallback
-  - HP ROI: 빨간(또는 설정된) 픽셀 비율로 HP% 계산
-    → 예) 전체 픽셀 중 HP 색상 픽셀 비율 = HP%
+  - 레벨 ROI: "LEV:15" 형태 텍스트 → 숫자 추출
+  - HP ROI:   "HP:115/115" 형태 텍스트 → 현재HP/최대HP 비율 계산
+
+OCR 엔진 우선순위:
+  1. pytesseract (설치된 경우)
+  2. easyocr (fallback)
+  3. 없으면 None 반환
 
 사용:
-    ld = LevelDetector(level_roi, hp_roi, hp_color="red")
+    ld = LevelDetector(level_roi, hp_roi)
     level = ld.read_level(frame_bgr)   # int or None
     hp    = ld.read_hp(frame_bgr)      # 0.0~1.0 or None
-
-frame_bgr: mss 캡처 → numpy array (전체 모니터 캡처 기준)
 """
 
+import re
+import time
 import numpy as np
 import cv2
-import time
-
-
-# HP바 색상 범위 (HSV)
-# 리니지 HP바: 어두운 적갈색 (RGB ~120-150, 20-30, 20-30)
-# HSV 변환: Hue=0~10, Sat=100~255, Val=40~180
-HP_HSV_RANGES = [
-    ((0,   100, 40),  (10,  255, 180)),   # 어두운 적갈색 (메인)
-    ((170, 100, 40),  (180, 255, 180)),   # 어두운 적갈색 (wrap)
-]
 
 
 class LevelDetector:
@@ -36,65 +29,62 @@ class LevelDetector:
     def __init__(self,
                  level_roi: dict = None,
                  hp_roi: dict = None,
-                 hp_color: str = "red",
+                 hp_color: str = "red",      # 호환성 유지용 (사용 안 함)
                  target_level: int = 5):
-        """
-        level_roi  : {"x","y","w","h"} 절대 화면 좌표
-        hp_roi     : {"x","y","w","h"} 절대 화면 좌표
-        hp_color   : "red" (기본) — 나중에 다른 색 지원 가능
-        target_level: 이 레벨 달성 시 DUMMY_ATTACK 종료
-        """
         self._level_roi    = level_roi
         self._hp_roi       = hp_roi
-        self._hp_color     = hp_color
         self._target_level = target_level
 
         # OCR 엔진 초기화
         self._ocr_engine = None
+        self._reader     = None
         self._init_ocr()
 
-        # 캐시 (너무 자주 호출 방지)
-        self._last_level     = None
-        self._last_hp        = None
-        self._last_level_t   = 0.0
-        self._last_hp_t      = 0.0
-        self._level_interval = 2.0   # 레벨은 2초마다 읽기
-        self._hp_interval    = 0.3   # HP는 0.3초마다 읽기
+        # 캐시
+        self._last_level   = None
+        self._last_hp      = None
+        self._last_level_t = 0.0
+        self._last_hp_t    = 0.0
+        self._level_interval = 2.0   # 레벨은 2초마다
+        self._hp_interval    = 0.5   # HP는 0.5초마다
+
+    # ─────────────────────────────────────────────────────────
+    #  OCR 초기화
+    # ─────────────────────────────────────────────────────────
 
     def _init_ocr(self):
-        """OCR 엔진 초기화 (pytesseract → easyocr 순서)."""
         try:
             import pytesseract
             pytesseract.get_tesseract_version()
             self._ocr_engine = "tesseract"
             print("[LevelDetector] OCR: pytesseract")
+            return
         except Exception:
-            try:
-                import easyocr
-                self._reader = easyocr.Reader(["en"], gpu=False, verbose=False)
-                self._ocr_engine = "easyocr"
-                print("[LevelDetector] OCR: easyocr")
-            except Exception:
-                self._ocr_engine = None
-                print("[LevelDetector] OCR 엔진 없음 → 레벨 인식 불가 (숫자만 인식)")
+            pass
+
+        try:
+            import easyocr
+            self._reader     = easyocr.Reader(["en"], gpu=False, verbose=False)
+            self._ocr_engine = "easyocr"
+            print("[LevelDetector] OCR: easyocr")
+            return
+        except Exception:
+            pass
+
+        self._ocr_engine = None
+        print("[LevelDetector] OCR 엔진 없음 → pip install easyocr 권장")
 
     def update_rois(self, level_roi=None, hp_roi=None):
-        """config reload 시 ROI 갱신."""
         if level_roi:
             self._level_roi = level_roi
         if hp_roi:
             self._hp_roi = hp_roi
 
     # ─────────────────────────────────────────────────────────
-    #  전체 화면 캡처 → ROI 크롭
+    #  ROI 크롭
     # ─────────────────────────────────────────────────────────
 
     def _crop_roi(self, frame_bgr: np.ndarray, roi: dict):
-        """
-        frame_bgr: 전체 모니터 캡처 (mss BGRA → BGR 변환된 것)
-        roi: {"x","y","w","h"} 절대 화면 좌표
-        → ROI 영역 크롭 반환
-        """
         if frame_bgr is None or roi is None:
             return None
         x, y, w, h = roi["x"], roi["y"], roi["w"], roi["h"]
@@ -108,14 +98,65 @@ class LevelDetector:
         return frame_bgr[y1:y2, x1:x2]
 
     # ─────────────────────────────────────────────────────────
+    #  이미지 전처리 (OCR 정확도 향상)
+    # ─────────────────────────────────────────────────────────
+
+    def _preprocess(self, crop_bgr: np.ndarray) -> np.ndarray:
+        """
+        확대 + 이진화.
+        리니지 UI 텍스트: 밝은 주황/흰색 글자, 어두운 배경
+        """
+        # 4배 확대
+        h, w = crop_bgr.shape[:2]
+        big = cv2.resize(crop_bgr, (w * 4, h * 4),
+                         interpolation=cv2.INTER_LINEAR)
+        # 그레이 변환
+        gray = cv2.cvtColor(big, cv2.COLOR_BGR2GRAY)
+        # CLAHE (대비 향상)
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(4, 4))
+        gray  = clahe.apply(gray)
+        # 이진화
+        _, binary = cv2.threshold(gray, 0, 255,
+                                  cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        return binary
+
+    # ─────────────────────────────────────────────────────────
+    #  OCR 텍스트 추출
+    # ─────────────────────────────────────────────────────────
+
+    def _ocr_text(self, crop_bgr: np.ndarray) -> str:
+        """이미지에서 텍스트 추출 (숫자 + 콜론 + 슬래시 허용)."""
+        binary = self._preprocess(crop_bgr)
+
+        if self._ocr_engine == "tesseract":
+            try:
+                import pytesseract
+                # 숫자, 콜론, 슬래시, 알파벳 허용
+                cfg = "--psm 7 --oem 3 -c tessedit_char_whitelist=0123456789:/LEVHPlevhp"
+                return pytesseract.image_to_string(binary, config=cfg).strip()
+            except Exception as e:
+                print(f"[LevelDetector] tesseract 오류: {e}")
+
+        elif self._ocr_engine == "easyocr":
+            try:
+                results = self._reader.readtext(
+                    binary, detail=0,
+                    allowlist="0123456789:/LEVHPlevhp"
+                )
+                return " ".join(results).strip()
+            except Exception as e:
+                print(f"[LevelDetector] easyocr 오류: {e}")
+
+        return ""
+
+    # ─────────────────────────────────────────────────────────
     #  레벨 인식
     # ─────────────────────────────────────────────────────────
 
     def read_level(self, frame_bgr: np.ndarray) -> int:
         """
-        레벨 ROI에서 숫자 OCR.
-        캐시: 2초마다 갱신.
-        반환: int or None
+        레벨 ROI OCR → "LEV:15" or "15" 에서 숫자 추출.
+        캐시: 2초
         """
         now = time.monotonic()
         if now - self._last_level_t < self._level_interval:
@@ -129,69 +170,33 @@ class LevelDetector:
         if crop is None:
             return None
 
-        level = self._ocr_digit(crop)
+        text = self._ocr_text(crop)
+        level = self._parse_level(text)
+
         if level is not None and 1 <= level <= 99:
             self._last_level = level
+            print(f"[LevelDetector] 레벨 인식: {level}  (OCR: '{text}')")
+
         return self._last_level
 
-    def _ocr_digit(self, crop_bgr: np.ndarray) -> int:
+    def _parse_level(self, text: str) -> int:
         """
-        이미지에서 레벨 숫자 읽기.
-        리니지 LEV UI: 주황색 텍스트 → 주황색만 추출 후 OCR
+        "LEV:15", "LEV 15", "15" 등에서 레벨 숫자 추출.
         """
-        # ── 주황색 텍스트 마스크 추출 (리니지 레벨 숫자 색상) ──
-        hsv = cv2.cvtColor(crop_bgr, cv2.COLOR_BGR2HSV)
-        # 주황색 범위 (Hue 10~25)
-        orange_mask = cv2.inRange(hsv,
-                                   np.array([10, 100, 100], dtype=np.uint8),
-                                   np.array([25, 255, 255], dtype=np.uint8))
-        # 흰색 텍스트도 포함 (혹시 다른 색상)
-        white_mask  = cv2.inRange(hsv,
-                                   np.array([0, 0, 180], dtype=np.uint8),
-                                   np.array([180, 40, 255], dtype=np.uint8))
-        combined = cv2.bitwise_or(orange_mask, white_mask)
-
-        # 마스크 적용 → 배경 검정
-        result = cv2.bitwise_and(crop_bgr, crop_bgr, mask=combined)
-        gray   = cv2.cvtColor(result, cv2.COLOR_BGR2GRAY)
-
-        # 크기 확대 (OCR 정확도 향상)
-        scale = 4
-        h, w  = gray.shape
-        gray  = cv2.resize(gray, (w*scale, h*scale),
-                           interpolation=cv2.INTER_LINEAR)
-        # 이진화
-        _, binary = cv2.threshold(gray, 30, 255, cv2.THRESH_BINARY)
-
-        text = None
-
-        if self._ocr_engine == "tesseract":
-            try:
-                import pytesseract
-                cfg = "--psm 7 --oem 3 -c tessedit_char_whitelist=0123456789"
-                text = pytesseract.image_to_string(binary, config=cfg).strip()
-            except Exception as e:
-                print(f"[LevelDetector] tesseract 오류: {e}")
-
-        elif self._ocr_engine == "easyocr":
-            try:
-                results = self._reader.readtext(binary, detail=0,
-                                                allowlist="0123456789")
-                text = "".join(results).strip()
-            except Exception as e:
-                print(f"[LevelDetector] easyocr 오류: {e}")
-
-        if text:
-            digits = "".join(c for c in text if c.isdigit())
-            if digits:
-                try:
-                    return int(digits[:2])  # 최대 2자리
-                except ValueError:
-                    pass
+        if not text:
+            return None
+        # 숫자만 추출
+        digits = re.findall(r'\d+', text)
+        if not digits:
+            return None
+        # 가장 처음 나오는 숫자 (1~99 범위)
+        for d in digits:
+            v = int(d)
+            if 1 <= v <= 99:
+                return v
         return None
 
     def is_target_level_reached(self, frame_bgr: np.ndarray) -> bool:
-        """목표 레벨 달성 여부."""
         lv = self.read_level(frame_bgr)
         if lv is None:
             return False
@@ -203,9 +208,8 @@ class LevelDetector:
 
     def read_hp(self, frame_bgr: np.ndarray) -> float:
         """
-        HP ROI에서 HP 비율 계산.
-        캐시: 0.3초마다 갱신.
-        반환: 0.0~1.0 or None
+        HP ROI OCR → "HP:115/115" 에서 현재HP/최대HP 비율 계산.
+        캐시: 0.5초
         """
         now = time.monotonic()
         if now - self._last_hp_t < self._hp_interval:
@@ -219,39 +223,32 @@ class LevelDetector:
         if crop is None:
             return None
 
-        hp = self._calc_hp_ratio(crop)
-        self._last_hp = hp
-        return hp
+        text = self._ocr_text(crop)
+        hp   = self._parse_hp(text)
 
-    def _calc_hp_ratio(self, crop_bgr: np.ndarray) -> float:
+        if hp is not None:
+            self._last_hp = hp
+            print(f"[LevelDetector] HP 인식: {hp*100:.0f}%  (OCR: '{text}')")
+
+        return self._last_hp
+
+    def _parse_hp(self, text: str) -> float:
         """
-        HP바 채움 비율 계산.
-        방식: 각 열(column)에 HP 색상 픽셀이 있으면 채워진 열로 판단
-              → 채워진 열 수 / 전체 열 수 = HP%
-        (HP바가 왼쪽→오른쪽으로 차있는 구조)
+        "HP:115/115", "115/115", "115 / 115" 등에서 현재HP/최대HP 비율 반환.
         """
-        hsv = cv2.cvtColor(crop_bgr, cv2.COLOR_BGR2HSV)
-        mask = np.zeros(hsv.shape[:2], dtype=np.uint8)
-
-        for (lo, hi) in HP_HSV_RANGES:
-            lo_arr = np.array(lo, dtype=np.uint8)
-            hi_arr = np.array(hi, dtype=np.uint8)
-            mask |= cv2.inRange(hsv, lo_arr, hi_arr)
-
-        total_cols = mask.shape[1]
-        if total_cols == 0:
+        if not text:
             return None
-
-        # 각 열에 HP 픽셀이 하나라도 있으면 채워진 열
-        col_filled = np.any(mask > 0, axis=0)  # shape: (width,)
-        filled_cols = int(np.count_nonzero(col_filled))
-
-        ratio = filled_cols / total_cols
-        ratio = max(0.0, min(1.0, ratio))
-        return ratio
+        # "숫자/숫자" 패턴
+        m = re.search(r'(\d+)\s*/\s*(\d+)', text)
+        if m:
+            cur = int(m.group(1))
+            mx  = int(m.group(2))
+            if mx > 0:
+                ratio = max(0.0, min(1.0, cur / mx))
+                return ratio
+        return None
 
     def is_hp_low(self, frame_bgr: np.ndarray, threshold: float = 0.5) -> bool:
-        """HP가 threshold 미만인지 확인."""
         hp = self.read_hp(frame_bgr)
         if hp is None:
             return False
