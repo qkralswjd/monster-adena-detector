@@ -1,0 +1,130 @@
+[
+  {
+    "timestamp": "2026-09-17T06:13:11.060",
+    "event": "TARGET_SELECTED",
+    "data": {
+      "cx": 1120,
+      "cy": 342,
+      "conf": 0.412,
+      "abs_cx": 1492,
+      "abs_cy": 601
+    }
+  },
+  {
+    "timestamp": "2026-09-17T06:13:11.061",
+    "event": "COMBAT_START",
+    "data": {
+      "cx": 1120,
+      "cy": 342,
+      "conf": 0.412
+    }
+  },
+  {
+    "timestamp": "2026-09-17T06:13:11.078",
+    "event": "PATROL_START"
+  },
+  {
+    "timestamp": "2026-09-17T06:13:14.571",
+    "event": "TARGET_LOST",
+    "data": {
+      "target": "cx=1120 cy=342 conf=0.41",
+      "miss_timeout_sec": 3.5
+    }
+  },
+  {
+    "timestamp": "2026-09-17T06:13:16.460",
+    "event": "LOOT_START",
+    "data": {
+      "count": 1,
+      "targets": [
+        [
+          361,
+          155
+        ]
+      ]
+    }
+  },
+  {
+    "timestamp": "2026-09-17T06:13:16.927",
+    "event": "LOOT_CLICK",
+    "data": {
+      "cx": 361,
+      "cy": 155,
+      "index": 1,
+      "total": 1
+    }
+  },
+  {
+    "timestamp": "2026-09-17T06:13:16.974",
+    "event": "LOOT_DONE",
+    "data": {
+      "reason": "all_clicked"
+    }
+  },
+  {
+    "timestamp": "2026-09-17T06:13:17.003",
+    "event": "PATROL_START"
+  },
+  {
+    "timestamp": "2026-09-17T06:13:17.410",
+    "event": "LOOT_START",
+    "data": {
+      "count": 1,
+      "targets": [
+        [
+          269,
+          155
+        ]
+      ]
+    }
+  },
+  {
+    "timestamp": "2026-09-17T06:13:17.856",
+    "event": "LOOT_CLICK",
+    "data": {
+      "cx": 269,
+      "cy": 155,
+      "index": 1,
+      "total": 1
+    }
+  },
+  {
+    "timestamp": "2026-09-17T06:13:17.892",
+    "event": "LOOT_DONE",
+    "data": {
+      "reason": "all_clicked"
+    }
+  },
+  {
+    "timestamp": "2026-09-17T06:13:17.918",
+    "event": "PATROL_START"
+  },
+  {
+    "timestamp": "2026-09-17T06:13:43.654",
+    "event": "TARGET_SELECTED",
+    "data": {
+      "cx": 771,
+      "cy": 364,
+      "conf": 0.354,
+      "abs_cx": 1143,
+      "abs_cy": 623
+    }
+  },
+  {
+    "timestamp": "2026-09-17T06:13:43.654",
+    "event": "COMBAT_START",
+    "data": {
+      "cx": 771,
+      "cy": 364,
+      "conf": 0.354
+    }
+  },
+  {
+    "timestamp": "2026-09-17T06:13:47.278",
+    "event": "TARGET_LOST",
+    "data": {
+      "target": "cx=771 cy=364 conf=0.35",
+      "miss_timeout_sec": 3.5
+    }
+  }
+]
