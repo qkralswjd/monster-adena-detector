@@ -212,6 +212,8 @@ class StateMachine:
         self._last_loot_done_t   = 0.0   # 마지막 LOOTING 완료 시각
         self._last_loot_cx       = -1    # 마지막 루팅 아데나 평균 cx (-1=미설정)
         self._last_loot_cy       = -1    # 마지막 루팅 아데나 평균 cy (-1=미설정)
+        # LOOTING 허용 조건: 최소 1회 이상 공격(combat_active=True)이 있었어야 함
+        self._has_attacked_once  = False  # combat_active=True 전달된 적 있으면 True
 
         # ── 아이템 타이머 ────────────────────────────────────────────────
         speed1_key      = icfg.get("speed1_key", "F6")
@@ -251,6 +253,7 @@ class StateMachine:
     def start_hunting(self) -> None:
         """바로 HUNTING 시작 (이미 사냥터에 있는 경우)."""
         logger.info("[SM] ▶ 사냥터 사냥 즉시 시작")
+        self._has_attacked_once = False  # 새 사냥 세션 시작 → 공격 전제 초기화
         self._enter(BotState.HUNTING)
 
     def stop(self) -> None:
@@ -290,6 +293,10 @@ class StateMachine:
             self._update_move_to_hunt_zone(detections)
 
         elif self.state == BotState.HUNTING:
+            # combat_active=True가 한 번이라도 전달되면 기록
+            if combat_active and not self._has_attacked_once:
+                self._has_attacked_once = True
+                print("[SM] 첫 공격 확인 → LOOTING 허용 상태로 전환")
             self._update_hunting(detections, combat_active)
 
         elif self.state == BotState.LOOTING:
@@ -439,6 +446,13 @@ class StateMachine:
              loot_revisit_radius_px 이내         → 같은 아데나로 판단, 무시
           3. 위 조건에 해당 안 되면               → LOOTING 진입
         """
+        # ── 0. 공격 전제 조건 체크 ──────────────────────────────────
+        # 최소 1회 이상 공격(combat_active=True)이 발생한 후에만 LOOTING 허용.
+        # 공격 없이 화면에 보이는 기존 아데나 때문에 LOOTING 진입하는 것을 방지.
+        if not self._has_attacked_once:
+            print("[SM] 아데나 감지됐으나 아직 공격 전 → LOOTING 차단")
+            return
+
         # ── 1. 쿨타임 체크 ──────────────────────────────────────────
         elapsed_since_loot = now - self._last_loot_done_t
         if self._last_loot_done_t > 0 and elapsed_since_loot < self.loot_cooldown_sec:
