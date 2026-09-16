@@ -53,19 +53,19 @@
   "dummy": {
     "pos": null,
     "cooldown_sec": 0.8,
-    "_note": "pos: [x,y] 허수아비 절대 화면 좌표. F1 설정모드에서 우클릭으로 등록."
+    "_note": "pos: [x,y] 허수아비 절대 화면 좌표. setup_tool.py 에서 등록."
   },
   "movement": {
     "waypoints": [],
     "click_interval_sec": 1.5,
-    "_note": "waypoints: [[x,y],...] 사냥터 이동 경유 좌표. F2 설정모드에서 우클릭으로 등록. 최대 10개."
+    "_note": "waypoints: [[x,y],...] 사냥터 이동 경유 좌표. setup_tool.py 에서 등록. 최대 10개."
   },
   "level_detector": {
     "target_level": 5,
     "hp_threshold": 0.5,
     "level_roi": null,
     "hp_roi": null,
-    "_note": "level_roi/hp_roi: {x,y,w,h} 절대 화면 좌표. F3/F4 설정모드에서 드래그로 등록."
+    "_note": "level_roi/hp_roi: {x,y,w,h} 절대 화면 좌표. setup_tool.py 에서 드래그로 등록."
   },
   "items": {
     "hp_potion_key": "F4",
