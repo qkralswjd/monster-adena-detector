@@ -8,7 +8,7 @@
     "confidence": 0.25,
     "iou_threshold": 0.45,
     "device": "cuda",
-    "img_size": 320,
+    "img_size": 640,
     "_note": "detector.py 에 전달되는 값. 좌표 변환 없음."
   },
   "controller": {
