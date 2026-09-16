@@ -272,11 +272,21 @@ def main():
 
                 # ── 전투 종료 감지 ───────────────────────────────
                 # combat_active=True 상태에서 tracker.update()가 (None, 0.0)을
-                # 반환하는 시점 = miss_timeout(3.5s) 초과 후 타겟 소실 확인.
-                # 이것이 "게임 자동사냥 종료" 판정의 기준 신호.
-                # miss 중(elapsed>0)은 가림/이탈 가능성 → 전투 유지.
+                # 반환하는 시점 = miss_timeout(3.5s) 초과 후 tracker._target=None.
+                #
+                # ※ 이 신호의 정확한 의미: "3.5초간 타겟을 탐지하지 못함"
+                #   = TARGET_LOST (타겟 소실). 사망 확정이 아님.
+                #   현재 코드에는 실제 사망을 확정할 수 있는 신호가 없음:
+                #     - 몬스터 HP바 감지 없음 (level_detector는 플레이어 HP만)
+                #     - 사망 애니메이션 클래스 없음 (YOLO는 monster/adena 2클래스)
+                #     - 가림·화면 이탈과 실제 사망을 구분하는 별도 로직 없음
+                #   miss 중(elapsed>0)은 가림/이탈 가능성 → 전투 유지.
+                #   miss_timeout(3.5s) 초과 후 타겟 재선택 안 됨 = 화면에서 완전 소실.
+                #   이것을 현재 코드에서 사용 가능한 가장 신뢰할 수 있는 신호로 사용.
                 if combat_active and last_target is None and miss_elapsed == 0.0:
-                    print(f"[COMBAT] END_CONFIRMED target={_combat_target_info}")
+                    print(f"[COMBAT] TARGET_LOST target={_combat_target_info} "
+                          f"(miss_timeout {tcfg['miss_timeout_sec']}s 초과, "
+                          f"사망 추정 — 가림/이탈과 구분 불가)")
                     combat_active = False
 
                 # ── 공격 실행 (combat_active=False일 때만) ───────
@@ -296,7 +306,8 @@ def main():
                     _combat_target_info = (f"cx={last_target.cx} "
                                            f"cy={last_target.cy} "
                                            f"conf={last_target.confidence:.2f}")
-                    print(f"[COMBAT] START target={_combat_target_info}")
+                    print(f"[COMBAT] START target={_combat_target_info} "
+                          f"→ 종료는 TARGET_LOST({tcfg['miss_timeout_sec']}s) 대기")
                     print(f"[Attack] → ({cx},{cy})  conf={last_target.confidence:.2f}")
                     ctrl.drag_attack(cx, cy, hold_ms=hold_ms)
                     last_attack_t  = now

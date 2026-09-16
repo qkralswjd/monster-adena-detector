@@ -11,7 +11,7 @@ target_selector.py
      - miss 중:                     ghost(예측 위치)를 ref로 사용해 재연결 탐색
      - max_allowed_dist = max(max_speed * elapsed, min_search_r)
        → 속도 미확보 상태에서도 min_search_r(60px) 보장
-  3. miss_timeout 초 이상 탐지 안 되면 → 사망 추정 → 새 타겟 선택
+  3. miss_timeout 초 이상 탐지 안 되면 → TARGET_LOST (사망 추정, 가림/이탈과 구분 불가) → 새 타겟 선택
 
 변수 역할 분리:
   dt      : 직전 update() ~ 현재 update() 사이의 실제 경과시간
@@ -299,7 +299,7 @@ class TargetTracker:
 
         # ── 탐지 실패 → miss 타이머 체크 ─────────────────────────────
         if elapsed > self._miss_timeout:
-            print(f"[Tracker] ✗ 소실 ({elapsed:.1f}s) → 사망 추정, 새 타겟 탐색")
+            print(f"[Tracker] ✗ TARGET_LOST ({elapsed:.1f}s) → 사망 추정(가림/이탈 포함), 새 타겟 탐색")
             self._target = None
             self._ghost  = None
             self._vx = self._vy = 0.0
