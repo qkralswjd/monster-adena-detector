@@ -10,7 +10,8 @@ main.py
               → adena_timeout 초 후 또는 아데나 없으면 → HUNTING
 
 좌표 원칙:
-  cx, cy = YOLO 출력 그대로 → PICO 전달 (변환 없음)
+  YOLO는 ROI 기준 좌표 출력 → roi_offset_x/y 더해 절대 화면 좌표로 변환 → PICO 전달
+  abs_x = roi_x + det_cx  (pico_image_autoclicker/pc/vision.py 방식과 동일)
 
 실행:
   python main.py            # PICO 연결 (COM4)
@@ -68,6 +69,14 @@ def main():
     # ── 초기화 ────────────────────────────────────────────────
     cap = ScreenCapture(monitor=cfg["capture"]["monitor"], roi=cfg.get("roi"))
     print(f"[Init] 캡처: {cap.width}x{cap.height}  left={cap.left} top={cap.top}")
+
+    # ROI 오프셋 (YOLO 좌표 → 절대 화면 좌표 변환용)
+    # pico_image_autoclicker vision.py 방식:
+    #   center_x = roi_x + det_x   (ROI 내부좌표 + ROI 시작점 = 절대좌표)
+    _roi = cfg.get("roi", {})
+    roi_offset_x = _roi.get("x", 0) if _roi.get("enabled") else 0
+    roi_offset_y = _roi.get("y", 0) if _roi.get("enabled") else 0
+    print(f"[Init] ROI 오프셋: +({roi_offset_x}, {roi_offset_y})")
 
     dcfg = cfg["detector"]
     det = YOLODetector(
@@ -202,7 +211,9 @@ def main():
                         and now - last_attack_t >= cooldown
                         and not ctrl.is_attacking):
 
-                    cx, cy = last_target.cx, last_target.cy
+                    # ROI 기준 좌표 → 절대 화면 좌표
+                    cx = last_target.cx + roi_offset_x
+                    cy = last_target.cy + roi_offset_y
                     print(f"[Attack] → ({cx},{cy})  conf={last_target.confidence:.2f}")
                     ctrl.drag_attack(cx, cy, hold_ms=hold_ms)
                     last_attack_t = now
@@ -248,11 +259,13 @@ def main():
 
                 if unclicked and now - last_adena_click_t >= adena_click_delay:
                     target_adena = max(unclicked, key=lambda d: d.confidence)
-                    ax, ay = target_adena.cx, target_adena.cy
+                    # ROI 기준 좌표 → 절대 화면 좌표
+                    ax = target_adena.cx + roi_offset_x
+                    ay = target_adena.cy + roi_offset_y
                     print(f"[Adena] 줍기 클릭 → ({ax},{ay})  conf={target_adena.confidence:.2f}  "
                           f"남은시간={adena_timeout - check_elapsed:.1f}s")
                     ctrl.click(ax, ay, pulse_ms=click_pulse_ms)
-                    adena_clicked_set.add((round(ax), round(ay)))
+                    adena_clicked_set.add((round(target_adena.cx), round(target_adena.cy)))
                     last_adena_click_t = now
 
                 # ADENA_CHECK 종료 조건
