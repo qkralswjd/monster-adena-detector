@@ -206,9 +206,7 @@ class PicoController:
             pre_x, pre_y = _get_cursor_pos()
             print(f"[Pico] PRESS 직전 커서: ({pre_x},{pre_y})")
 
-            # 2. PRESS  (드래그 없음 — 단순 클릭 테스트)
-            # TEST: MOVE:-10:0 제거. PRESS → hold → RELEASE 만 수행.
-            # 목적: 단순 클릭으로 리니지 타겟팅이 발생하는지 검증.
+            # 2. PRESS
             self._write_line("PRESS")
             ok_press = self._wait_ack("OK:PRESS", "ERR:PRESS")
             if not ok_press:
@@ -221,7 +219,19 @@ class PicoController:
             # 3. hold 대기
             time.sleep(hold_ms / 1000.0)
 
-            # 4. RELEASE (MOVE:-10:0 없음)
+            # 4. MOVE:-10:0 (왼쪽 10px 드래그 → 리니지 자동공격 진입)
+            print("[Pico] MOVE:-10:0")
+            self._write_line("MOVE:-10:0")
+            ok_move = self._wait_ack("OK:MOVE", "ERR:MOVE")
+            if not ok_move:
+                # MOVE 실패 → RELEASE 후 중단
+                print("[Pico] MOVE:-10:0 ACK 실패 → RELEASE 후 공격 중단")
+                self._write_line("RELEASE")
+                self._wait_ack("OK:RELEASE", "ERR:RELEASE")  # 결과 무관
+                return
+
+            # 5. RELEASE
+            print("[Pico] RELEASE")
             self._write_line("RELEASE")
             ok_release = self._wait_ack("OK:RELEASE", "ERR:RELEASE")
             if not ok_release:
@@ -237,7 +247,7 @@ class PicoController:
             post_x, post_y = _get_cursor_pos()
             print(f"[Pico] RELEASE 후 커서: ({post_x},{post_y})")
 
-            print(f"[Pico] 공격 완료 (단순클릭, 드래그없음): ({x},{y})")
+            print(f"[Pico] 공격 완료 (드래그): ({x},{y})")
 
         except Exception as e:
             print(f"[Pico] 오류: {e}")
