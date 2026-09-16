@@ -160,6 +160,21 @@ def main():
         mon_w    = mon["width"]
         mon_h    = mon["height"]
 
+    # ── 환경 요약 (진단용) ──────────────────────────────────────────
+    # ※ mon_left/mon_top 은 현재 Pico 좌표 계산에 미포함(단일모니터=0이면 무관).
+    #   단일 모니터: mon_left=0, mon_top=0 → 영향 없음
+    #   멀티 모니터: mon_left≠0 → 좌표 오차 발생 가능 (이번 테스트에서는 미수정)
+    try:
+        import ctypes as _ctypes
+        _dpi = _ctypes.windll.shcore.GetScaleFactorForDevice(0)  # % 단위 (100=100%)
+        _dpi_str = f"{_dpi}%"
+    except Exception:
+        _dpi_str = "읽기실패(GetScaleFactorForDevice)"
+    print(f"[Env] 모니터#{cfg['capture']['monitor']}  "
+          f"mon_left={mon_left} mon_top={mon_top}  "
+          f"mon_size={mon_w}x{mon_h}  DPI={_dpi_str}")
+    print(f"[Env] ※ mon_left/mon_top은 Pico 절대좌표에 미포함 — 단일모니터(0,0)이면 무관")
+
     # ── StateMachine 초기화 ────────────────────────────────────────
     # LevelDetector가 ROI 좌표만 mss로 직접 캡처 → 전체화면 캡처 불필요
     sm = StateMachine(
@@ -336,6 +351,27 @@ def main():
                     _combat_target_info = (f"cx={last_target.cx} "
                                            f"cy={last_target.cy} "
                                            f"conf={last_target.confidence:.2f}")
+                    # ── 좌표 변환 상세 로그 ──────────────────────────────
+                    # ※ mon_left/mon_top은 Pico 좌표에 미포함(이번 테스트에서 변경 없음)
+                    print(f"[ATTACK] ROI=({last_target.cx},{last_target.cy}) "
+                          f"OFFSET=({roi_offset_x},{roi_offset_y}) "
+                          f"MON=({mon_left},{mon_top})[미사용] "
+                          f"ABS=({cx},{cy})")
+
+                    # ── 게임 창 foreground 확인 ───────────────────────────
+                    # HID 입력은 foreground 창에 전달됨.
+                    # 게임 창이 뒤에 있으면 입력이 다른 창으로 가거나 무시될 수 있음.
+                    # ※ 이 확인은 로그 전용. 입력 구조 변경 없음.
+                    try:
+                        import ctypes as _ctypes_fg
+                        _hwnd = _ctypes_fg.windll.user32.GetForegroundWindow()
+                        _buf  = _ctypes_fg.create_unicode_buffer(256)
+                        _ctypes_fg.windll.user32.GetWindowTextW(_hwnd, _buf, 256)
+                        _fg_title = _buf.value.strip() or "(제목없음)"
+                        print(f"[WINDOW] foreground='{_fg_title}'  hwnd={_hwnd}")
+                    except Exception as _fe:
+                        print(f"[WINDOW] foreground 확인 실패: {_fe}")
+
                     # 이벤트 순서: TARGET_SELECTED(타겟 확정) → COMBAT_START(공격 명령)
                     print(f"[Attack] → ({cx},{cy})  conf={last_target.confidence:.2f}")
                     get_recorder().log_event("TARGET_SELECTED", {
