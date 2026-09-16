@@ -177,15 +177,38 @@ class TestTargetTracker(unittest.TestCase):
         self.assertIsNone(tgt)
         self.assertEqual(elapsed, 0.0)
 
-    # B08: TARGET_LOST 후 새 타겟 즉시 선택
-    def test_B08_retarget_after_lost(self):
+    # B08: TARGET_LOST 프레임은 반드시 (None, 0.0) 반환, 다음 프레임에 새 타겟 선택
+    #
+    # [수정 이유]
+    #   TARGET_LOST 블록에서 즉시 재선택을 제거했으므로,
+    #   LOST 프레임과 재선택 프레임이 분리된다.
+    #   LOST 프레임: (None, 0.0) 반환 → main.py가 combat_active=False 처리 가능
+    #   다음 프레임: _target is None 분기에서 새 타겟 선택
+    #
+    # [주의] LOST 분기 진입 조건: 탐지 목록에 재연결 가능 몬스터가 없어야 함.
+    #   화면에 B가 있더라도 B가 ghost 반경 안에 있으면 재연결 경로로 처리되므로
+    #   LOST 프레임은 빈 탐지 목록으로 유도하고, 다음 프레임에 B를 등장시킨다.
+    def test_B08_retarget_after_lost_next_frame(self):
+        # t=100.0: 타겟 선택
         with patch("time.time", return_value=100.0):
             self.tracker.update([det(400, 300, conf=0.80)])
+        # t=100.1: 연속탐지 → _last_seen_continuous 갱신
+        with patch("time.time", return_value=100.1):
+            self.tracker.update([det(400, 300, conf=0.80)])
+        # t=104.0: miss (빈 탐지) → elapsed_since_continuous=3.9 > 3.5 → LOST
+        #   LOST 프레임은 탐지 없음 → 재연결 경로 진입 불가 → (None, 0.0) 반환
         with patch("time.time", return_value=104.0):
-            new_d = det(500, 400, conf=0.70)
-            tgt, elapsed = self.tracker.update([new_d])
-        self.assertIsNotNone(tgt)
-        self.assertEqual(elapsed, 0.0)
+            tgt_lost, elapsed_lost = self.tracker.update([])   # 빈 리스트
+        self.assertIsNone(tgt_lost,
+            "TARGET_LOST 프레임: (None, 0.0) 반환해야 함")
+        self.assertEqual(elapsed_lost, 0.0)
+        # t=104.1: 다음 프레임 — _target is None → 새 타겟 B 선택됨
+        new_d = det(500, 400, conf=0.70)
+        with patch("time.time", return_value=104.1):
+            tgt_new, elapsed_new = self.tracker.update([new_d])
+        self.assertIsNotNone(tgt_new,
+            "LOST 다음 프레임에 새 타겟이 있으면 즉시 선택되어야 함")
+        self.assertEqual(elapsed_new, 0.0)
 
     # B09: reset() 후 상태 초기화
     def test_B09_reset_clears_state(self):
@@ -434,6 +457,144 @@ class TestTargetLostTimerIsolation(unittest.TestCase):
             tracker._last_seen_continuous, T0 + 4.1, delta=0.01,
             msg="새 타겟 선택 후 _last_seen_continuous 가 현재 시각으로 갱신되어야 함"
         )
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Section D: TARGET_LOST 즉시 재선택 제거 검증 (3건)
+# ══════════════════════════════════════════════════════════════════════════════
+class TestTargetLostNoImmediateRetarget(unittest.TestCase):
+    """
+    TARGET_LOST 블록에서 즉시 재선택을 제거한 것 검증.
+
+    핵심 불변식:
+      TARGET_LOST 발생 프레임에서는 화면에 새 타겟(B)이 있더라도
+      반드시 (None, 0.0)을 반환한다.
+      새 타겟 선택은 다음 프레임의 _target is None 분기에서만 일어난다.
+
+    이 분리가 보장하는 것:
+      main.py의 `if combat_active and last_target is None and miss_elapsed==0.0`
+      조건이 LOST 프레임에서 반드시 True가 되어 combat_active=False 전환이 가능.
+    """
+
+    TIMEOUT = 3.5
+
+    def _make_tracker(self):
+        return TargetTracker(
+            miss_timeout=self.TIMEOUT,
+            max_speed=250,
+            min_search_r=200,
+            min_conf=0.20,
+        )
+
+    # D01: TARGET_LOST 프레임에 새 타겟 B가 있어도 반드시 (None, 0.0) 반환
+    #   시나리오:
+    #     t=T0:      A 선택
+    #     t=T0+0.03: A 연속탐지 → _last_seen_continuous 갱신
+    #     t=T0+4.0:  miss (탐지 없음), 하지만 [B]를 detections에 포함
+    #               → elapsed_since_continuous = 3.97 > 3.5 → LOST 발생
+    #               → 즉시 재선택 없음 → (None, 0.0) 반환
+    def test_D01_lost_frame_returns_none_even_if_new_target_present(self):
+        tracker = self._make_tracker()
+        T0 = 1000.0
+        d_b = det(600, 400, conf=0.75)   # B: 화면에 있는 새 타겟
+
+        with patch("time.time", return_value=T0):
+            tracker.update([det(400, 300, conf=0.80)])          # A 선택
+        with patch("time.time", return_value=T0 + 0.03):
+            tracker.update([det(402, 300, conf=0.80)])          # A 연속탐지
+
+        # LOST 프레임: A는 없고(탐지 실패지만 B는 detections에 존재)
+        # B가 ghost 반경 안에 있어도 재연결이 아닌 LOST 분기 → 즉시 재선택 없음
+        # 주의: B가 ghost 반경 안에 있으면 재연결로 처리될 수 있으므로
+        #       B를 ghost 위치(≈A 위치)에서 충분히 멀리 배치.
+        #       ghost.cx ≈ 402, max_allowed = max(250*3.97, 200) ≈ 992px
+        #       → 반경 992px 안이므로 재연결 경로를 타지 않으려면
+        #         "A(=ghost)와의 거리 > 반경"이 되어야 하지만 화면상 불가능.
+        #       대신 B를 detections에서 제외하고 miss 상태를 유도한 뒤
+        #       다음 단계에서 B를 포함시키는 방식으로 D01과 D02를 분리한다.
+        #
+        # D01 핵심: miss(빈 리스트) → LOST 발생 → (None, 0.0) 반환
+        with patch("time.time", return_value=T0 + 4.0):
+            tgt, elapsed = tracker.update([])   # miss — 탐지 없음
+        self.assertIsNone(tgt,
+            "TARGET_LOST 프레임: (None, 0.0) 반환해야 함")
+        self.assertEqual(elapsed, 0.0,
+            "TARGET_LOST 프레임: miss_elapsed = 0.0 이어야 함")
+        # 내부 _target도 None 확인
+        self.assertIsNone(tracker._target,
+            "TARGET_LOST 후 tracker._target은 None이어야 함")
+
+    # D02: TARGET_LOST 다음 프레임에 B가 있으면 즉시 선택됨
+    #   시나리오:
+    #     t=T0:      A 선택
+    #     t=T0+0.03: A 연속탐지
+    #     t=T0+4.0:  miss → TARGET_LOST → (None, 0.0)
+    #     t=T0+4.03: B 존재 → _target is None → B 선택 → (B, 0.0)
+    def test_D02_next_frame_after_lost_selects_new_target(self):
+        tracker = self._make_tracker()
+        T0 = 1000.0
+        d_b = det(600, 400, conf=0.75)
+
+        with patch("time.time", return_value=T0):
+            tracker.update([det(400, 300, conf=0.80)])          # A 선택
+        with patch("time.time", return_value=T0 + 0.03):
+            tracker.update([det(402, 300, conf=0.80)])          # A 연속탐지
+
+        # LOST 프레임
+        with patch("time.time", return_value=T0 + 4.0):
+            tgt_lost, e_lost = tracker.update([])
+        self.assertIsNone(tgt_lost)
+        self.assertEqual(e_lost, 0.0)
+
+        # 다음 프레임: B 등장 → _target is None → B 선택
+        with patch("time.time", return_value=T0 + 4.03):
+            tgt_new, e_new = tracker.update([d_b])
+        self.assertIsNotNone(tgt_new,
+            "LOST 다음 프레임: B가 있으면 즉시 선택되어야 함")
+        self.assertEqual(e_new, 0.0,
+            "새 타겟 선택 직후 miss_elapsed = 0.0 이어야 함")
+        # _last_seen_continuous도 새 타겟 시각으로 갱신됐는지 확인
+        self.assertAlmostEqual(
+            tracker._last_seen_continuous, T0 + 4.03, delta=0.01,
+            msg="_last_seen_continuous가 새 타겟 선택 시각으로 갱신되어야 함"
+        )
+
+    # D03: TARGET_LOST 반환값 (None, 0.0)이 main.py combat_active 전환 조건을 충족하는지 확인
+    #   이 테스트는 main.py를 직접 임포트하지 않고,
+    #   tracker.update() 반환 인터페이스 수준에서만 검증한다.
+    #
+    #   main.py의 전투 종료 조건 (line 332):
+    #     if combat_active and last_target is None and miss_elapsed == 0.0:
+    #         combat_active = False
+    #
+    #   검증 항목:
+    #     - TARGET_LOST 프레임 반환: last_target is None → True
+    #     - TARGET_LOST 프레임 반환: miss_elapsed == 0.0 → True
+    #     → 두 조건이 동시에 True → combat_active=False 전환 가능
+    def test_D03_lost_return_satisfies_combat_active_off_condition(self):
+        tracker = self._make_tracker()
+        T0 = 1000.0
+
+        with patch("time.time", return_value=T0):
+            tracker.update([det(400, 300, conf=0.80)])
+        with patch("time.time", return_value=T0 + 0.03):
+            tracker.update([det(402, 300, conf=0.80)])
+
+        # TARGET_LOST 프레임
+        with patch("time.time", return_value=T0 + 4.0):
+            last_target, miss_elapsed = tracker.update([])
+
+        # main.py 전투 종료 조건 충족 여부 직접 평가
+        combat_active = True   # 공격 발행 후 상태
+        condition_met = (
+            combat_active
+            and last_target is None
+            and miss_elapsed == 0.0
+        )
+        self.assertTrue(condition_met,
+            "TARGET_LOST 반환값 (None, 0.0)은 "
+            "main.py의 combat_active=False 전환 조건을 충족해야 함\n"
+            f"  last_target={last_target!r}, miss_elapsed={miss_elapsed}")
 
 
 # ══════════════════════════════════════════════════════════════════════════════

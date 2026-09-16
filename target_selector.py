@@ -368,19 +368,15 @@ class TargetTracker:
             print(
                 f"[Tracker] ✗ TARGET_LOST "
                 f"(연속탐지 기준 {elapsed_since_continuous:.1f}s) "
-                f"→ 사망 추정(가림/이탈 포함), 새 타겟 탐색"
+                f"→ 사망 추정(가림/이탈 포함), 새 타겟은 다음 프레임에 탐색"
             )
             self._target = None
             self._ghost  = None
             self._vx = self._vy = 0.0
-
-            # min_conf 전달: TARGET_LOST 후 재탐색에도 동일 기준 적용
-            new = select_by_confidence(monsters, min_conf=self._min_conf)
-            if new:
-                self._target               = new
-                self._last_seen            = now
-                self._last_seen_continuous = now
-                print(f"[Tracker] ★ 새 타겟: cx={new.cx} cy={new.cy} conf={new.confidence:.2f}")
+            # ※ 즉시 재선택 없음.
+            # 이 프레임은 반드시 (None, 0.0)을 반환해 main.py가
+            # combat_active=False 로 전환할 수 있도록 한다.
+            # 다음 프레임에서 _target is None 분기가 새 타겟을 선택한다.
             return self.target, 0.0
 
         # ── miss 중: ghost 위치 반환, 공격 불가 ──────────────────────
