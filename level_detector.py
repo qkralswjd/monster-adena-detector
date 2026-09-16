@@ -132,16 +132,17 @@ def _parse_level(text: str):
     """OCR 텍스트에서 레벨 숫자를 추출합니다.
 
     레퍼런스 구조 (level_reader.py _parse_level):
-      1) LEV/LEC/LEU 계열 (V→C/U 오인식 포함, 대소문자 무관)
-         예: "LEV:14", "LEC:14", "LEU:14", "Lev:5"
+      1) LEV/LEC/LEU 계열 (V→C/U 오인식, ; → : 오인식 포함, 대소문자 무관)
+         예: "LEV:14", "LEC:14", "LEU:14", "Lev:5", "Lev ; 15", "Lev ; 15_"
       2) Lv.숫자 계열
          예: "Lv.5", "Lv 5", "LV.5", "lv5"
-      3) 숫자만 (region이 레벨 숫자만 보이는 경우, 1~99)
+      3) 숫자만 — LEV 접두사가 있는 경우에만 허용 (단독 숫자는 오인식 위험)
     """
     text_stripped = text.strip()
 
     # 1) LEV / LEC / LEU 계열
-    m = re.search(r"[Ll][Ee][VvCcUu][: .]*?(\d+)", text_stripped)
+    # [: .;]* → 콜론/공백/점/세미콜론(; → : 오인식) 허용
+    m = re.search(r"[Ll][Ee][VvCcUu][: .;_]*(\d+)", text_stripped)
     if m:
         return int(m.group(1))
 
@@ -150,12 +151,14 @@ def _parse_level(text: str):
     if m:
         return int(m.group(1))
 
-    # 3) 숫자만
-    m = re.search(r"^\d+$", text_stripped.replace(" ", ""))
-    if m:
-        val = int(m.group(0))
-        if 1 <= val <= 99:
-            return val
+    # 3) 숫자만 — 단독 숫자는 무시 (42 같은 오인식 방지)
+    #    LEV/Lv 접두사 없이 숫자만 나오면 다른 UI 요소일 가능성 높음
+    # (필요 시 아래 주석 해제)
+    # m = re.search(r"^\d+$", text_stripped.replace(" ", ""))
+    # if m:
+    #     val = int(m.group(0))
+    #     if 1 <= val <= 99:
+    #         return val
 
     return None
 
