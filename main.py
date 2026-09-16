@@ -214,6 +214,14 @@ def main():
     prev_log_t      = 0.0
     LOG_INTERVAL    = 0.5
 
+    # ── 전투 상태 ────────────────────────────────────────────────────
+    # drag_attack() 호출 후 게임 내 자동사냥이 계속되는 구간을 추적.
+    # ctrl.is_attacking 은 HID 스레드 상태(~수백ms)이며 게임 전투와 무관.
+    # 전투 종료 판정: combat_active=True 상태에서 tracker.update()가
+    # (None, 0.0)을 반환할 때 (miss_timeout 3.5s 초과 → 타겟 소실 확인).
+    combat_active         = False
+    _combat_target_info   = ""   # 로그용 타겟 식별 문자열
+
     try:
         while True:
             now = time.time()
@@ -262,7 +270,22 @@ def main():
                 monsters = [d for d in detections if d.class_id == 0]
                 last_target, miss_elapsed = tracker.update(detections)
 
-                if (last_target is not None
+                # ── 전투 종료 감지 ───────────────────────────────
+                # combat_active=True 상태에서 tracker.update()가 (None, 0.0)을
+                # 반환하는 시점 = miss_timeout(3.5s) 초과 후 타겟 소실 확인.
+                # 이것이 "게임 자동사냥 종료" 판정의 기준 신호.
+                # miss 중(elapsed>0)은 가림/이탈 가능성 → 전투 유지.
+                if combat_active and last_target is None and miss_elapsed == 0.0:
+                    print(f"[COMBAT] END_CONFIRMED target={_combat_target_info}")
+                    combat_active = False
+
+                # ── 공격 실행 (combat_active=False일 때만) ───────
+                # 조건 10개:
+                #   기존 5개: target 존재, miss_elapsed==0.0, confidence,
+                #             cy, cooldown, not is_attacking
+                #   추가 1개: not combat_active (게임 자동사냥 중 새 공격 금지)
+                if (not combat_active
+                        and last_target is not None
                         and miss_elapsed == 0.0
                         and last_target.confidence >= min_conf
                         and last_target.cy >= min_cy
@@ -270,9 +293,18 @@ def main():
                         and not ctrl.is_attacking):
                     cx = last_target.cx + roi_offset_x
                     cy = last_target.cy + roi_offset_y
+                    _combat_target_info = (f"cx={last_target.cx} "
+                                           f"cy={last_target.cy} "
+                                           f"conf={last_target.confidence:.2f}")
+                    print(f"[COMBAT] START target={_combat_target_info}")
                     print(f"[Attack] → ({cx},{cy})  conf={last_target.confidence:.2f}")
                     ctrl.drag_attack(cx, cy, hold_ms=hold_ms)
-                    last_attack_t = now
+                    last_attack_t  = now
+                    combat_active  = True
+                elif combat_active and last_target is not None and miss_elapsed == 0.0:
+                    # 전투 중 새 공격 요청이 왔으나 차단
+                    if now - prev_log_t >= LOG_INTERVAL:
+                        print(f"[COMBAT] BLOCK_NEW_ATTACK target={_combat_target_info}")
 
                 # 로그
                 if now - prev_log_t >= LOG_INTERVAL:
@@ -281,14 +313,20 @@ def main():
                         tgt_str = (f"cx={last_target.cx} cy={last_target.cy}"
                                    if last_target else "없음")
                         print(f"── [HUNTING] 몬={len(monsters)}  "
-                              f"DET {det.fps:.1f}fps  타겟={tgt_str} ──")
+                              f"DET {det.fps:.1f}fps  타겟={tgt_str}  "
+                              f"combat={'ON' if combat_active else 'OFF'} ──")
             else:
-                # HUNTING 아닌 상태 전환 시 1회만 리셋 (매 루프 호출 방지)
-                if sm.state not in (BotState.HUNTING,) and tracker.target is not None:
+                # HUNTING 아닌 상태 전환 시:
+                # combat_active=False 일 때만 tracker.reset() 허용.
+                # 전투 중(combat_active=True)인데 상태 전환이 일어난 경우는
+                # reset 보류 → HUNTING 복귀 시 자연스럽게 해제.
+                if (sm.state not in (BotState.HUNTING,)
+                        and not combat_active
+                        and tracker.target is not None):
                     tracker.reset()
 
             # ── StateMachine tick ─────────────────────────────────
-            sm.update(frame, detections)
+            sm.update(frame, detections, combat_active=combat_active)
 
             # ── 오버레이 갱신 ────────────────────────────────────
             # LevelDetector가 캐시 반환 (실제 캡처는 내부에서 타이머 기반으로)

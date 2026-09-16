@@ -252,12 +252,14 @@ class StateMachine:
     def state_name(self) -> str:
         return self.state.name
 
-    def update(self, frame, detections: list) -> None:
+    def update(self, frame, detections: list, combat_active: bool = False) -> None:
         """매 루프마다 호출.
 
         Args:
-            frame     : ROI 기준 캡처 프레임 (BGR ndarray)
-            detections: YOLODetector.detect() 반환 Detection 리스트
+            frame         : ROI 기준 캡처 프레임 (BGR ndarray)
+            detections    : YOLODetector.detect() 반환 Detection 리스트
+            combat_active : 게임 자동사냥 진행 중 여부 (main.py 관리).
+                            True이면 순찰·LOOTING 전환을 차단한다.
 
         Note:
             레벨/HP 인식은 LevelDetector 내부에서 ROI 직접 캡처.
@@ -278,7 +280,7 @@ class StateMachine:
             self._update_move_to_hunt_zone(detections)
 
         elif self.state == BotState.HUNTING:
-            self._update_hunting(detections)
+            self._update_hunting(detections, combat_active)
 
         elif self.state == BotState.LOOTING:
             self._update_looting()
@@ -367,10 +369,13 @@ class StateMachine:
 
     # ── HUNTING ───────────────────────────────────────────────────────────
 
-    def _update_hunting(self, detections: list) -> None:
+    def _update_hunting(self, detections: list, combat_active: bool = False) -> None:
         now = time.time()
 
-        # 최초 진입 시 순찰 시작
+        # 최초 진입 시에만 순찰 시작.
+        # LOOTING 복귀 등 재진입(HUNTING → LOOTING → HUNTING) 시에는
+        # _patrol_started=True를 유지하여 patrol_mover를 reset하지 않음.
+        # (_enter(HUNTING)에서 _patrol_started를 False로 초기화하지 않도록 변경됨)
         if not self._patrol_started:
             if self.patrol_mover:
                 self.patrol_mover.start()
@@ -387,6 +392,16 @@ class StateMachine:
         monsters = [d for d in detections if d.class_id == 0]
         adenas   = [d for d in detections if d.class_id == 1]
 
+        # ── 전투 중이면 순찰/LOOTING 전환 모두 차단 ──────────────────────
+        # combat_active=True: drag_attack() 이후 게임 자동사냥이 진행 중.
+        # monsters=[] 이어도 일시적 YOLO miss일 수 있으므로 전투 유지.
+        # 전투 종료 판정은 main.py에서 tracker 소실 신호로 수행.
+        if combat_active:
+            if not monsters and not adenas:
+                pass  # YOLO miss — 전투 중으로 간주, 아무것도 하지 않음
+            # monsters가 보이거나 adenas가 보여도 combat_active=True이면 차단
+            return  # 순찰/LOOTING 로직에 도달하지 않음
+
         if monsters:
             # 몬스터 있으면 공격 (main.py의 tracker/attack 로직이 처리)
             pass
@@ -394,15 +409,17 @@ class StateMachine:
             # 몬스터 없을 때만 아데나 탐지 & 순찰 이동
             if adenas:
                 # 아데나 탐지 → LOOTING
+                # combat_active=False 이미 확인됨 → 정상 전투 종료 후 전환
                 self._loot_targets  = [(d.cx, d.cy) for d in adenas]
                 self._loot_idx      = 0
                 self._loot_start_t  = now
                 self.loot_detector.invalidate()
                 print(f"[SM] 아데나 {len(adenas)}개 감지 → LOOTING")
+                print("[LOOT] START")
                 self._enter(BotState.LOOTING)
                 return
 
-            # 순찰 이동
+            # 순찰 이동 (combat_active=False 확인됨 → 전투 중 차단 없음)
             if self.patrol_mover:
                 status = self.patrol_mover.tick(self.ctrl)
                 if status == "ARRIVED":
@@ -418,11 +435,13 @@ class StateMachine:
         # 타임아웃
         if now - self._loot_start_t >= self.loot_timeout:
             print("[SM] 아데나 줍기 타임아웃 → HUNTING 복귀")
+            print("[LOOT] DONE (타임아웃)")
             self._enter(BotState.HUNTING)
             return
 
         if not self._loot_targets or self._loot_idx >= len(self._loot_targets):
             print("[SM] 아데나 줍기 완료 → HUNTING 복귀")
+            print("[LOOT] DONE")
             self._enter(BotState.HUNTING)
             return
 
@@ -448,7 +467,24 @@ class StateMachine:
             self._last_dummy_atk  = 0.0
 
         elif new_state == BotState.HUNTING:
-            self._patrol_started = False
+            # _patrol_started 는 여기서 초기화하지 않음.
+            # 최초 진입(IDLE/MOVE_TO_HUNT_ZONE → HUNTING)에서만 patrol_mover.start()를
+            # 호출하고, LOOTING → HUNTING 복귀 시에는 재시작하지 않는다.
+            # 최초 진입 판정: _patrol_started 값이 False인 상태에서 진입 → 그때만 start().
+            # 이를 위해 LOOTING → HUNTING 재진입 시 _patrol_started를 False로 바꾸지 않음.
+            # 주의: start_hunting() / start_at_hunt_zone() 호출 직후에는
+            #        _load_config()가 _patrol_started=False로 초기화하므로
+            #        최초 진입 시 patrol_mover.start()가 정상 호출됨.
+            if self.state not in (BotState.LOOTING,):
+                # LOOTING 복귀가 아닌 경우(최초 진입, MOVE_TO_HUNT_ZONE → HUNTING 등)는
+                # patrol_started를 False로 세팅해 patrol_mover.start() 호출하도록 함.
+                self._patrol_started = False
+            else:
+                # LOOTING → HUNTING 복귀: patrol_mover 상태 유지 (재시작 안 함)
+                print("[HUNT] RESUME (순찰 상태 유지)")
+
+        elif new_state == BotState.LOOTING:
+            print("[LOOT] START (SM 진입)")
 
         elif new_state == BotState.DONE:
             print("[SM] ✅ 레벨링 완료!")
