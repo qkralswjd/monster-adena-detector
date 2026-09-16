@@ -23,10 +23,11 @@ import time
 
 
 # HP바 색상 범위 (HSV)
-# 빨간색 두 범위 (Hue 0~10, 170~180)
+# 리니지 HP바: 어두운 적갈색 (RGB ~120-150, 20-30, 20-30)
+# HSV 변환: Hue=0~10, Sat=100~255, Val=40~180
 HP_HSV_RANGES = [
-    ((0,   80, 80),  (10,  255, 255)),
-    ((170, 80, 80),  (180, 255, 255)),
+    ((0,   100, 40),  (10,  255, 180)),   # 어두운 적갈색 (메인)
+    ((170, 100, 40),  (180, 255, 180)),   # 어두운 적갈색 (wrap)
 ]
 
 
@@ -134,23 +135,40 @@ class LevelDetector:
         return self._last_level
 
     def _ocr_digit(self, crop_bgr: np.ndarray) -> int:
-        """이미지에서 숫자 하나 읽기."""
-        # 전처리: 그레이 → 이진화
-        gray = cv2.cvtColor(crop_bgr, cv2.COLOR_BGR2GRAY)
+        """
+        이미지에서 레벨 숫자 읽기.
+        리니지 LEV UI: 주황색 텍스트 → 주황색만 추출 후 OCR
+        """
+        # ── 주황색 텍스트 마스크 추출 (리니지 레벨 숫자 색상) ──
+        hsv = cv2.cvtColor(crop_bgr, cv2.COLOR_BGR2HSV)
+        # 주황색 범위 (Hue 10~25)
+        orange_mask = cv2.inRange(hsv,
+                                   np.array([10, 100, 100], dtype=np.uint8),
+                                   np.array([25, 255, 255], dtype=np.uint8))
+        # 흰색 텍스트도 포함 (혹시 다른 색상)
+        white_mask  = cv2.inRange(hsv,
+                                   np.array([0, 0, 180], dtype=np.uint8),
+                                   np.array([180, 40, 255], dtype=np.uint8))
+        combined = cv2.bitwise_or(orange_mask, white_mask)
+
+        # 마스크 적용 → 배경 검정
+        result = cv2.bitwise_and(crop_bgr, crop_bgr, mask=combined)
+        gray   = cv2.cvtColor(result, cv2.COLOR_BGR2GRAY)
+
         # 크기 확대 (OCR 정확도 향상)
-        scale = 3
-        h, w = gray.shape
-        gray = cv2.resize(gray, (w*scale, h*scale), interpolation=cv2.INTER_LINEAR)
+        scale = 4
+        h, w  = gray.shape
+        gray  = cv2.resize(gray, (w*scale, h*scale),
+                           interpolation=cv2.INTER_LINEAR)
         # 이진화
-        _, binary = cv2.threshold(gray, 0, 255,
-                                  cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        _, binary = cv2.threshold(gray, 30, 255, cv2.THRESH_BINARY)
 
         text = None
 
         if self._ocr_engine == "tesseract":
             try:
                 import pytesseract
-                cfg = "--psm 8 --oem 3 -c tessedit_char_whitelist=0123456789"
+                cfg = "--psm 7 --oem 3 -c tessedit_char_whitelist=0123456789"
                 text = pytesseract.image_to_string(binary, config=cfg).strip()
             except Exception as e:
                 print(f"[LevelDetector] tesseract 오류: {e}")
@@ -207,9 +225,10 @@ class LevelDetector:
 
     def _calc_hp_ratio(self, crop_bgr: np.ndarray) -> float:
         """
-        HP 색상 픽셀 비율 계산.
-        빨간색 픽셀 수 / 전체 픽셀 수 = HP%
-        (HP바가 왼쪽→오른쪽으로 차있는 구조 가정)
+        HP바 채움 비율 계산.
+        방식: 각 열(column)에 HP 색상 픽셀이 있으면 채워진 열로 판단
+              → 채워진 열 수 / 전체 열 수 = HP%
+        (HP바가 왼쪽→오른쪽으로 차있는 구조)
         """
         hsv = cv2.cvtColor(crop_bgr, cv2.COLOR_BGR2HSV)
         mask = np.zeros(hsv.shape[:2], dtype=np.uint8)
@@ -219,14 +238,15 @@ class LevelDetector:
             hi_arr = np.array(hi, dtype=np.uint8)
             mask |= cv2.inRange(hsv, lo_arr, hi_arr)
 
-        total = mask.size
-        filled = int(np.count_nonzero(mask))
-
-        if total == 0:
+        total_cols = mask.shape[1]
+        if total_cols == 0:
             return None
 
-        ratio = filled / total
-        # 클램프
+        # 각 열에 HP 픽셀이 하나라도 있으면 채워진 열
+        col_filled = np.any(mask > 0, axis=0)  # shape: (width,)
+        filled_cols = int(np.count_nonzero(col_filled))
+
+        ratio = filled_cols / total_cols
         ratio = max(0.0, min(1.0, ratio))
         return ratio
 
