@@ -224,8 +224,46 @@ class OverlayWindow:
         self._canvas.bind("<ButtonRelease-1>", self._on_release)
         self._canvas.bind("<Button-3>",        self._on_right_click)
 
+        # 마우스 위치 추적 → 버튼 위에 있을 때만 클릭 수신
+        self._mouse_check_loop()
+
         self._schedule_redraw()
         root.mainloop()
+
+    def _mouse_check_loop(self):
+        """
+        50ms마다 마우스 위치 확인.
+        버튼 위 → 클릭통과 OFF (오버레이가 클릭 받음)
+        버튼 밖 + 일반모드 → 클릭통과 ON (게임으로 전달)
+        설정모드 → 항상 클릭통과 OFF
+        """
+        if not self._running or self._root is None:
+            return
+        try:
+            # 전체화면 기준 마우스 좌표
+            pt = ctypes.wintypes.POINT()
+            ctypes.windll.user32.GetCursorPos(ctypes.byref(pt))
+            # 오버레이 기준 좌표로 변환
+            mx = pt.x - self._win_x
+            my = pt.y - self._win_y
+
+            on_btn = self._is_on_button(mx, my)
+
+            if self._hwnd:
+                if self._setup_mode != MODE_NORMAL:
+                    # 설정모드: 항상 클릭 수신
+                    _set_click_through(self._hwnd, False)
+                elif on_btn:
+                    # 버튼 위: 클릭 수신
+                    _set_click_through(self._hwnd, False)
+                else:
+                    # 일반모드 + 버튼 밖: 클릭 통과
+                    _set_click_through(self._hwnd, True)
+        except Exception:
+            pass
+
+        if self._root:
+            self._root.after(50, self._mouse_check_loop)
 
     def _schedule_redraw(self):
         if not self._running:
