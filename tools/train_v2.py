@@ -208,6 +208,7 @@ def train(yaml_path):
     except ImportError:
         print("[train] ultralytics 없음 → pip install ultralytics")
         sys.exit(1)
+    # ↑ import 확인만. 이 아래는 try 밖 (finally 오염 없음)
 
     # BASE_MODEL 존재 확인
     if os.path.exists(BASE_MODEL):
@@ -220,7 +221,7 @@ def train(yaml_path):
     print(f"  epochs   : {EPOCHS}")
     print(f"  img_size : {IMG_SIZE}")
     print(f"  batch    : {BATCH}")
-    print(f"  adena cls_pw: {ADENA_CLS_WEIGHT}x")
+    print(f"  adena 복제배수: {ADENA_REPEAT}x  fl_gamma: 2.0")
     print(f"  저장     : {os.path.join(PROJECT, NAME)}\n")
 
     model = YOLO(model_src)
