@@ -269,17 +269,61 @@ class OverlayWindow:
         self._canvas.bind("<B1-Motion>",        self._on_drag_move)
         self._canvas.bind("<ButtonRelease-1>",  self._on_drag_end)
 
-        # 키보드 단축키
-        root.bind("<F1>",  lambda e: self._set_mode(MODE_DUMMY))
-        root.bind("<F2>",  lambda e: self._set_mode(MODE_WAYPOINT))
-        root.bind("<F3>",  lambda e: self._set_mode(MODE_LEVEL_ROI))
-        root.bind("<F4>",  lambda e: self._set_mode(MODE_HP_ROI))
-        root.bind("<Escape>", lambda e: self._set_mode(MODE_NORMAL))
-        root.bind("<Delete>", lambda e: self._undo_last())
-        root.bind("<Control-x>", lambda e: self._save_config())
+        # ── 전역 핫키 (pynput) ───────────────────────────────
+        # tkinter 포커스 없어도 작동
+        self._start_hotkey_listener()
 
         self._schedule_redraw()
         root.mainloop()
+
+    def _start_hotkey_listener(self):
+        """pynput 전역 키보드 리스너 시작 (별도 스레드)."""
+        try:
+            from pynput import keyboard as _kb
+
+            _ctrl_pressed = [False]
+
+            def on_press(key):
+                try:
+                    if key == _kb.Key.ctrl_l or key == _kb.Key.ctrl_r:
+                        _ctrl_pressed[0] = True
+                    elif key == _kb.Key.f1:
+                        self._root.after(0, lambda: self._set_mode(MODE_DUMMY))
+                    elif key == _kb.Key.f2:
+                        self._root.after(0, lambda: self._set_mode(MODE_WAYPOINT))
+                    elif key == _kb.Key.f3:
+                        self._root.after(0, lambda: self._set_mode(MODE_LEVEL_ROI))
+                    elif key == _kb.Key.f4:
+                        self._root.after(0, lambda: self._set_mode(MODE_HP_ROI))
+                    elif key == _kb.Key.esc:
+                        self._root.after(0, lambda: self._set_mode(MODE_NORMAL))
+                    elif key == _kb.Key.delete:
+                        self._root.after(0, self._undo_last)
+                    elif _ctrl_pressed[0]:
+                        try:
+                            if key.char == 'x' or key.char == 'X':
+                                self._root.after(0, self._save_config)
+                        except AttributeError:
+                            pass
+                except Exception:
+                    pass
+
+            def on_release(key):
+                try:
+                    if key == _kb.Key.ctrl_l or key == _kb.Key.ctrl_r:
+                        _ctrl_pressed[0] = False
+                except Exception:
+                    pass
+
+            listener = _kb.Listener(on_press=on_press, on_release=on_release)
+            listener.daemon = True
+            listener.start()
+            print("[Overlay] 전역 핫키 리스너 시작 (pynput)")
+            print("[Overlay] F1/F2/F3/F4: 설정모드  ESC: 종료  Ctrl+X: 저장  Delete: 되돌리기")
+        except ImportError:
+            print("[Overlay] pynput 없음 → pip install pynput")
+        except Exception as e:
+            print(f"[Overlay] 핫키 리스너 실패: {e}")
 
     def _set_mode(self, mode: str):
         self._setup_mode = mode
