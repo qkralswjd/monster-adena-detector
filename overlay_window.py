@@ -245,8 +245,8 @@ class OverlayWindow:
             ox2, oy2 = self._det_to_ov(d.x + d.w, d.y + d.h)
             ocx, ocy = self._det_to_ov(d.cx, d.cy)
             if d.class_id == 1:
-                clr = CLR_ADENA_TGT if state == "ADENA_CHECK" else CLR_ADENA
-                lw  = 2 if state == "ADENA_CHECK" else 1
+                clr = CLR_ADENA_TGT if state == "LOOTING" else CLR_ADENA
+                lw  = 2 if state == "LOOTING" else 1
                 c.create_rectangle(ox, oy, ox2, oy2, outline=clr, width=lw)
                 self._text(c, f"adena {d.confidence:.2f}",
                            ox, oy-4, clr, size=9)
@@ -348,10 +348,12 @@ class OverlayWindow:
     def _draw_hud(self, c, dets, target, det_fps, cap_fps,
                   state, hp_pct, level):
         state_clr = {
-            "HUNTING":      CLR_TARGET,
-            "ADENA_CHECK":  CLR_ADENA_TGT,
-            "DUMMY_ATTACK": CLR_DUMMY,
-            "MOVING":       CLR_WAYPOINT,
+            "HUNTING":           CLR_TARGET,
+            "LOOTING":           CLR_ADENA_TGT,
+            "ATTACKING_DUMMY":   CLR_DUMMY,
+            "MOVE_TO_HUNT_ZONE": CLR_WAYPOINT,
+            "IDLE":              CLR_TEXT,
+            "DONE":              CLR_TEXT,
         }.get(state, CLR_TEXT)
 
         hp_str = f"{hp_pct:.1f}%" if hp_pct is not None else "?"

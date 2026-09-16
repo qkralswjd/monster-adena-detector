@@ -67,7 +67,7 @@ def _calc_hp_pct(crop_bgr: np.ndarray) -> float:
     # BGR → HSV
     hsv = cv2.cvtColor(crop_bgr, cv2.COLOR_BGR2HSV)
 
-    # 빨간색 픽셀 마스크 (두 HSV 범위 OR)
+    # 파란색 픽셀 마스크 (HSV H=100~140)
     mask = np.zeros(hsv.shape[:2], dtype=np.uint8)
     for (lower, upper) in _HP_HSV_RANGES:
         m = cv2.inRange(hsv, np.array(lower, dtype=np.uint8),
@@ -181,7 +181,7 @@ class LevelDetector:
     def __init__(self,
                  level_roi: dict = None,
                  hp_roi: dict = None,
-                 hp_color: str = "red",      # 하위 호환용 (무시됨, 항상 빨간색)
+                 hp_color: str = "blue",     # 하위 호환용 (무시됨, 항상 파란색)
                  target_level: int = 5):
         self._level_roi    = level_roi
         self._hp_roi       = hp_roi
@@ -198,7 +198,7 @@ class LevelDetector:
         self._level_interval = 2.0   # 레벨: 2초마다 OCR
         self._hp_interval    = 0.5   # HP: 0.5초마다
 
-        print("[LevelDetector] 초기화 완료 (HP: 빨간색 HSV, 전체 열 합계 방식)")
+        print("[LevelDetector] 초기화 완료 (HP: 파란색 HSV H=100~140, 전체 열 합계 방식)")
 
     def _ensure_ocr(self):
         if self._ocr is None:
@@ -298,12 +298,12 @@ class LevelDetector:
     # ─────────────────────────────────────────────────────────
 
     def read_hp(self, frame_bgr: np.ndarray) -> float:
-        """HP ROI에서 빨간색 픽셀 열 비율로 HP% 계산.
+        """HP ROI에서 파란색 픽셀 열 비율로 HP% 계산.
 
         레퍼런스 구조 (hp_reader.py):
-          - HSV 빨간색 범위 (H=0~10, H=170~180)
+          - HSV 파란색 범위 (H=100~140, 실측 RGB≈(0,36~43,175~212))
           - 텍스트가 바 중간을 가로막으므로 연속 열 방식 불가
-          - 전체 빨간 열 합계(count_nonzero) 비율 사용
+          - 전체 파란 열 합계(count_nonzero) 비율 사용
 
         캐시: 0.5초
 
