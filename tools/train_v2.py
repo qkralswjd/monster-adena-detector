@@ -10,15 +10,13 @@ tools/train_v2.py
 
 해결 전략:
   1. adena 이미지를 val에 강제 포함 (stratified split)
-  2. cls_pw (class weight) 로 adena 손실 가중치 8배 증가
-  3. augmentation 강화 (mosaic, mixup, copy_paste)
-  4. monster_v1 best.pt 에서 fine-tune (전이학습)
-  5. 기존 monster_v1 모델 덮어쓰지 않고 monster_v2 로 저장
+  2. adena 이미지를 train에 N배 복제 → 실질적 데이터 증량
+  3. fl_gamma=2.0 focal loss → 어려운 샘플(adena) 집중 학습
+  4. augmentation 강화 (mosaic, mixup, copy_paste)
+  5. monster_v1 best.pt 에서 fine-tune (전이학습)
+  6. 기존 monster_v1 덮어쓰지 않고 monster_v2 로 저장
 
 사용법:
-    python tools/train_v2.py
-
-PC에서 실행 (C:\\Users\\dongj\\monster_tracker):
     python tools/train_v2.py
 
 결과:
@@ -45,9 +43,10 @@ DEVICE      = 0
 PROJECT     = os.path.join(ROOT, "runs", "detect")
 NAME        = "monster_v2"
 
-# adena 클래스 가중치: monster(1.0) vs adena(N배)
-# 70개 vs 585개 → 약 8배 불균형 → 8.0 으로 보정
-ADENA_CLS_WEIGHT = 8.0
+# adena 이미지 복제 배수
+# 64장 → 64 * ADENA_REPEAT 장으로 train에 추가
+# monster 459장 대비 균형 목표: 약 5배 복제 → 320장
+ADENA_REPEAT = 5
 # ────────────────────────────────────────────────────────────
 
 
@@ -134,6 +133,58 @@ def stratified_split(val_ratio=0.15):
     return len(val_set)
 
 
+def duplicate_adena_images(repeat=ADENA_REPEAT):
+    """
+    train 내 adena 이미지를 repeat 배 복제.
+    파일명: 원본_dup1.jpg / 원본_dup1.txt ... 원본_dupN.jpg / 원본_dupN.txt
+    이미 복제본이 있으면 건너뜀 (중복 방지).
+    """
+    train_img = os.path.join(DATASET, "images", "train")
+    train_lbl = os.path.join(DATASET, "labels", "train")
+
+    # adena 라벨 있는 원본 파일만 (dup 제외)
+    adena_bases = []
+    for lbl_f in glob.glob(os.path.join(train_lbl, "*.txt")):
+        base = os.path.splitext(os.path.basename(lbl_f))[0]
+        if "_dup" in base:
+            continue   # 이미 복제본
+        with open(lbl_f) as f:
+            if any(l.startswith("1 ") for l in f.read().strip().split("\n")):
+                adena_bases.append(base)
+
+    print(f"[dup] adena train 원본: {len(adena_bases)}개  →  {repeat}배 복제")
+    created = 0
+    for base in adena_bases:
+        src_img = os.path.join(train_img, base + ".jpg")
+        src_lbl = os.path.join(train_lbl, base + ".txt")
+        if not os.path.exists(src_img) or not os.path.exists(src_lbl):
+            continue
+        for i in range(1, repeat + 1):
+            dst_img = os.path.join(train_img, f"{base}_dup{i}.jpg")
+            dst_lbl = os.path.join(train_lbl, f"{base}_dup{i}.txt")
+            if not os.path.exists(dst_img):
+                shutil.copy2(src_img, dst_img)
+                shutil.copy2(src_lbl, dst_lbl)
+                created += 1
+
+    total_adena = len(adena_bases) * (repeat + 1)
+    print(f"[dup] 복제 완료: {created}개 생성  adena 총 train: {total_adena}장")
+
+
+def cleanup_duplicates():
+    """학습 후 복제본 정리 (원본만 남김). 선택적으로 호출."""
+    train_img = os.path.join(DATASET, "images", "train")
+    train_lbl = os.path.join(DATASET, "labels", "train")
+    removed = 0
+    for f in glob.glob(os.path.join(train_img, "*_dup*.jpg")):
+        os.remove(f)
+        removed += 1
+    for f in glob.glob(os.path.join(train_lbl, "*_dup*.txt")):
+        os.remove(f)
+        removed += 1
+    print(f"[cleanup] 복제본 {removed}개 삭제")
+
+
 def make_yaml():
     """dataset.yaml 생성 (경로는 상대경로로 저장)."""
     import yaml
@@ -183,15 +234,14 @@ def train(yaml_path):
         name      = NAME,
         patience  = 20,
 
-        # ── 클래스 불균형 보정 ──────────────────────────
-        # cls_pw: 각 클래스의 BCE 손실 가중치
-        # [monster_weight, adena_weight]
-        cls_pw    = [1.0, ADENA_CLS_WEIGHT],
+        # ── Focal Loss (어려운 샘플 집중) ───────────────
+        # fl_gamma=2.0: adena처럼 잘 못 잡는 객체에 손실 더 집중
+        fl_gamma  = 2.0,
 
         # ── Augmentation 강화 ───────────────────────────
         mosaic    = 1.0,       # mosaic 항상 ON
         mixup     = 0.15,      # 15% 확률로 mixup
-        copy_paste= 0.3,       # 30% 확률로 객체 복사-붙여넣기 (adena 증강 효과)
+        copy_paste= 0.3,       # 30% 확률로 객체 복사-붙여넣기
         degrees   = 5.0,       # 미세 회전
         translate = 0.1,
         scale     = 0.5,
@@ -204,7 +254,7 @@ def train(yaml_path):
         save      = True,
         plots     = True,
         verbose   = True,
-        close_mosaic = 10,     # 마지막 10 epoch은 mosaic OFF (fine-tuning 안정화)
+        close_mosaic = 10,     # 마지막 10 epoch은 mosaic OFF (안정화)
     )
     return results
 
@@ -228,13 +278,21 @@ def main():
     # 1. stratified split (adena → val 포함)
     stratified_split(val_ratio=0.15)
 
-    # 2. dataset.yaml
+    # 2. adena 이미지 복제 (불균형 보정)
+    duplicate_adena_images(repeat=ADENA_REPEAT)
+
+    # 3. dataset.yaml
     yaml_path = make_yaml()
 
-    # 3. 학습
-    train(yaml_path)
+    # 4. 학습
+    try:
+        train(yaml_path)
+    finally:
+        # 5. 복제본 정리 (학습 성공/실패 무관하게)
+        print("\n[cleanup] 복제본 정리 중...")
+        cleanup_duplicates()
 
-    # 4. 결과 안내
+    # 6. 결과 안내
     print_summary()
 
 
