@@ -141,6 +141,14 @@ class OverlayWindow:
         # 액션 버튼 히트박스 [(x1,y1,x2,y2, action), ...]
         self._act_rects    = []
 
+        # 히트박스 미리 계산 (mon_w 확정 후)
+        self._calc_buttons()
+        print(f"[Overlay] 버튼 히트박스:")
+        for (x1,y1,x2,y2,mode,label,clr) in self._btn_rects:
+            print(f"  [{label}] ({x1},{y1})~({x2},{y2})")
+        for (x1,y1,x2,y2,action,label,clr) in self._act_rects:
+            print(f"  [{label}] ({x1},{y1})~({x2},{y2})")
+
         self._last_click   = 0.0
         self._click_cd     = 0.15
 
@@ -233,31 +241,31 @@ class OverlayWindow:
     def _mouse_check_loop(self):
         """
         50ms마다 마우스 위치 확인.
-        버튼 위 → 클릭통과 OFF (오버레이가 클릭 받음)
-        버튼 밖 + 일반모드 → 클릭통과 ON (게임으로 전달)
+        버튼 위 → 클릭통과 OFF
+        버튼 밖 + 일반모드 → 클릭통과 ON
         설정모드 → 항상 클릭통과 OFF
         """
         if not self._running or self._root is None:
             return
         try:
-            # 전체화면 기준 마우스 좌표
             pt = ctypes.wintypes.POINT()
             ctypes.windll.user32.GetCursorPos(ctypes.byref(pt))
-            # 오버레이 기준 좌표로 변환
+            # 오버레이 창 기준 상대좌표
             mx = pt.x - self._win_x
             my = pt.y - self._win_y
+
+            # 버튼 히트박스가 비어있으면 재계산
+            if not self._btn_rects:
+                self._calc_buttons()
 
             on_btn = self._is_on_button(mx, my)
 
             if self._hwnd:
                 if self._setup_mode != MODE_NORMAL:
-                    # 설정모드: 항상 클릭 수신
                     _set_click_through(self._hwnd, False)
                 elif on_btn:
-                    # 버튼 위: 클릭 수신
                     _set_click_through(self._hwnd, False)
                 else:
-                    # 일반모드 + 버튼 밖: 클릭 통과
                     _set_click_through(self._hwnd, True)
         except Exception:
             pass
