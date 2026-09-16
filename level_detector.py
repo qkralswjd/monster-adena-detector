@@ -16,7 +16,7 @@ level_detector.py
 
 [레벨 인식]
   - 엔진: easyocr (detail=1, confidence 포함)
-  - 전처리: OTSU 이진화만 (확대 없음 — 확대 보간이 '1'→'9'/'4' 오인식 유발)
+  - 전처리: 2배 확대(INTER_CUBIC) + OTSU 이진화 (실측 conf 0.86, '1' 정확 인식)
   - 신뢰도 임계값: 0.1 (LEV:14 등 OCR 신뢰도 낮아 완화)
   - 정규식 패턴:
       1) LEV/LEC/LEU 계열: [Ll][Ee][VvCcUu][: .]*?(\\d+)  ← V→C/U 오인식 포함
@@ -95,20 +95,32 @@ def _calc_hp_pct(crop_bgr: np.ndarray) -> float:
 def _preprocess_for_ocr(crop_bgr: np.ndarray) -> np.ndarray:
     """레벨 OCR 인식률을 높이기 위한 전처리.
 
-    실측 기반 (tesseract 비교 테스트 결과):
+    실측 기반 (debug_preprocess.py 실제 게임 화면 비교 테스트):
       - 배경: 주황/갈색 그라데이션 (어두운 계열)
       - 텍스트: 흰색 (RGB≈240,245,255) → 그레이스케일 시 배경보다 밝음
-      → OTSU 이진화 후 확대 X — 확대 보간이 '1'획에 픽셀을 채워 '9'/'4'로 변형시킴
-      → 이진화 결과 그대로 (흰 배경 + 검정 텍스트) easyocr에 전달
+
+    비교 결과 (실제 게임 ROI 기준):
+      - OTSU만(resize없음): 'Lev:45' ❌ conf=0.38
+      - 3x+CLAHE+OTSU:     'Lev:45' ❌ conf=0.23
+      - 2x+OTSU:           'Lev:15' ✅ conf=0.86  ← 채택
+      - 4x+thresh147:      'Lev;45' ❌ conf=0.40
+      - 3x+thresh200:      'LEV:15' ✅ conf=0.47
+      - 3x+원본컬러:       'LEv:15' ✅ conf=0.60
 
     처리 순서:
-      1) 그레이스케일
-      2) OTSU 이진화 (흰 텍스트=255, 어두운 배경=0)
-      3) bitwise_not 반전 → 흰 배경 + 검정 텍스트 (easyocr 최적)
-      ※ 확대(resize) 제거: 이진화 후 확대하면 보간으로 '1'→'9'/'4' 오인식 발생
+      1) 2배 확대 (INTER_CUBIC — 부드러운 보간, 1획 보존)
+      2) 그레이스케일
+      3) OTSU 이진화 (흰 텍스트=255, 어두운 배경=0)
+      4) bitwise_not 반전 → 흰 배경 + 검정 텍스트 (easyocr 최적)
     """
+    h, w = crop_bgr.shape[:2]
+
+    # 2배 확대 (INTER_CUBIC: 보간 부드럽지만 1획 유지 — 실측 conf 0.86)
+    enlarged = cv2.resize(crop_bgr, (w * 2, h * 2),
+                          interpolation=cv2.INTER_CUBIC)
+
     # 그레이스케일
-    gray = cv2.cvtColor(crop_bgr, cv2.COLOR_BGR2GRAY)
+    gray = cv2.cvtColor(enlarged, cv2.COLOR_BGR2GRAY)
 
     # OTSU 이진화: 흰 텍스트(밝음)=255, 주황/갈색 배경(어두움)=0
     _, binary = cv2.threshold(gray, 0, 255,
@@ -292,7 +304,7 @@ class LevelDetector:
         if crop is None:
             return self._last_level
 
-        # 전처리 (OTSU 이진화만 — 확대 없음)
+        # 전처리 (2배 확대 + OTSU — 실측 최적)
         processed = _preprocess_for_ocr(crop)
 
         # OCR — 1회 실패 시 즉시 재시도 1회 (easyocr 비결정성 대응)
