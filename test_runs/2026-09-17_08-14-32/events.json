@@ -1,0 +1,48 @@
+[
+  {
+    "timestamp": "2026-09-17T08:14:32.212",
+    "event": "PATROL_START"
+  },
+  {
+    "timestamp": "2026-09-17T08:14:54.115",
+    "event": "TARGET_SELECTED",
+    "data": {
+      "cx": 814,
+      "cy": 167,
+      "conf": 0.313,
+      "abs_cx": 1186,
+      "abs_cy": 426
+    }
+  },
+  {
+    "timestamp": "2026-09-17T08:14:54.116",
+    "event": "COMBAT_START",
+    "data": {
+      "cx": 814,
+      "cy": 167,
+      "conf": 0.313
+    }
+  },
+  {
+    "timestamp": "2026-09-17T08:14:56.157",
+    "event": "COMBAT_BLOCK_NEW_ATTACK",
+    "data": {
+      "target": "cx=814 cy=167 conf=0.31"
+    }
+  },
+  {
+    "timestamp": "2026-09-17T08:14:58.753",
+    "event": "COMBAT_BLOCK_NEW_ATTACK",
+    "data": {
+      "target": "cx=814 cy=167 conf=0.31"
+    }
+  },
+  {
+    "timestamp": "2026-09-17T08:15:02.269",
+    "event": "TARGET_LOST",
+    "data": {
+      "target": "cx=814 cy=167 conf=0.31",
+      "miss_timeout_sec": 3.5
+    }
+  }
+]
