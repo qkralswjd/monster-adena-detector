@@ -17,8 +17,11 @@ target_selector.py
   dt      : 직전 update() ~ 현재 update() 사이의 실제 경과시간
             → 연속 탐지 시 순간 속도 계산에 사용
             → 0 < dt <= DT_MAX(0.2s) 로 클램핑해 비정상 값 방어
-  elapsed : _last_seen(마지막 실제 탐지) 이후 경과시간
-            → ghost 예측 범위 계산 및 miss_timeout 판정에 사용
+  elapsed : _last_seen(마지막 실제 탐지/재연결) 이후 경과시간
+            → ghost 예측 범위 계산·재연결 탐색 반경에 사용
+  elapsed_since_continuous : _last_seen_continuous(마지막 연속탐지 성공) 이후 경과시간
+            → miss_timeout 판정 전용
+            → 재연결 성공(was_continuous=False)으로는 갱신되지 않음
 
 ghost 용도:
   - 오버레이 표시: miss 중 박스가 이동 방향으로 따라감
@@ -128,9 +131,19 @@ class TargetTracker:
 
     [변경 3] dt / elapsed 역할 분리 + dt 방어 클램핑
       dt      = 직전 update() 호출 간격 → 연속탐지 속도 계산
-      elapsed = 마지막 실제 탐지 이후   → ghost 범위·miss_timeout
+      elapsed = 마지막 실제 탐지 이후   → ghost 범위·재연결 반경
       전: dt가 선언만 되고 사용 안 됨 (dead variable)
       후: dt로 연속탐지 순간속도 계산. dt > DT_MAX(0.2s)이면 클램핑.
+
+    [변경 5] miss_timeout 기준점 분리 (_last_seen_continuous)
+      전: _last_seen = now (재연결 성공 시도 갱신)
+          → miss 후 재연결이 반복되면 타이머가 계속 리셋됨
+          → TARGET_LOST가 10초 이상 지연되는 원인
+      후: _last_seen_continuous = now (연속탐지 성공 시에만 갱신)
+          _last_seen = now (이전과 동일, ghost 범위 계산용 유지)
+          miss_timeout 판정: elapsed_since_continuous > miss_timeout
+          → 재연결이 아무리 반복돼도 기준시각은 마지막 연속탐지로 고정
+          → 연속탐지 기준 3.5s 후 TARGET_LOST 보장
 
     [변경 4] 연속탐지 / miss후재연결 속도 계산 분기
       연속탐지(elapsed < dt*2): vx = Δcx / dt   → 순간 속도
@@ -155,7 +168,19 @@ class TargetTracker:
                  min_conf: float = _DEFAULT_MIN_CONF):  # config.json target.min_conf
         self._target       = None         # 현재 추적 중인 실제 Detection
         self._ghost        = None         # miss 중 예측 위치 Detection (오버레이·ref용)
-        self._last_seen    = 0.0          # 마지막 실제 탐지의 time.time()
+
+        # ── 시각 추적 변수 ────────────────────────────────────────────────
+        # _last_seen            : 마지막 실제 탐지 OR 재연결 성공 시각
+        #                         ghost 예측 좌표 계산 및 재연결 탐색 반경에 사용
+        #                         (재연결 성공 시에도 갱신 → ghost가 실제 위치로 리셋)
+        self._last_seen             = 0.0
+
+        # _last_seen_continuous : 마지막 연속탐지(was_continuous=True) 성공 시각
+        #                         miss_timeout 판정 전용.
+        #                         재연결 성공(was_continuous=False)으로는 갱신되지 않음.
+        #                         → 재연결이 반복돼도 타이머 기준점이 리셋되지 않음
+        self._last_seen_continuous  = 0.0
+
         self._miss_timeout = miss_timeout
         self._max_speed    = max_speed
         self._min_search_r = min_search_r
@@ -206,16 +231,24 @@ class TargetTracker:
             # min_conf 전달: cy>=MIN_TARGET_CY AND conf>=self._min_conf 동시 적용
             new = select_by_confidence(monsters, min_conf=self._min_conf)
             if new:
-                self._target    = new
-                self._ghost     = None
-                self._last_seen = now
+                self._target               = new
+                self._ghost                = None
+                self._last_seen            = now  # ghost 범위 기준 갱신
+                self._last_seen_continuous = now  # miss_timeout 기준 갱신
                 self._vx = self._vy = 0.0
                 print(f"[Tracker] ★ 타겟 선택: cx={new.cx} cy={new.cy} conf={new.confidence:.2f}")
             return self.target, 0.0
 
-        # ── elapsed: 마지막 실제 탐지 이후 경과시간 ──────────────────
-        # ghost 예측 범위 계산 및 miss_timeout 판정에만 사용.
+        # ── elapsed: 마지막 실제 탐지/재연결 이후 경과시간 ────────────
+        # ghost 예측 좌표·재연결 탐색 반경 계산에 사용.
+        # (재연결 성공 시에도 _last_seen이 갱신되므로 ghost가 실제 위치로 리셋됨)
         elapsed = now - self._last_seen
+
+        # ── elapsed_since_continuous: 마지막 연속탐지 이후 경과시간 ─────
+        # miss_timeout 판정 전용.
+        # was_continuous=False인 재연결 성공으로는 갱신되지 않으므로
+        # 재연결이 반복돼도 이 값은 계속 증가한다.
+        elapsed_since_continuous = now - self._last_seen_continuous
 
         # ── ghost(예측 위치) 계산 ─────────────────────────────────────
         # [변경 전]
@@ -308,7 +341,15 @@ class TargetTracker:
 
             self._target    = best
             self._ghost     = None   # 실제 탐지 확보 → ghost 제거
-            self._last_seen = now
+            self._last_seen = now    # ghost 기준 갱신 (연속/재연결 모두 갱신)
+
+            # ── miss_timeout 기준점 갱신: 연속탐지 성공 시에만 ───────────
+            # was_continuous=True  : 정상 연속탐지 → 기준시각 갱신
+            # was_continuous=False : miss 후 재연결 → 기준시각 갱신 금지
+            #   이유: 재연결이 반복될 때마다 갱신하면 3.5s 타이머가 계속 리셋되어
+            #         TARGET_LOST가 10초 이상 지연되는 버그가 발생함.
+            if was_continuous:
+                self._last_seen_continuous = now
 
             moved = math.hypot(best.cx - prev_cx, best.cy - prev_cy)
             if moved > 20:
@@ -321,8 +362,14 @@ class TargetTracker:
             return self._target, 0.0
 
         # ── 탐지 실패 → miss 타이머 체크 ─────────────────────────────
-        if elapsed > self._miss_timeout:
-            print(f"[Tracker] ✗ TARGET_LOST ({elapsed:.1f}s) → 사망 추정(가림/이탈 포함), 새 타겟 탐색")
+        # miss_timeout 판정은 _last_seen_continuous 기준으로만 수행.
+        # (재연결 성공이 반복돼도 elapsed_since_continuous는 계속 증가)
+        if elapsed_since_continuous > self._miss_timeout:
+            print(
+                f"[Tracker] ✗ TARGET_LOST "
+                f"(연속탐지 기준 {elapsed_since_continuous:.1f}s) "
+                f"→ 사망 추정(가림/이탈 포함), 새 타겟 탐색"
+            )
             self._target = None
             self._ghost  = None
             self._vx = self._vy = 0.0
@@ -330,21 +377,23 @@ class TargetTracker:
             # min_conf 전달: TARGET_LOST 후 재탐색에도 동일 기준 적용
             new = select_by_confidence(monsters, min_conf=self._min_conf)
             if new:
-                self._target    = new
-                self._last_seen = now
+                self._target               = new
+                self._last_seen            = now
+                self._last_seen_continuous = now
                 print(f"[Tracker] ★ 새 타겟: cx={new.cx} cy={new.cy} conf={new.confidence:.2f}")
             return self.target, 0.0
 
         # ── miss 중: ghost 위치 반환, 공격 불가 ──────────────────────
         # self.target → _ghost (예측 위치 Detection) 반환
-        # miss_elapsed = elapsed > 0.0 → main.py miss_elapsed==0.0 조건 미충족
+        # miss_elapsed = elapsed_since_continuous > 0.0 → main.py miss_elapsed==0.0 조건 미충족
         # → 공격 실행 없음. ghost는 오버레이 표시 전용.
-        return self.target, elapsed
+        return self.target, elapsed_since_continuous
 
     def reset(self):
-        self._target = None
-        self._ghost  = None
-        self._vx = self._vy = 0.0
-        self._last_seen = 0.0
-        self._prev_t    = 0.0
+        self._target               = None
+        self._ghost                = None
+        self._vx = self._vy        = 0.0
+        self._last_seen            = 0.0
+        self._last_seen_continuous = 0.0
+        self._prev_t               = 0.0
         print("[Tracker] 리셋")
