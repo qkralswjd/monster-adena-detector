@@ -29,8 +29,8 @@
   },
   "target": {
     "max_dist": 80,
-    "miss_timeout_sec": 2.5,
-    "min_conf": 0.4,
+    "miss_timeout_sec": 3.5,
+    "min_conf": 0.25,
     "min_cy": 150,
     "_note": "miss_timeout_sec: 2.5초. max_dist: 150px. iou_thresh 제거됨(거리 기반 추적으로 통일)."
   },
