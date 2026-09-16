@@ -6,12 +6,12 @@ level_detector.py
 인식 구조 (레퍼런스 hp_reader.py / level_reader.py 기반):
 
 [HP 인식]
-  - HP 바 색상: 파란색 (실측 RGB≈(0,36~43,175~212) → HSV Hue≈220~230°)
-    OpenCV HSV에서 Hue는 0~180 스케일이므로 220~230° → H=110~130
-  - HSV 범위: H=100~140 (파란색 계열, S/V 하한으로 배경 제외)
+  - HP 바 색상: 빨간색 그라데이션 (실측 확인)
+    OpenCV HSV: 빨간색은 H=0~10 + H=170~180 두 구간
+  - HSV 범위: H=0~10 (순수 빨강) + H=170~180 (빨강 반대편)
   - 핵심: "HP : 115 / 115" 텍스트가 바 중간을 가로막아 연속 열이 끊김
     → 연속 열(break at first gap) 방식 사용 불가
-    → 전체 파란 열 합계 비율 방식 사용 (np.count_nonzero)
+    → 전체 빨간 열 합계 비율 방식 사용 (np.count_nonzero)
   - 결과: 0.0 ~ 100.0 (%)
 
 [레벨 인식]
@@ -38,13 +38,15 @@ import mss as _mss
 
 # ─────────────────────────────────────────────────────────────
 #  HP 바 HSV 범위
-#  실측: RGB≈(0, 36~43, 175~212) → HSV Hue≈220~230°
-#  OpenCV HSV: Hue는 0~180 스케일 (실제각도 /2)
-#  → 220~230° / 2 = 110~115 → 여유분 포함 H=100~140
+#  실측: 빨간색 그라데이션 바 (HP:115/115 텍스트 포함)
+#  OpenCV HSV: 빨간색은 Hue가 0~10 + 170~180 두 구간
+#  → 낮은 채도/명도도 포함 (어두운 빨간 포함)
 # ─────────────────────────────────────────────────────────────
 _HP_HSV_RANGES = [
-    # 파란색 (H=100~140, S=60+, V=30+ — 어두운 파란도 포함)
-    ((100, 60, 30), (140, 255, 255)),
+    # 빨간색 구간 1: H=0~10 (순수 빨강)
+    ((0,  60, 30), (10,  255, 255)),
+    # 빨간색 구간 2: H=170~180 (빨강 반대편)
+    ((170, 60, 30), (180, 255, 255)),
 ]
 
 
@@ -69,7 +71,7 @@ def _calc_hp_pct(crop_bgr: np.ndarray) -> float:
     # BGR → HSV
     hsv = cv2.cvtColor(crop_bgr, cv2.COLOR_BGR2HSV)
 
-    # 파란색 픽셀 마스크 (HSV H=100~140)
+    # 빨간색 픽셀 마스크 (HSV H=0~10 + H=170~180)
     mask = np.zeros(hsv.shape[:2], dtype=np.uint8)
     for (lower, upper) in _HP_HSV_RANGES:
         m = cv2.inRange(hsv, np.array(lower, dtype=np.uint8),
@@ -80,12 +82,12 @@ def _calc_hp_pct(crop_bgr: np.ndarray) -> float:
     if total_cols == 0:
         return 100.0
 
-    # 각 열에 파란 픽셀이 하나라도 있으면 True (axis=0 → 열 방향 축소)
-    col_has_blue = np.any(mask > 0, axis=0)   # shape: (width,)
+    # 각 열에 빨간 픽셀이 하나라도 있으면 True (axis=0 → 열 방향 축소)
+    col_has_red = np.any(mask > 0, axis=0)   # shape: (width,)
 
-    # ★ 핵심: 연속이 아닌 전체 파란 열 합계 비율
-    blue_cols = int(np.count_nonzero(col_has_blue))
-    hp_pct = round((blue_cols / total_cols) * 100.0, 1)
+    # ★ 핵심: 연속이 아닌 전체 빨간 열 합계 비율
+    red_cols = int(np.count_nonzero(col_has_red))
+    hp_pct = round((red_cols / total_cols) * 100.0, 1)
 
     return hp_pct
 
@@ -209,7 +211,7 @@ class LevelDetector:
         self._level_interval = 2.0   # 레벨: 2초마다 OCR
         self._hp_interval    = 0.5   # HP: 0.5초마다
 
-        print("[LevelDetector] 초기화 완료 (HP: 파란색 HSV H=100~140, ROI 직접 캡처)")
+        print("[LevelDetector] 초기화 완료 (HP: 빨간색 HSV H=0~10+170~180, ROI 직접 캡처)")
 
     def _ensure_ocr(self):
         if self._ocr is None:
