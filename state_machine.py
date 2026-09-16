@@ -46,6 +46,7 @@ import numpy as np
 from waypoint_mover  import WaypointMover, RandomPatrolMover
 from loot_detector   import LootDetector
 from level_detector  import LevelDetector
+from recorder        import get_recorder
 
 logger = logging.getLogger("state_machine")
 
@@ -398,6 +399,7 @@ class StateMachine:
                 self.patrol_mover.start()
             self._patrol_started = True
             print("[SM] 순찰 시작 (patrol_waypoints loop)")
+            get_recorder().log_event("PATROL_START")
 
         # 레벨 체크
         level = self.level_det.read_level()
@@ -479,6 +481,10 @@ class StateMachine:
         self._loot_start_t = now
         self.loot_detector.invalidate()
         print(f"[SM] 아데나 {len(adenas)}개 감지 → LOOTING")
+        get_recorder().log_event("LOOT_START", {
+            "count":   len(adenas),
+            "targets": [(d.cx, d.cy) for d in adenas],
+        })
         self._enter(BotState.LOOTING)
 
     # ── LOOTING ───────────────────────────────────────────────────────────
@@ -490,12 +496,14 @@ class StateMachine:
         if now - self._loot_start_t >= self.loot_timeout:
             print("[SM] 아데나 줍기 타임아웃 → HUNTING 복귀")
             print("[LOOT] DONE (타임아웃)")
+            get_recorder().log_event("LOOT_DONE", {"reason": "timeout"})
             self._enter(BotState.HUNTING)
             return
 
         if not self._loot_targets or self._loot_idx >= len(self._loot_targets):
             print("[SM] 아데나 줍기 완료 → HUNTING 복귀")
             print("[LOOT] DONE")
+            get_recorder().log_event("LOOT_DONE", {"reason": "all_clicked"})
             self._enter(BotState.HUNTING)
             return
 
@@ -503,6 +511,12 @@ class StateMachine:
             cx, cy = self._loot_targets[self._loot_idx]
             self.ctrl.click(int(cx), int(cy))
             print(f"[Loot] 줍기 클릭 → ({cx},{cy}) {self._loot_idx+1}/{len(self._loot_targets)}")
+            get_recorder().log_event("LOOT_CLICK", {
+                "cx":    int(cx),
+                "cy":    int(cy),
+                "index": self._loot_idx + 1,
+                "total": len(self._loot_targets),
+            })
             self._last_loot_click = now
             self._loot_idx += 1
 
@@ -545,8 +559,14 @@ class StateMachine:
                     print(f"[HUNT] RESUME (순찰 상태 유지) "
                           f"루팅좌표=({self._last_loot_cx},{self._last_loot_cy}) "
                           f"쿨타임={self.loot_cooldown_sec}s")
+                    get_recorder().log_event("HUNT_RESUME", {
+                        "loot_cx":      self._last_loot_cx,
+                        "loot_cy":      self._last_loot_cy,
+                        "cooldown_sec": self.loot_cooldown_sec,
+                    })
                 else:
                     print("[HUNT] RESUME (순찰 상태 유지)")
+                    get_recorder().log_event("HUNT_RESUME")
 
         elif new_state == BotState.LOOTING:
             print("[LOOT] START (SM 진입)")

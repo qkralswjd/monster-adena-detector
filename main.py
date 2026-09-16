@@ -43,6 +43,9 @@ import os
 import time
 import json
 
+# recorder는 --record 플래그 없이는 완전 no-op (_NullRecorder)
+from recorder import init_recorder, get_recorder
+
 sys.path.insert(0, os.path.dirname(__file__))
 
 from screen_capture import ScreenCapture
@@ -74,9 +77,23 @@ def _load_config(cfg_path: str) -> dict:
 
 def main():
     # ── 인자 파싱 ──────────────────────────────────────────────────
+    if "--help" in sys.argv or "-h" in sys.argv:
+        print("사용법: python main.py [옵션]")
+        print("")
+        print("옵션:")
+        print("  (없음)         PICO 연결 후 ATTACKING_DUMMY 시작")
+        print("  --dummy        PICO 없이 더미 컨트롤러 (로그 전용 테스트)")
+        print("  --skip-dummy   ATTACKING_DUMMY 건너뛰고 MOVE_TO_HUNT_ZONE 시작")
+        print("  --hunt-only    바로 HUNTING 상태에서 시작")
+        print("  --record       화면 녹화 + 콘솔 로그 + 이벤트 JSON 동시 기록")
+        print("                 test_runs/YYYY-MM-DD_HH-MM-SS/ 폴더에 저장")
+        print("  --help, -h     이 도움말 출력")
+        return
+
     dummy_mode  = "--dummy"       in sys.argv   # PICO 없이 더미 컨트롤러
     skip_dummy  = "--skip-dummy"  in sys.argv   # ATTACKING_DUMMY 건너뜀
     hunt_only   = "--hunt-only"   in sys.argv   # 바로 HUNTING
+    record_mode = "--record"      in sys.argv   # 테스트 기록 (화면녹화+로그+이벤트)
 
     # ── config 로드 ────────────────────────────────────────────────
     cfg_path = os.path.join(os.path.dirname(__file__), "config.json")
@@ -184,6 +201,15 @@ def main():
         max_dist     = tcfg.get("max_dist", 350),
     )
 
+    # ── 테스트 기록 초기화 (--record 플래그, config 로드 이후) ─────
+    # monitor 번호를 config에서 읽어야 하므로 config 로드 후에 위치.
+    # --record 없으면 get_recorder()는 완전 no-op(_NullRecorder).
+    if record_mode:
+        _base_dir = os.path.join(os.path.dirname(__file__), "test_runs")
+        _monitor  = cfg.get("capture", {}).get("monitor", 1)
+        init_recorder(base_dir=_base_dir, monitor_index=_monitor, record_fps=10.0)
+        print("[REC] --record 모드 활성화")
+
     # ── StateMachine 시작 모드 선택 ────────────────────────────────
     if hunt_only:
         print("[Start] --hunt-only: 바로 HUNTING")
@@ -287,6 +313,10 @@ def main():
                     print(f"[COMBAT] TARGET_LOST target={_combat_target_info} "
                           f"(miss_timeout {tcfg['miss_timeout_sec']}s 초과, "
                           f"사망 추정 — 가림/이탈과 구분 불가)")
+                    get_recorder().log_event("TARGET_LOST", {
+                        "target": _combat_target_info,
+                        "miss_timeout_sec": tcfg["miss_timeout_sec"],
+                    })
                     combat_active = False
 
                 # ── 공격 실행 (combat_active=False일 때만) ───────
@@ -306,9 +336,22 @@ def main():
                     _combat_target_info = (f"cx={last_target.cx} "
                                            f"cy={last_target.cy} "
                                            f"conf={last_target.confidence:.2f}")
+                    # 이벤트 순서: TARGET_SELECTED(타겟 확정) → COMBAT_START(공격 명령)
+                    print(f"[Attack] → ({cx},{cy})  conf={last_target.confidence:.2f}")
+                    get_recorder().log_event("TARGET_SELECTED", {
+                        "cx":     last_target.cx,
+                        "cy":     last_target.cy,
+                        "conf":   round(last_target.confidence, 3),
+                        "abs_cx": cx,
+                        "abs_cy": cy,
+                    })
                     print(f"[COMBAT] START target={_combat_target_info} "
                           f"→ 종료는 TARGET_LOST({tcfg['miss_timeout_sec']}s) 대기")
-                    print(f"[Attack] → ({cx},{cy})  conf={last_target.confidence:.2f}")
+                    get_recorder().log_event("COMBAT_START", {
+                        "cx":   last_target.cx,
+                        "cy":   last_target.cy,
+                        "conf": round(last_target.confidence, 3),
+                    })
                     ctrl.drag_attack(cx, cy, hold_ms=hold_ms)
                     last_attack_t  = now
                     combat_active  = True
@@ -316,6 +359,9 @@ def main():
                     # 전투 중 새 공격 요청이 왔으나 차단
                     if now - prev_log_t >= LOG_INTERVAL:
                         print(f"[COMBAT] BLOCK_NEW_ATTACK target={_combat_target_info}")
+                        get_recorder().log_event("COMBAT_BLOCK_NEW_ATTACK", {
+                            "target": _combat_target_info,
+                        })
 
                 # 로그
                 if now - prev_log_t >= LOG_INTERVAL:
@@ -364,6 +410,8 @@ def main():
         ctrl.stop()
         ctrl.disconnect()
         ov.stop()
+        # 테스트 기록 종료 (--record 없으면 no-op)
+        get_recorder().stop()
         print("[Stop] 종료 완료")
 
 
