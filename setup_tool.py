@@ -328,38 +328,29 @@ class SetupTool:
         self._lbl_hint["text"] = "캡처 중..."
 
     def _show_screenshot(self):
-        """캡처 이미지를 캔버스에 맞게 축소해 표시."""
+        """캡처 이미지를 1:1 원본 크기로 표시 (스크롤로 이동)."""
         if self._screenshot is None:
             return
 
-        c = self._canvas
-        c.update_idletasks()
-        cw = max(c.winfo_width(),  800)
-        ch = max(c.winfo_height(), 500)
-
         img = self._screenshot
         iw, ih = img.size
-        scale = min(cw / iw, ch / ih, 1.0)   # 최대 100% (확대 안 함)
-        self._scale = scale
 
-        nw = int(iw * scale)
-        nh = int(ih * scale)
-        self._display_img = img.resize((nw, nh), Image.LANCZOS)
+        # 항상 1:1 원본 크기
+        self._scale = 1.0
+        self._display_img = img
         self._tk_img = ImageTk.PhotoImage(self._display_img)
 
-        # 캔버스 중앙에 배치
-        self._img_offset_x = max((cw - nw) // 2, 0)
-        self._img_offset_y = max((ch - nh) // 2, 0)
+        # 이미지는 (0,0)에 배치, 스크롤로 이동
+        self._img_offset_x = 0
+        self._img_offset_y = 0
 
+        c = self._canvas
         c.delete("all")
-        c.configure(scrollregion=(0, 0,
-                                   max(cw, nw + self._img_offset_x * 2),
-                                   max(ch, nh + self._img_offset_y * 2)))
-        c.create_image(self._img_offset_x, self._img_offset_y,
-                       anchor=tk.NW, image=self._tk_img, tags="bg")
+        c.configure(scrollregion=(0, 0, iw, ih))
+        c.create_image(0, 0, anchor=tk.NW, image=self._tk_img, tags="bg")
 
         self._redraw_markers()
-        self._lbl_hint["text"] = "이미지 로드 완료. 버튼을 눌러 좌표를 등록하세요."
+        self._lbl_hint["text"] = f"원본크기 {iw}x{ih} — 스크롤로 이동, Ctrl+휠로 줌."
 
     def _on_resize(self, event):
         if self._screenshot:
