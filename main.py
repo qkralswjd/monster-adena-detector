@@ -291,18 +291,19 @@ def main():
                         print(f"── [HUNTING] 몬={len(monsters)}  "
                               f"DET {det.fps:.1f}fps  타겟={tgt_str} ──")
             else:
-                if sm.state not in (BotState.HUNTING,):
+                # HUNTING 아닌 상태 전환 시 1회만 리셋 (매 루프 호출 방지)
+                if sm.state not in (BotState.HUNTING,) and tracker.target is not None:
                     tracker.reset()
 
             # ── StateMachine tick ─────────────────────────────────
-            # StateMachine.update() 내부에서 전체화면 캡처(grab) 수행
-            sm.update(frame, detections)
+            # SM.update() 내부에서 전체화면 캡처(grab) + HP/레벨 인식 수행
+            # → full_frame을 SM에서 받아 오버레이에 재사용 (2중 캡처 제거)
+            full_frame = sm.update(frame, detections)
 
             # ── 오버레이 갱신 ────────────────────────────────────
-            if sm.state not in (BotState.IDLE, BotState.DONE):
-                _full = capture_full_frame()
-                hp_pct    = sm.level_det.read_hp(_full)
-                level_now = sm.level_det.read_level(_full)
+            if full_frame is not None:
+                hp_pct    = sm.level_det.read_hp(full_frame)
+                level_now = sm.level_det.read_level(full_frame)
             else:
                 hp_pct    = None
                 level_now = None

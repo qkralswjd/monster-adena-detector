@@ -37,6 +37,7 @@
 import logging
 import time
 from enum import Enum, auto
+from typing import Optional
 
 import numpy as np
 
@@ -232,17 +233,21 @@ class StateMachine:
     def state_name(self) -> str:
         return self.state.name
 
-    def update(self, frame, detections: list) -> None:
+    def update(self, frame, detections: list) -> Optional[np.ndarray]:
         """매 루프마다 호출.
 
         Args:
             frame     : ROI 기준 캡처 프레임 (BGR ndarray)
             detections: YOLODetector.detect() 반환 Detection 리스트
+
+        Returns:
+            full_frame: 전체화면 BGR ndarray (main.py 오버레이용 재사용).
+                        IDLE / DONE 상태에서는 None 반환.
         """
         if self.state in (BotState.IDLE, BotState.DONE):
-            return
+            return None
 
-        # 전체화면 캡처 (레벨/HP 인식)
+        # 전체화면 캡처 (레벨/HP 인식) — main.py에서 재사용해 2중 캡처 방지
         full_frame = self.grab()
 
         # ── 아이템 공통 처리 ──────────────────────────────────────────
@@ -261,6 +266,8 @@ class StateMachine:
 
         elif self.state == BotState.LOOTING:
             self._update_looting(full_frame)
+
+        return full_frame  # main.py 오버레이용으로 재사용 (2중 캡처 제거)
 
     # ── HP / 아이템 공통 ──────────────────────────────────────────────────
 
