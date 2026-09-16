@@ -31,8 +31,10 @@ level_detector.py
 
 import re
 import time
+import threading
 import numpy as np
 import cv2
+import mss as _mss
 
 # ─────────────────────────────────────────────────────────────
 #  HP 바 HSV 범위
@@ -184,10 +186,17 @@ class LevelDetector:
                  level_roi: dict = None,
                  hp_roi: dict = None,
                  hp_color: str = "blue",     # 하위 호환용 (무시됨, 항상 파란색)
-                 target_level: int = 5):
+                 target_level: int = 5,
+                 monitor: int = 1):
         self._level_roi    = level_roi
         self._hp_roi       = hp_roi
         self._target_level = target_level
+        self._monitor_idx  = monitor
+
+        # mss 직접 캡처 (ROI 좌표만 캡처 → 전체화면 캡처 불필요)
+        self._sct          = _mss.mss()
+        self._mon_left     = self._sct.monitors[monitor]["left"]
+        self._mon_top      = self._sct.monitors[monitor]["top"]
 
         # easyocr lazy init
         self._ocr = None
@@ -200,7 +209,7 @@ class LevelDetector:
         self._level_interval = 2.0   # 레벨: 2초마다 OCR
         self._hp_interval    = 0.5   # HP: 0.5초마다
 
-        print("[LevelDetector] 초기화 완료 (HP: 파란색 HSV H=100~140, 전체 열 합계 방식)")
+        print("[LevelDetector] 초기화 완료 (HP: 파란색 HSV H=100~140, ROI 직접 캡처)")
 
     def _ensure_ocr(self):
         if self._ocr is None:
@@ -213,11 +222,39 @@ class LevelDetector:
             self._hp_roi = hp_roi
 
     # ─────────────────────────────────────────────────────────
-    #  ROI 크롭 (공통)
+    #  ROI 직접 캡처 (mss로 해당 영역만 캡처)
     # ─────────────────────────────────────────────────────────
 
+    def _grab_roi(self, roi: dict):
+        """ROI 좌표만 mss로 직접 캡처 → BGR ndarray 반환.
+
+        전체화면을 캡처 후 크롭하는 방식 대신
+        해당 픽셀 영역만 캡처해 CPU/메모리 부하 최소화.
+        """
+        if roi is None:
+            return None
+        x = roi.get("x", 0)
+        y = roi.get("y", 0)
+        w = roi.get("w", roi.get("width", 0))
+        h = roi.get("h", roi.get("height", 0))
+        if w <= 0 or h <= 0:
+            return None
+        region = {
+            "left":   self._mon_left + x,
+            "top":    self._mon_top  + y,
+            "width":  w,
+            "height": h,
+        }
+        try:
+            shot = self._sct.grab(region)
+            bgr  = np.array(shot)[:, :, :3]   # BGRA → BGR
+            return bgr
+        except Exception:
+            return None
+
+    # 하위 호환 — frame_bgr 기반 크롭 (호출처가 넘겨줄 때만 사용)
     def _crop_roi(self, frame_bgr: np.ndarray, roi: dict):
-        """ROI dict {"x","y","w","h"} 또는 {"x","y","width","height"} 지원."""
+        """ROI dict {"x","y","w","h"}로 frame_bgr 크롭 (레거시)."""
         if frame_bgr is None or roi is None:
             return None
         x = roi.get("x", 0)
@@ -227,10 +264,8 @@ class LevelDetector:
         if w <= 0 or h <= 0:
             return None
         fh, fw = frame_bgr.shape[:2]
-        x1 = max(0, x)
-        y1 = max(0, y)
-        x2 = min(fw, x + w)
-        y2 = min(fh, y + h)
+        x1, y1 = max(0, x), max(0, y)
+        x2, y2 = min(fw, x+w), min(fh, y+h)
         if x2 <= x1 or y2 <= y1:
             return None
         return frame_bgr[y1:y2, x1:x2]
@@ -239,14 +274,10 @@ class LevelDetector:
     #  레벨 인식
     # ─────────────────────────────────────────────────────────
 
-    def read_level(self, frame_bgr: np.ndarray) -> int:
-        """레벨 ROI OCR → 레벨 숫자 반환.
+    def read_level(self, frame_bgr: np.ndarray = None) -> int:
+        """레벨 ROI를 mss로 직접 캡처 → OCR → 레벨 숫자 반환.
 
-        레퍼런스 LevelReader.read() 구조:
-          - detail=1 (신뢰도 포함)
-          - 신뢰도 < 0.1 은 무시 (완화된 임계값)
-          - _parse_level로 LEV/LEC/LEU/Lv 패턴 파싱
-
+        frame_bgr: 하위 호환용 (무시됨 — mss 직접 캡처 사용)
         캐시: 2초
         """
         now = time.monotonic()
@@ -257,7 +288,8 @@ class LevelDetector:
         if self._level_roi is None:
             return self._last_level
 
-        crop = self._crop_roi(frame_bgr, self._level_roi)
+        # 전체화면 대신 레벨 ROI 영역만 직접 캡처
+        crop = self._grab_roi(self._level_roi)
         if crop is None:
             return self._last_level
 
@@ -299,14 +331,10 @@ class LevelDetector:
     #  HP 인식
     # ─────────────────────────────────────────────────────────
 
-    def read_hp(self, frame_bgr: np.ndarray) -> float:
-        """HP ROI에서 파란색 픽셀 열 비율로 HP% 계산.
+    def read_hp(self, frame_bgr: np.ndarray = None) -> float:
+        """HP ROI를 mss로 직접 캡처 → 파란색 픽셀 열 비율로 HP% 계산.
 
-        레퍼런스 구조 (hp_reader.py):
-          - HSV 파란색 범위 (H=100~140, 실측 RGB≈(0,36~43,175~212))
-          - 텍스트가 바 중간을 가로막으므로 연속 열 방식 불가
-          - 전체 파란 열 합계(count_nonzero) 비율 사용
-
+        frame_bgr: 하위 호환용 (무시됨 — mss 직접 캡처 사용)
         캐시: 0.5초
 
         Returns:
@@ -320,7 +348,8 @@ class LevelDetector:
         if self._hp_roi is None:
             return self._last_hp
 
-        crop = self._crop_roi(frame_bgr, self._hp_roi)
+        # 전체화면 대신 HP ROI 영역만 직접 캡처
+        crop = self._grab_roi(self._hp_roi)
         if crop is None:
             return self._last_hp
 

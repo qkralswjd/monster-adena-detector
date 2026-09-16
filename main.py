@@ -143,23 +143,12 @@ def main():
         mon_w    = mon["width"]
         mon_h    = mon["height"]
 
-    # 전체화면 캡처 (레벨/HP 인식용)
-    _full_sct = _mss.mss()
-    _full_mon = _full_sct.monitors[cfg["capture"]["monitor"]]
-
-    def capture_full_frame():
-        shot = _full_sct.grab(_full_mon)
-        import cv2
-        bgr = np.array(shot)[:, :, :3]
-        bgr = bgr[:, :, ::-1].copy()  # BGRA → BGR
-        return bgr
-
     # ── StateMachine 초기화 ────────────────────────────────────────
+    # LevelDetector가 ROI 좌표만 mss로 직접 캡처 → 전체화면 캡처 불필요
     sm = StateMachine(
-        config             = cfg,
-        ctrl               = ctrl,
-        capture_full_frame = capture_full_frame,
-        press_key_fn       = _press_key,
+        config       = cfg,
+        ctrl         = ctrl,
+        press_key_fn = _press_key,
     )
 
     # ── 오버레이 ────────────────────────────────────────────────────
@@ -296,17 +285,12 @@ def main():
                     tracker.reset()
 
             # ── StateMachine tick ─────────────────────────────────
-            # SM.update() 내부에서 전체화면 캡처(grab) + HP/레벨 인식 수행
-            # → full_frame을 SM에서 받아 오버레이에 재사용 (2중 캡처 제거)
-            full_frame = sm.update(frame, detections)
+            sm.update(frame, detections)
 
             # ── 오버레이 갱신 ────────────────────────────────────
-            if full_frame is not None:
-                hp_pct    = sm.level_det.read_hp(full_frame)
-                level_now = sm.level_det.read_level(full_frame)
-            else:
-                hp_pct    = None
-                level_now = None
+            # LevelDetector가 캐시 반환 (실제 캡처는 내부에서 타이머 기반으로)
+            hp_pct    = sm.level_det.read_hp()
+            level_now = sm.level_det.read_level()
 
             ov.update(
                 detections   = last_detections,
@@ -324,7 +308,6 @@ def main():
     except KeyboardInterrupt:
         print("\n[Stop] Ctrl+C")
     finally:
-        _full_sct.close()
         cap.stop()
         ctrl.stop()
         ctrl.disconnect()

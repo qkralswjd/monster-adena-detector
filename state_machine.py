@@ -84,19 +84,18 @@ class StateMachine:
         self,
         config: dict,
         ctrl,
-        capture_full_frame,
         press_key_fn,
+        capture_full_frame=None,   # 하위 호환용 (무시됨)
     ):
         """
         Args:
             config          : config.json 전체 dict
             ctrl            : PicoController or DummyController
-            capture_full_frame: () -> BGR ndarray (전체 화면 캡처 함수)
             press_key_fn    : (key: str) -> None (키 입력 함수)
+            capture_full_frame: 미사용 (하위 호환 유지)
         """
         self.cfg   = config
         self.ctrl  = ctrl
-        self.grab  = capture_full_frame
         self.press = press_key_fn
 
         self.state       = BotState.IDLE
@@ -130,10 +129,12 @@ class StateMachine:
         hp_roi                  = ldcfg.get("hp_roi")
 
         # ── 레벨/HP 감지기 ───────────────────────────────────────────────
+        monitor = cfg.get("capture", {}).get("monitor", 1)
         self.level_det = LevelDetector(
             level_roi    = level_roi,
             hp_roi       = hp_roi,
             target_level = self.target_level_dummy,
+            monitor      = monitor,
         )
 
         # ── 아이템 키 ────────────────────────────────────────────────────
@@ -234,46 +235,41 @@ class StateMachine:
     def state_name(self) -> str:
         return self.state.name
 
-    def update(self, frame, detections: list) -> Optional[np.ndarray]:
+    def update(self, frame, detections: list) -> None:
         """매 루프마다 호출.
 
         Args:
             frame     : ROI 기준 캡처 프레임 (BGR ndarray)
             detections: YOLODetector.detect() 반환 Detection 리스트
 
-        Returns:
-            full_frame: 전체화면 BGR ndarray (main.py 오버레이용 재사용).
-                        IDLE / DONE 상태에서는 None 반환.
+        Note:
+            레벨/HP 인식은 LevelDetector 내부에서 ROI 직접 캡처.
+            전체화면 캡처 불필요.
         """
         if self.state in (BotState.IDLE, BotState.DONE):
-            return None
-
-        # 전체화면 캡처 (레벨/HP 인식) — main.py에서 재사용해 2중 캡처 방지
-        full_frame = self.grab()
+            return
 
         # ── 아이템 공통 처리 ──────────────────────────────────────────
-        self._check_hp_and_use_potion(full_frame)
+        self._check_hp_and_use_potion()
         self._check_speed_items()
 
         # ── 상태별 처리 ───────────────────────────────────────────────
         if self.state == BotState.ATTACKING_DUMMY:
-            self._update_attacking_dummy(full_frame)
+            self._update_attacking_dummy()
 
         elif self.state == BotState.MOVE_TO_HUNT_ZONE:
             self._update_move_to_hunt_zone(detections)
 
         elif self.state == BotState.HUNTING:
-            self._update_hunting(full_frame, detections)
+            self._update_hunting(detections)
 
         elif self.state == BotState.LOOTING:
-            self._update_looting(full_frame)
-
-        return full_frame  # main.py 오버레이용으로 재사용 (2중 캡처 제거)
+            self._update_looting()
 
     # ── HP / 아이템 공통 ──────────────────────────────────────────────────
 
-    def _check_hp_and_use_potion(self, full_frame) -> None:
-        hp = self.level_det.read_hp(full_frame)
+    def _check_hp_and_use_potion(self) -> None:
+        hp = self.level_det.read_hp()
         if hp is None:
             return
         now = time.time()
@@ -295,11 +291,11 @@ class StateMachine:
 
     # ── ATTACKING_DUMMY ───────────────────────────────────────────────────
 
-    def _update_attacking_dummy(self, full_frame) -> None:
+    def _update_attacking_dummy(self) -> None:
         now = time.time()
 
         # 레벨 체크
-        level = self.level_det.read_level(full_frame)
+        level = self.level_det.read_level()
         if level is not None and level >= self.target_level_dummy:
             print(f"[SM] Lv.{level} 달성! → 사냥터 이동 시작")
             if self.hunt_mover:
@@ -354,7 +350,7 @@ class StateMachine:
 
     # ── HUNTING ───────────────────────────────────────────────────────────
 
-    def _update_hunting(self, full_frame, detections: list) -> None:
+    def _update_hunting(self, detections: list) -> None:
         now = time.time()
 
         # 최초 진입 시 순찰 시작
@@ -365,7 +361,7 @@ class StateMachine:
             print("[SM] 순찰 시작 (patrol_waypoints loop)")
 
         # 레벨 체크
-        level = self.level_det.read_level(full_frame)
+        level = self.level_det.read_level()
         if level is not None and level >= self.target_level_hunt:
             print(f"[SM] Lv.{level} 달성! → 완료")
             self._enter(BotState.DONE)
@@ -398,7 +394,7 @@ class StateMachine:
 
     # ── LOOTING ───────────────────────────────────────────────────────────
 
-    def _update_looting(self, full_frame) -> None:
+    def _update_looting(self) -> None:
         now = time.time()
 
         # 타임아웃
