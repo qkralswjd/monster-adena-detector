@@ -354,8 +354,8 @@ class OverlayWindow:
             "MOVING":       CLR_WAYPOINT,
         }.get(state, CLR_TEXT)
 
-        hp_str = f"{hp_pct*100:.0f}%" if hp_pct is not None else "?"
-        hp_clr = ("#FF4444" if (hp_pct is not None and hp_pct < 0.5)
+        hp_str = f"{hp_pct:.1f}%" if hp_pct is not None else "?"
+        hp_clr = ("#FF4444" if (hp_pct is not None and hp_pct < 50.0)  # 0~100% 범위
                   else "#44FF44")
         lv_str = str(level) if level is not None else "?"
 

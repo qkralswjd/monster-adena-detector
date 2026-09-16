@@ -121,7 +121,7 @@ def main():
 
     # 레벨/HP
     target_level      = ldcfg.get("target_level", 5)
-    hp_threshold      = ldcfg.get("hp_threshold", 0.5)
+    hp_threshold      = ldcfg.get("hp_threshold", 50.0)  # 0~100% 범위 (level_detector.py read_hp 반환값 기준)
     level_roi         = ldcfg.get("level_roi")
     hp_roi            = ldcfg.get("hp_roi")
 
@@ -313,7 +313,7 @@ def main():
             if (hp_pct is not None
                     and hp_pct < hp_threshold
                     and now - last_hp_potion_t >= HP_POTION_COOLDOWN):
-                print(f"[Item] HP {hp_pct*100:.0f}% < {hp_threshold*100:.0f}% → {hp_potion_key} 사용")
+                print(f"[Item] HP {hp_pct:.1f}% < {hp_threshold:.0f}% → {hp_potion_key} 사용")
                 _press_key(hp_potion_key)
                 last_hp_potion_t = now
 

@@ -62,7 +62,7 @@
   },
   "level_detector": {
     "target_level": 5,
-    "hp_threshold": 0.5,
+    "hp_threshold": 50.0,
     "level_roi": null,
     "hp_roi": null,
     "_note": "level_roi/hp_roi: {x,y,w,h} 절대 화면 좌표. setup_tool.py 에서 드래그로 등록."
