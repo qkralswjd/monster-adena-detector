@@ -25,7 +25,30 @@ import time
 import json
 import os
 import math
+import ctypes
+import ctypes.wintypes
 from typing import List, Optional, Callable
+
+# Windows 스타일 상수
+GWL_EXSTYLE     = -20
+WS_EX_LAYERED   = 0x00080000
+WS_EX_TRANSPARENT = 0x00000020
+
+def _get_hwnd(root):
+    """tkinter 창의 HWND 반환."""
+    return ctypes.windll.user32.FindWindowW(None, root.title() or None)
+
+def _set_click_through(hwnd, enable: bool):
+    """
+    enable=True  → 클릭 통과 (게임으로 전달, 오버레이 표시 전용)
+    enable=False → 클릭 수신 (설정 모드, 오버레이가 클릭 받음)
+    """
+    style = ctypes.windll.user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
+    if enable:
+        style |= WS_EX_TRANSPARENT
+    else:
+        style &= ~WS_EX_TRANSPARENT
+    ctypes.windll.user32.SetWindowLongW(hwnd, GWL_EXSTYLE, style)
 
 
 # ── 색상 ────────────────────────────────────────────────────
@@ -223,6 +246,24 @@ class OverlayWindow:
         )
         self._canvas.pack()
 
+        # ── HWND 저장 (클릭통과 전환용) ──────────────────────
+        root.update()  # 창 생성 완료 대기
+        self._hwnd = ctypes.windll.user32.GetParent(
+            ctypes.windll.user32.GetFocus()
+        )
+        # tkinter 창 HWND 가져오기
+        try:
+            self._hwnd = root.winfo_id()
+            # 실제 최상위 창 HWND
+            import ctypes
+            self._hwnd = ctypes.windll.user32.GetAncestor(self._hwnd, 2)  # GA_ROOT=2
+        except Exception:
+            self._hwnd = None
+
+        # 시작 시 클릭 통과 ON (일반 모드)
+        if self._hwnd:
+            _set_click_through(self._hwnd, True)
+
         # ── 바인딩 ────────────────────────────────────────────
         # 일반 클릭 (좌클릭) → 게임 입력
         self._canvas.bind("<Button-1>",         self._on_left_click)
@@ -240,7 +281,7 @@ class OverlayWindow:
         root.bind("<F4>",  lambda e: self._set_mode(MODE_HP_ROI))
         root.bind("<Escape>", lambda e: self._set_mode(MODE_NORMAL))
         root.bind("<Delete>", lambda e: self._undo_last())
-        root.bind("<Return>", lambda e: self._save_config())
+        root.bind("<Control-x>", lambda e: self._save_config())
 
         self._schedule_redraw()
         root.mainloop()
@@ -251,6 +292,15 @@ class OverlayWindow:
         self._drag_current = None
         self._dragging     = False
         print(f"[Setup] 모드 전환: {mode}")
+
+        # 클릭 통과 전환
+        # 설정 모드 → 클릭 수신 (오버레이가 마우스 받음)
+        # 일반 모드 → 클릭 통과 (게임으로 전달)
+        if self._hwnd:
+            click_through = (mode == MODE_NORMAL)
+            _set_click_through(self._hwnd, click_through)
+            print(f"[Setup] 클릭통과: {'ON' if click_through else 'OFF (오버레이가 클릭 수신)'}")
+
         if mode == MODE_NORMAL:
             print("[Setup] 일반 모드 (설정 완료)")
 
