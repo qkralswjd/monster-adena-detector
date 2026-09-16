@@ -43,7 +43,7 @@ class TargetTracker:
     def __init__(self,
                  miss_timeout: float = 3.5,
                  max_dist: float = 200,       # 하위 호환용 (미사용)
-                 max_speed: float = 400):     # px/초 - 몬스터 최대 이동 속도
+                 max_speed: float = 250):     # px/초 - 몬스터 최대 이동 속도
         self._target       = None
         self._last_seen    = 0.0
         self._last_seen_t  = 0.0   # 마지막 탐지 시각
