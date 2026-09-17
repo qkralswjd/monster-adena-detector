@@ -44,3 +44,16 @@ models/
 # 임시 파일
 *.tmp
 *.bak
+
+# dataset_field_v1: 대용량 이미지/프레임은 제외, 코드/라벨/리포트/yaml만 추적
+# images/ previews/ frames/ missed/ false_positives/ hard_cases/ contact_sheets/ 는 용량이 너무 커서 제외
+dataset_field_v1/images/
+dataset_field_v1/frames/
+dataset_field_v1/previews/
+dataset_field_v1/missed/
+dataset_field_v1/false_positives/
+dataset_field_v1/hard_cases/
+dataset_field_v1/contact_sheets/
+
+# dataset/ 캐시 파일
+dataset/labels/*.cache

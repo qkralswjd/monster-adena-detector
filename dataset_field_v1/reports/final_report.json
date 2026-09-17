@@ -1,0 +1,163 @@
+{
+  "generated_at": "2026-09-17 13:24:21",
+  "videos": {
+    "VID_A": {
+      "path": "test_runs/2026-09-17_06-13-10/screen.mp4",
+      "split": "train"
+    },
+    "VID_B": {
+      "path": "test_runs/2026-09-17_06-40-52/screen.mp4",
+      "split": "train"
+    },
+    "VID_C": {
+      "path": "test_runs/2026-09-17_07-00-50/screen.mp4",
+      "split": "train"
+    },
+    "VID_D": {
+      "path": "test_runs/2026-09-17_07-45-08/screen.mp4",
+      "split": "val"
+    },
+    "VID_E": {
+      "path": "test_runs/2026-09-17_08-14-32/screen.mp4",
+      "split": "val"
+    },
+    "VID_F": {
+      "path": "test_runs/2026-09-17_09-10-38/screen_95mb.mp4",
+      "split": "test"
+    }
+  },
+  "extract": {
+    "VID_A": 202,
+    "VID_B": 227,
+    "VID_C": 217,
+    "VID_D": 202,
+    "VID_E": 104,
+    "VID_F": 600
+  },
+  "tracks": {},
+  "cases": {
+    "VID_A": {
+      "A": 49,
+      "B": 103,
+      "C": 21,
+      "E": 7,
+      "EMPTY": 20,
+      "HARD": 2
+    },
+    "VID_B": {
+      "C": 36,
+      "EMPTY": 16,
+      "A": 82,
+      "B": 87,
+      "HARD": 1,
+      "E": 5
+    },
+    "VID_C": {
+      "A": 39,
+      "B": 67,
+      "EMPTY": 58,
+      "C": 31,
+      "E": 16,
+      "HARD": 6
+    },
+    "VID_D": {
+      "HARD": 1,
+      "A": 59,
+      "B": 90,
+      "C": 39,
+      "E": 1,
+      "EMPTY": 12
+    },
+    "VID_E": {
+      "A": 30,
+      "B": 23,
+      "EMPTY": 29,
+      "E": 3,
+      "C": 19
+    },
+    "VID_F": {
+      "C": 85,
+      "B": 218,
+      "A": 187,
+      "E": 22,
+      "HARD": 8,
+      "EMPTY": 80
+    }
+  },
+  "final_stats": {
+    "split": {
+      "train": {
+        "images": 646,
+        "instances": 1063
+      },
+      "val": {
+        "images": 306,
+        "instances": 425
+      },
+      "test": {
+        "images": 600,
+        "instances": 959
+      }
+    },
+    "case": {
+      "A": 446,
+      "B": 588,
+      "C": 231,
+      "D": 0,
+      "E": 54,
+      "HARD": 18,
+      "EMPTY": 215
+    },
+    "position": {
+      "LEFT": 769,
+      "CENTER": 1200,
+      "RIGHT": 478,
+      "TOP": 599,
+      "MIDDLE": 888,
+      "BOTTOM": 960
+    },
+    "size": {
+      "SMALL": 543,
+      "MEDIUM": 1904,
+      "LARGE": 0
+    },
+    "hard_neg": 287,
+    "vid_inst": {
+      "VID_A": 389,
+      "VID_B": 438,
+      "VID_C": 236,
+      "VID_D": 310,
+      "VID_E": 115,
+      "VID_F": 959
+    }
+  },
+  "validation": {
+    "train": {
+      "stats": {
+        "total": 646,
+        "labeled": 515,
+        "empty": 131,
+        "instances": 1063
+      },
+      "issues": {}
+    },
+    "val": {
+      "stats": {
+        "total": 306,
+        "labeled": 260,
+        "empty": 46,
+        "instances": 425
+      },
+      "issues": {}
+    },
+    "test": {
+      "stats": {
+        "total": 600,
+        "labeled": 490,
+        "empty": 110,
+        "instances": 959
+      },
+      "issues": {}
+    }
+  }
+}

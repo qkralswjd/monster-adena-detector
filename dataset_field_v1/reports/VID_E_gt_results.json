@@ -1,0 +1,5671 @@
+{
+  "0": {
+    "frame_no": 0,
+    "fname": "VID_E_f000000.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000000.jpg",
+    "ts_sec": 0.0,
+    "diff": 99.0,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.6075,
+        "cx_n": 0.0478,
+        "cy_n": 0.9001,
+        "w_n": 0.0743,
+        "h_n": 0.1408,
+        "x1r": 12.147976875305176,
+        "y1r": 391.6057434082031,
+        "x2r": 96.4426040649414,
+        "y2r": 458.05023193359375,
+        "clipped": false,
+        "case": "A",
+        "track_len": 14,
+        "gt_source": "yolo_high"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.5081,
+        "cx_n": 0.6021,
+        "cy_n": 0.4252,
+        "w_n": 0.0519,
+        "h_n": 0.1044,
+        "x1r": 653.9061889648438,
+        "y1r": 176.0435333251953,
+        "x2r": 712.8350830078125,
+        "y2r": 225.342529296875,
+        "clipped": false,
+        "case": "A",
+        "track_len": 2,
+        "gt_source": "yolo_high"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.6075,
+        "cx_n": 0.0478,
+        "cy_n": 0.9001,
+        "w_n": 0.0743,
+        "h_n": 0.1408,
+        "x1r": 12.147976875305176,
+        "y1r": 391.6057434082031,
+        "x2r": 96.4426040649414,
+        "y2r": 458.05023193359375,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.5081,
+        "cx_n": 0.6021,
+        "cy_n": 0.4252,
+        "w_n": 0.0519,
+        "h_n": 0.1044,
+        "x1r": 653.9061889648438,
+        "y1r": 176.0435333251953,
+        "x2r": 712.8350830078125,
+        "y2r": 225.342529296875,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2166,
+        "cx_n": 0.358,
+        "cy_n": 0.7055,
+        "w_n": 0.0435,
+        "h_n": 0.1544,
+        "x1r": 381.65045166015625,
+        "y1r": 296.53240966796875,
+        "x2r": 431.00146484375,
+        "y2r": 369.4181823730469,
+        "clipped": false
+      }
+    ],
+    "case": "A",
+    "case_flags": [
+      "A"
+    ]
+  },
+  "2": {
+    "frame_no": 2,
+    "fname": "VID_E_f000002.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000002.jpg",
+    "ts_sec": 0.2,
+    "diff": 12.68,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.4654,
+        "cx_n": 0.0496,
+        "cy_n": 0.8504,
+        "w_n": 0.082,
+        "h_n": 0.1458,
+        "x1r": 9.82481861114502,
+        "y1r": 366.99481201171875,
+        "x2r": 102.87104034423828,
+        "y2r": 435.7906188964844,
+        "clipped": false,
+        "case": "C",
+        "track_len": 14,
+        "gt_source": "yolo_mid_track"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2138,
+        "cx_n": 0.6107,
+        "cy_n": 0.3701,
+        "w_n": 0.0482,
+        "h_n": 0.0957,
+        "x1r": 665.8212280273438,
+        "y1r": 152.10452270507812,
+        "x2r": 720.4968872070312,
+        "y2r": 197.28094482421875,
+        "clipped": false,
+        "case": "B",
+        "track_len": 2,
+        "gt_source": "track_interpolated"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1438,
+        "cx_n": 0.5687,
+        "cy_n": 0.3884,
+        "w_n": 0.0549,
+        "h_n": 0.1172,
+        "x1r": 614.3289184570312,
+        "y1r": 155.66847229003906,
+        "x2r": 676.6239624023438,
+        "y2r": 210.98643493652344,
+        "clipped": false,
+        "case": "B",
+        "track_len": 7,
+        "gt_source": "track_interpolated"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.4654,
+        "cx_n": 0.0496,
+        "cy_n": 0.8504,
+        "w_n": 0.082,
+        "h_n": 0.1458,
+        "x1r": 9.82481861114502,
+        "y1r": 366.99481201171875,
+        "x2r": 102.87104034423828,
+        "y2r": 435.7906188964844,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2138,
+        "cx_n": 0.6107,
+        "cy_n": 0.3701,
+        "w_n": 0.0482,
+        "h_n": 0.0957,
+        "x1r": 665.8212280273438,
+        "y1r": 152.10452270507812,
+        "x2r": 720.4968872070312,
+        "y2r": 197.28094482421875,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1438,
+        "cx_n": 0.5687,
+        "cy_n": 0.3884,
+        "w_n": 0.0549,
+        "h_n": 0.1172,
+        "x1r": 614.3289184570312,
+        "y1r": 155.66847229003906,
+        "x2r": 676.6239624023438,
+        "y2r": 210.98643493652344,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1058,
+        "cx_n": 0.3602,
+        "cy_n": 0.7734,
+        "w_n": 0.0461,
+        "h_n": 0.117,
+        "x1r": 382.7108459472656,
+        "y1r": 337.4454345703125,
+        "x2r": 435.0366516113281,
+        "y2r": 392.66455078125,
+        "clipped": false
+      }
+    ],
+    "case": "B",
+    "case_flags": [
+      "B",
+      "C"
+    ]
+  },
+  "4": {
+    "frame_no": 4,
+    "fname": "VID_E_f000004.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000004.jpg",
+    "ts_sec": 0.4,
+    "diff": 12.34,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.7499,
+        "cx_n": 0.5913,
+        "cy_n": 0.3355,
+        "w_n": 0.0776,
+        "h_n": 0.1206,
+        "x1r": 627.0734252929688,
+        "y1r": 129.9197540283203,
+        "x2r": 715.144775390625,
+        "y2r": 186.8199920654297,
+        "clipped": false,
+        "case": "A",
+        "track_len": 7,
+        "gt_source": "yolo_high"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.6283,
+        "cx_n": 0.0467,
+        "cy_n": 0.8053,
+        "w_n": 0.0714,
+        "h_n": 0.1365,
+        "x1r": 12.465646743774414,
+        "y1r": 347.8636779785156,
+        "x2r": 93.54396057128906,
+        "y2r": 412.3076171875,
+        "clipped": false,
+        "case": "A",
+        "track_len": 14,
+        "gt_source": "yolo_high"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.5018,
+        "cx_n": 0.3171,
+        "cy_n": 0.9368,
+        "w_n": 0.0393,
+        "h_n": 0.1264,
+        "x1r": 337.6366271972656,
+        "y1r": 412.3299865722656,
+        "x2r": 382.2789001464844,
+        "y2r": 472,
+        "clipped": false,
+        "case": "A",
+        "track_len": 2,
+        "gt_source": "yolo_high"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.7499,
+        "cx_n": 0.5913,
+        "cy_n": 0.3355,
+        "w_n": 0.0776,
+        "h_n": 0.1206,
+        "x1r": 627.0734252929688,
+        "y1r": 129.9197540283203,
+        "x2r": 715.144775390625,
+        "y2r": 186.8199920654297,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.6283,
+        "cx_n": 0.0467,
+        "cy_n": 0.8053,
+        "w_n": 0.0714,
+        "h_n": 0.1365,
+        "x1r": 12.465646743774414,
+        "y1r": 347.8636779785156,
+        "x2r": 93.54396057128906,
+        "y2r": 412.3076171875,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.5018,
+        "cx_n": 0.3171,
+        "cy_n": 0.9368,
+        "w_n": 0.0393,
+        "h_n": 0.1264,
+        "x1r": 337.6366271972656,
+        "y1r": 412.3299865722656,
+        "x2r": 382.2789001464844,
+        "y2r": 472,
+        "clipped": false
+      }
+    ],
+    "case": "A",
+    "case_flags": [
+      "A"
+    ]
+  },
+  "6": {
+    "frame_no": 6,
+    "fname": "VID_E_f000006.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000006.jpg",
+    "ts_sec": 0.6,
+    "diff": 12.26,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.292,
+        "cx_n": 0.5775,
+        "cy_n": 0.294,
+        "w_n": 0.0499,
+        "h_n": 0.1216,
+        "x1r": 627.1795043945312,
+        "y1r": 110.05596160888672,
+        "x2r": 683.7799072265625,
+        "y2r": 167.4634246826172,
+        "clipped": false,
+        "case": "C",
+        "track_len": 7,
+        "gt_source": "yolo_mid_track"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1955,
+        "cx_n": 0.0471,
+        "cy_n": 0.756,
+        "w_n": 0.073,
+        "h_n": 0.1419,
+        "x1r": 11.969208717346191,
+        "y1r": 323.35662841796875,
+        "x2r": 94.85735321044922,
+        "y2r": 390.34136962890625,
+        "clipped": false,
+        "case": "B",
+        "track_len": 14,
+        "gt_source": "track_interpolated"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.292,
+        "cx_n": 0.5775,
+        "cy_n": 0.294,
+        "w_n": 0.0499,
+        "h_n": 0.1216,
+        "x1r": 627.1795043945312,
+        "y1r": 110.05596160888672,
+        "x2r": 683.7799072265625,
+        "y2r": 167.4634246826172,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1955,
+        "cx_n": 0.0471,
+        "cy_n": 0.756,
+        "w_n": 0.073,
+        "h_n": 0.1419,
+        "x1r": 11.969208717346191,
+        "y1r": 323.35662841796875,
+        "x2r": 94.85735321044922,
+        "y2r": 390.34136962890625,
+        "clipped": false
+      }
+    ],
+    "case": "B",
+    "case_flags": [
+      "B",
+      "C"
+    ]
+  },
+  "8": {
+    "frame_no": 8,
+    "fname": "VID_E_f000008.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000008.jpg",
+    "ts_sec": 0.8,
+    "diff": 11.75,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.6651,
+        "cx_n": 0.0489,
+        "cy_n": 0.7379,
+        "w_n": 0.08,
+        "h_n": 0.1452,
+        "x1r": 10.120048522949219,
+        "y1r": 314.0055847167969,
+        "x2r": 100.94525909423828,
+        "y2r": 382.5577087402344,
+        "clipped": false,
+        "case": "A",
+        "track_len": 14,
+        "gt_source": "yolo_high"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1328,
+        "cx_n": 0.5851,
+        "cy_n": 0.2696,
+        "w_n": 0.0694,
+        "h_n": 0.1157,
+        "x1r": 624.733154296875,
+        "y1r": 99.92193603515625,
+        "x2r": 703.501220703125,
+        "y2r": 154.55087280273438,
+        "clipped": false,
+        "case": "B",
+        "track_len": 7,
+        "gt_source": "track_interpolated"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.6651,
+        "cx_n": 0.0489,
+        "cy_n": 0.7379,
+        "w_n": 0.08,
+        "h_n": 0.1452,
+        "x1r": 10.120048522949219,
+        "y1r": 314.0055847167969,
+        "x2r": 100.94525909423828,
+        "y2r": 382.5577087402344,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1328,
+        "cx_n": 0.5851,
+        "cy_n": 0.2696,
+        "w_n": 0.0694,
+        "h_n": 0.1157,
+        "x1r": 624.733154296875,
+        "y1r": 99.92193603515625,
+        "x2r": 703.501220703125,
+        "y2r": 154.55087280273438,
+        "clipped": false
+      }
+    ],
+    "case": "B",
+    "case_flags": [
+      "B",
+      "A"
+    ]
+  },
+  "10": {
+    "frame_no": 10,
+    "fname": "VID_E_f000010.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000010.jpg",
+    "ts_sec": 1.0,
+    "diff": 12.12,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.6605,
+        "cx_n": 0.5874,
+        "cy_n": 0.2166,
+        "w_n": 0.085,
+        "h_n": 0.1193,
+        "x1r": 618.5018920898438,
+        "y1r": 74.06317138671875,
+        "x2r": 714.949951171875,
+        "y2r": 130.39271545410156,
+        "clipped": false,
+        "case": "A",
+        "track_len": 7,
+        "gt_source": "yolo_high"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1136,
+        "cx_n": 0.047,
+        "cy_n": 0.6878,
+        "w_n": 0.0778,
+        "h_n": 0.1435,
+        "x1r": 9.180839538574219,
+        "y1r": 290.788818359375,
+        "x2r": 97.5250244140625,
+        "y2r": 358.5071105957031,
+        "clipped": false,
+        "case": "B",
+        "track_len": 14,
+        "gt_source": "track_interpolated"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.6605,
+        "cx_n": 0.5874,
+        "cy_n": 0.2166,
+        "w_n": 0.085,
+        "h_n": 0.1193,
+        "x1r": 618.5018920898438,
+        "y1r": 74.06317138671875,
+        "x2r": 714.949951171875,
+        "y2r": 130.39271545410156,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1136,
+        "cx_n": 0.047,
+        "cy_n": 0.6878,
+        "w_n": 0.0778,
+        "h_n": 0.1435,
+        "x1r": 9.180839538574219,
+        "y1r": 290.788818359375,
+        "x2r": 97.5250244140625,
+        "y2r": 358.5071105957031,
+        "clipped": false
+      }
+    ],
+    "case": "B",
+    "case_flags": [
+      "B",
+      "A"
+    ]
+  },
+  "12": {
+    "frame_no": 12,
+    "fname": "VID_E_f000012.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000012.jpg",
+    "ts_sec": 1.2,
+    "diff": 12.33,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.6863,
+        "cx_n": 0.0461,
+        "cy_n": 0.6348,
+        "w_n": 0.0703,
+        "h_n": 0.1519,
+        "x1r": 12.464192390441895,
+        "y1r": 263.75213623046875,
+        "x2r": 92.27203369140625,
+        "y2r": 335.4637145996094,
+        "clipped": false,
+        "case": "A",
+        "track_len": 14,
+        "gt_source": "yolo_high"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2889,
+        "cx_n": 0.5973,
+        "cy_n": 0.1606,
+        "w_n": 0.0662,
+        "h_n": 0.1062,
+        "x1r": 640.3545532226562,
+        "y1r": 50.73102951049805,
+        "x2r": 715.4385986328125,
+        "y2r": 100.8797378540039,
+        "clipped": false,
+        "case": "C",
+        "track_len": 7,
+        "gt_source": "yolo_mid_track"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.6863,
+        "cx_n": 0.0461,
+        "cy_n": 0.6348,
+        "w_n": 0.0703,
+        "h_n": 0.1519,
+        "x1r": 12.464192390441895,
+        "y1r": 263.75213623046875,
+        "x2r": 92.27203369140625,
+        "y2r": 335.4637145996094,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2889,
+        "cx_n": 0.5973,
+        "cy_n": 0.1606,
+        "w_n": 0.0662,
+        "h_n": 0.1062,
+        "x1r": 640.3545532226562,
+        "y1r": 50.73102951049805,
+        "x2r": 715.4385986328125,
+        "y2r": 100.8797378540039,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1247,
+        "cx_n": 0.577,
+        "cy_n": 0.1727,
+        "w_n": 0.0561,
+        "h_n": 0.1233,
+        "x1r": 623.0353393554688,
+        "y1r": 52.395870208740234,
+        "x2r": 686.6824951171875,
+        "y2r": 110.60408020019531,
+        "clipped": false
+      }
+    ],
+    "case": "A",
+    "case_flags": [
+      "C",
+      "A"
+    ]
+  },
+  "14": {
+    "frame_no": 14,
+    "fname": "VID_E_f000014.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000014.jpg",
+    "ts_sec": 1.4,
+    "diff": 12.01,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.8114,
+        "cx_n": 0.0458,
+        "cy_n": 0.6096,
+        "w_n": 0.0697,
+        "h_n": 0.157,
+        "x1r": 12.437564849853516,
+        "y1r": 250.70068359375,
+        "x2r": 91.59297943115234,
+        "y2r": 324.78271484375,
+        "clipped": false,
+        "case": "A",
+        "track_len": 14,
+        "gt_source": "yolo_high"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1015,
+        "cx_n": 0.6141,
+        "cy_n": 0.1329,
+        "w_n": 0.0344,
+        "h_n": 0.0905,
+        "x1r": 677.447509765625,
+        "y1r": 41.342674255371094,
+        "x2r": 716.4888916015625,
+        "y2r": 84.0720443725586,
+        "clipped": false,
+        "case": "B",
+        "track_len": 7,
+        "gt_source": "track_interpolated"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2056,
+        "cx_n": 0.3189,
+        "cy_n": 0.9425,
+        "w_n": 0.0374,
+        "h_n": 0.1129,
+        "x1r": 340.7622375488281,
+        "y1r": 418.2086486816406,
+        "x2r": 383.2367248535156,
+        "y2r": 471.50140380859375,
+        "clipped": false,
+        "case": "B",
+        "track_len": 2,
+        "gt_source": "track_interpolated"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.8114,
+        "cx_n": 0.0458,
+        "cy_n": 0.6096,
+        "w_n": 0.0697,
+        "h_n": 0.157,
+        "x1r": 12.437564849853516,
+        "y1r": 250.70068359375,
+        "x2r": 91.59297943115234,
+        "y2r": 324.78271484375,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2056,
+        "cx_n": 0.3189,
+        "cy_n": 0.9425,
+        "w_n": 0.0374,
+        "h_n": 0.1129,
+        "x1r": 340.7622375488281,
+        "y1r": 418.2086486816406,
+        "x2r": 383.2367248535156,
+        "y2r": 471.50140380859375,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1526,
+        "cx_n": 0.5792,
+        "cy_n": 0.1489,
+        "w_n": 0.058,
+        "h_n": 0.1151,
+        "x1r": 624.49365234375,
+        "y1r": 43.12113952636719,
+        "x2r": 690.3134155273438,
+        "y2r": 97.43496704101562,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1015,
+        "cx_n": 0.6141,
+        "cy_n": 0.1329,
+        "w_n": 0.0344,
+        "h_n": 0.0905,
+        "x1r": 677.447509765625,
+        "y1r": 41.342674255371094,
+        "x2r": 716.4888916015625,
+        "y2r": 84.0720443725586,
+        "clipped": false
+      }
+    ],
+    "case": "B",
+    "case_flags": [
+      "B",
+      "A"
+    ]
+  },
+  "16": {
+    "frame_no": 16,
+    "fname": "VID_E_f000016.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000016.jpg",
+    "ts_sec": 1.6,
+    "diff": 12.33,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.7673,
+        "cx_n": 0.0446,
+        "cy_n": 0.5668,
+        "w_n": 0.0721,
+        "h_n": 0.1424,
+        "x1r": 9.69034194946289,
+        "y1r": 233.93740844726562,
+        "x2r": 91.55180358886719,
+        "y2r": 301.1511535644531,
+        "clipped": false,
+        "case": "A",
+        "track_len": 14,
+        "gt_source": "yolo_high"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.7673,
+        "cx_n": 0.0446,
+        "cy_n": 0.5668,
+        "w_n": 0.0721,
+        "h_n": 0.1424,
+        "x1r": 9.69034194946289,
+        "y1r": 233.93740844726562,
+        "x2r": 91.55180358886719,
+        "y2r": 301.1511535644531,
+        "clipped": false
+      }
+    ],
+    "case": "A",
+    "case_flags": [
+      "A"
+    ]
+  },
+  "18": {
+    "frame_no": 18,
+    "fname": "VID_E_f000018.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000018.jpg",
+    "ts_sec": 1.8,
+    "diff": 12.29,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.7419,
+        "cx_n": 0.0461,
+        "cy_n": 0.5175,
+        "w_n": 0.071,
+        "h_n": 0.1535,
+        "x1r": 12.054713249206543,
+        "y1r": 208.0240936279297,
+        "x2r": 92.59132385253906,
+        "y2r": 280.4944152832031,
+        "clipped": false,
+        "case": "A",
+        "track_len": 14,
+        "gt_source": "yolo_high"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.7419,
+        "cx_n": 0.0461,
+        "cy_n": 0.5175,
+        "w_n": 0.071,
+        "h_n": 0.1535,
+        "x1r": 12.054713249206543,
+        "y1r": 208.0240936279297,
+        "x2r": 92.59132385253906,
+        "y2r": 280.4944152832031,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1221,
+        "cx_n": 0.4613,
+        "cy_n": 0.4638,
+        "w_n": 0.0331,
+        "h_n": 0.133,
+        "x1r": 504.8096008300781,
+        "y1r": 187.54417419433594,
+        "x2r": 542.4269409179688,
+        "y2r": 250.2984619140625,
+        "clipped": false
+      }
+    ],
+    "case": "A",
+    "case_flags": [
+      "E",
+      "A"
+    ]
+  },
+  "20": {
+    "frame_no": 20,
+    "fname": "VID_E_f000020.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000020.jpg",
+    "ts_sec": 2.0,
+    "diff": 11.76,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.7985,
+        "cx_n": 0.0446,
+        "cy_n": 0.4906,
+        "w_n": 0.0721,
+        "h_n": 0.1588,
+        "x1r": 9.743975639343262,
+        "y1r": 194.10507202148438,
+        "x2r": 91.5263442993164,
+        "y2r": 269.0369567871094,
+        "clipped": false,
+        "case": "A",
+        "track_len": 14,
+        "gt_source": "yolo_high"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.7985,
+        "cx_n": 0.0446,
+        "cy_n": 0.4906,
+        "w_n": 0.0721,
+        "h_n": 0.1588,
+        "x1r": 9.743975639343262,
+        "y1r": 194.10507202148438,
+        "x2r": 91.5263442993164,
+        "y2r": 269.0369567871094,
+        "clipped": false
+      }
+    ],
+    "case": "A",
+    "case_flags": [
+      "A"
+    ]
+  },
+  "22": {
+    "frame_no": 22,
+    "fname": "VID_E_f000022.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000022.jpg",
+    "ts_sec": 2.2,
+    "diff": 12.17,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.7641,
+        "cx_n": 0.0426,
+        "cy_n": 0.4501,
+        "w_n": 0.072,
+        "h_n": 0.146,
+        "x1r": 7.536074638366699,
+        "y1r": 178.00938415527344,
+        "x2r": 89.23107147216797,
+        "y2r": 246.90966796875,
+        "clipped": false,
+        "case": "A",
+        "track_len": 14,
+        "gt_source": "yolo_high"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.7641,
+        "cx_n": 0.0426,
+        "cy_n": 0.4501,
+        "w_n": 0.072,
+        "h_n": 0.146,
+        "x1r": 7.536074638366699,
+        "y1r": 178.00938415527344,
+        "x2r": 89.23107147216797,
+        "y2r": 246.90966796875,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1282,
+        "cx_n": 0.279,
+        "cy_n": 0.917,
+        "w_n": 0.0407,
+        "h_n": 0.166,
+        "x1r": 293.6114501953125,
+        "y1r": 393.6519470214844,
+        "x2r": 339.7615966796875,
+        "y2r": 472,
+        "clipped": false
+      }
+    ],
+    "case": "A",
+    "case_flags": [
+      "E",
+      "A"
+    ]
+  },
+  "24": {
+    "frame_no": 24,
+    "fname": "VID_E_f000024.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000024.jpg",
+    "ts_sec": 2.4,
+    "diff": 12.69,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.7603,
+        "cx_n": 0.038,
+        "cy_n": 0.401,
+        "w_n": 0.076,
+        "h_n": 0.1688,
+        "x1r": 0,
+        "y1r": 149.4576873779297,
+        "x2r": 86.26764678955078,
+        "y2r": 229.12998962402344,
+        "clipped": false,
+        "case": "A",
+        "track_len": 14,
+        "gt_source": "yolo_high"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.5184,
+        "cx_n": 0.2489,
+        "cy_n": 0.9146,
+        "w_n": 0.048,
+        "h_n": 0.1708,
+        "x1r": 255.2390594482422,
+        "y1r": 391.3996887207031,
+        "x2r": 309.69610595703125,
+        "y2r": 472,
+        "clipped": false,
+        "case": "C",
+        "track_len": 0,
+        "gt_source": "yolo_high"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.7603,
+        "cx_n": 0.038,
+        "cy_n": 0.401,
+        "w_n": 0.076,
+        "h_n": 0.1688,
+        "x1r": 0,
+        "y1r": 149.4576873779297,
+        "x2r": 86.26764678955078,
+        "y2r": 229.12998962402344,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.5184,
+        "cx_n": 0.2489,
+        "cy_n": 0.9146,
+        "w_n": 0.048,
+        "h_n": 0.1708,
+        "x1r": 255.2390594482422,
+        "y1r": 391.3996887207031,
+        "x2r": 309.69610595703125,
+        "y2r": 472,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1278,
+        "cx_n": 0.2029,
+        "cy_n": 0.509,
+        "w_n": 0.0196,
+        "h_n": 0.0803,
+        "x1r": 219.19970703125,
+        "y1r": 221.29678344726562,
+        "x2r": 241.4525909423828,
+        "y2r": 259.199462890625,
+        "clipped": false
+      }
+    ],
+    "case": "A",
+    "case_flags": [
+      "C",
+      "E",
+      "A"
+    ]
+  },
+  "26": {
+    "frame_no": 26,
+    "fname": "VID_E_f000026.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000026.jpg",
+    "ts_sec": 2.6,
+    "diff": 12.47,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1657,
+        "cx_n": 0.0269,
+        "cy_n": 0.399,
+        "w_n": 0.0537,
+        "h_n": 0.1242,
+        "x1r": 0,
+        "y1r": 159.0059356689453,
+        "x2r": 60.95164108276367,
+        "y2r": 217.6217803955078,
+        "clipped": false,
+        "case": "B",
+        "track_len": 14,
+        "gt_source": "track_interpolated"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1657,
+        "cx_n": 0.0269,
+        "cy_n": 0.399,
+        "w_n": 0.0537,
+        "h_n": 0.1242,
+        "x1r": 0,
+        "y1r": 159.0059356689453,
+        "x2r": 60.95164108276367,
+        "y2r": 217.6217803955078,
+        "clipped": false
+      }
+    ],
+    "case": "B",
+    "case_flags": [
+      "B"
+    ]
+  },
+  "28": {
+    "frame_no": 28,
+    "fname": "VID_E_f000028.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000028.jpg",
+    "ts_sec": 2.8,
+    "diff": 11.76,
+    "gt_dets": [],
+    "yolo_dets": [],
+    "case": "EMPTY",
+    "case_flags": []
+  },
+  "32": {
+    "frame_no": 32,
+    "fname": "VID_E_f000032.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000032.jpg",
+    "ts_sec": 3.2,
+    "diff": 0.66,
+    "gt_dets": [],
+    "yolo_dets": [],
+    "case": "EMPTY",
+    "case_flags": []
+  },
+  "38": {
+    "frame_no": 38,
+    "fname": "VID_E_f000038.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000038.jpg",
+    "ts_sec": 3.8,
+    "diff": 13.69,
+    "gt_dets": [],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1473,
+        "cx_n": 0.5248,
+        "cy_n": 0.227,
+        "w_n": 0.05,
+        "h_n": 0.1507,
+        "x1r": 567.3399047851562,
+        "y1r": 71.56526184082031,
+        "x2r": 624.0479736328125,
+        "y2r": 142.69985961914062,
+        "clipped": false
+      }
+    ],
+    "case": "E",
+    "case_flags": [
+      "E"
+    ]
+  },
+  "40": {
+    "frame_no": 40,
+    "fname": "VID_E_f000040.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000040.jpg",
+    "ts_sec": 4.0,
+    "diff": 12.61,
+    "gt_dets": [],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2286,
+        "cx_n": 0.3581,
+        "cy_n": 0.386,
+        "w_n": 0.0352,
+        "h_n": 0.1403,
+        "x1r": 386.50701904296875,
+        "y1r": 149.0880889892578,
+        "x2r": 426.4750061035156,
+        "y2r": 215.3319549560547,
+        "clipped": false
+      }
+    ],
+    "case": "E",
+    "case_flags": [
+      "E"
+    ]
+  },
+  "42": {
+    "frame_no": 42,
+    "fname": "VID_E_f000042.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000042.jpg",
+    "ts_sec": 4.2,
+    "diff": 12.34,
+    "gt_dets": [],
+    "yolo_dets": [],
+    "case": "EMPTY",
+    "case_flags": []
+  },
+  "44": {
+    "frame_no": 44,
+    "fname": "VID_E_f000044.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000044.jpg",
+    "ts_sec": 4.4,
+    "diff": 12.24,
+    "gt_dets": [],
+    "yolo_dets": [],
+    "case": "EMPTY",
+    "case_flags": []
+  },
+  "46": {
+    "frame_no": 46,
+    "fname": "VID_E_f000046.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000046.jpg",
+    "ts_sec": 4.6,
+    "diff": 11.59,
+    "gt_dets": [],
+    "yolo_dets": [],
+    "case": "EMPTY",
+    "case_flags": []
+  },
+  "48": {
+    "frame_no": 48,
+    "fname": "VID_E_f000048.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000048.jpg",
+    "ts_sec": 4.8,
+    "diff": 12.33,
+    "gt_dets": [],
+    "yolo_dets": [],
+    "case": "EMPTY",
+    "case_flags": []
+  },
+  "50": {
+    "frame_no": 50,
+    "fname": "VID_E_f000050.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000050.jpg",
+    "ts_sec": 5.0,
+    "diff": 12.21,
+    "gt_dets": [],
+    "yolo_dets": [],
+    "case": "EMPTY",
+    "case_flags": []
+  },
+  "52": {
+    "frame_no": 52,
+    "fname": "VID_E_f000052.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000052.jpg",
+    "ts_sec": 5.2,
+    "diff": 11.63,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1332,
+        "cx_n": 0.5246,
+        "cy_n": 0.2287,
+        "w_n": 0.0505,
+        "h_n": 0.147,
+        "x1r": 566.7515869140625,
+        "y1r": 73.26300048828125,
+        "x2r": 624.0665283203125,
+        "y2r": 142.65472412109375,
+        "clipped": false,
+        "case": "B",
+        "track_len": 4,
+        "gt_source": "track_interpolated"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1332,
+        "cx_n": 0.5246,
+        "cy_n": 0.2287,
+        "w_n": 0.0505,
+        "h_n": 0.147,
+        "x1r": 566.7515869140625,
+        "y1r": 73.26300048828125,
+        "x2r": 624.0665283203125,
+        "y2r": 142.65472412109375,
+        "clipped": false
+      }
+    ],
+    "case": "B",
+    "case_flags": [
+      "B"
+    ]
+  },
+  "54": {
+    "frame_no": 54,
+    "fname": "VID_E_f000054.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000054.jpg",
+    "ts_sec": 5.4,
+    "diff": 11.5,
+    "gt_dets": [],
+    "yolo_dets": [],
+    "case": "EMPTY",
+    "case_flags": []
+  },
+  "56": {
+    "frame_no": 56,
+    "fname": "VID_E_f000056.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000056.jpg",
+    "ts_sec": 5.6,
+    "diff": 11.44,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1592,
+        "cx_n": 0.5251,
+        "cy_n": 0.2284,
+        "w_n": 0.0508,
+        "h_n": 0.1438,
+        "x1r": 567.117919921875,
+        "y1r": 73.89131927490234,
+        "x2r": 624.783447265625,
+        "y2r": 141.76278686523438,
+        "clipped": false,
+        "case": "B",
+        "track_len": 4,
+        "gt_source": "track_interpolated"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1592,
+        "cx_n": 0.5251,
+        "cy_n": 0.2284,
+        "w_n": 0.0508,
+        "h_n": 0.1438,
+        "x1r": 567.117919921875,
+        "y1r": 73.89131927490234,
+        "x2r": 624.783447265625,
+        "y2r": 141.76278686523438,
+        "clipped": false
+      }
+    ],
+    "case": "B",
+    "case_flags": [
+      "B"
+    ]
+  },
+  "58": {
+    "frame_no": 58,
+    "fname": "VID_E_f000058.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000058.jpg",
+    "ts_sec": 5.8,
+    "diff": 11.37,
+    "gt_dets": [],
+    "yolo_dets": [],
+    "case": "EMPTY",
+    "case_flags": []
+  },
+  "60": {
+    "frame_no": 60,
+    "fname": "VID_E_f000060.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000060.jpg",
+    "ts_sec": 6.0,
+    "diff": 11.02,
+    "gt_dets": [],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1996,
+        "cx_n": 0.3228,
+        "cy_n": 0.1826,
+        "w_n": 0.0794,
+        "h_n": 0.1222,
+        "x1r": 321.3670349121094,
+        "y1r": 57.36064910888672,
+        "x2r": 411.4890441894531,
+        "y2r": 115.03553771972656,
+        "clipped": false
+      }
+    ],
+    "case": "EMPTY",
+    "case_flags": []
+  },
+  "62": {
+    "frame_no": 62,
+    "fname": "VID_E_f000062.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000062.jpg",
+    "ts_sec": 6.2,
+    "diff": 11.53,
+    "gt_dets": [],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2009,
+        "cx_n": 0.326,
+        "cy_n": 0.1917,
+        "w_n": 0.0362,
+        "h_n": 0.0908,
+        "x1r": 349.45672607421875,
+        "y1r": 69.06687927246094,
+        "x2r": 390.5222473144531,
+        "y2r": 111.9413070678711,
+        "clipped": false
+      }
+    ],
+    "case": "EMPTY",
+    "case_flags": []
+  },
+  "64": {
+    "frame_no": 64,
+    "fname": "VID_E_f000064.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000064.jpg",
+    "ts_sec": 6.4,
+    "diff": 12.18,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.4071,
+        "cx_n": 0.2962,
+        "cy_n": 0.2174,
+        "w_n": 0.0559,
+        "h_n": 0.0987,
+        "x1r": 304.474853515625,
+        "y1r": 79.33439636230469,
+        "x2r": 367.8905029296875,
+        "y2r": 125.92701721191406,
+        "clipped": false,
+        "case": "C",
+        "track_len": 8,
+        "gt_source": "yolo_mid_track"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.4071,
+        "cx_n": 0.2962,
+        "cy_n": 0.2174,
+        "w_n": 0.0559,
+        "h_n": 0.0987,
+        "x1r": 304.474853515625,
+        "y1r": 79.33439636230469,
+        "x2r": 367.8905029296875,
+        "y2r": 125.92701721191406,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1163,
+        "cx_n": 0.3433,
+        "cy_n": 0.7522,
+        "w_n": 0.0673,
+        "h_n": 0.2392,
+        "x1r": 351.408203125,
+        "y1r": 298.58917236328125,
+        "x2r": 427.7768249511719,
+        "y2r": 411.4966125488281,
+        "clipped": false
+      }
+    ],
+    "case": "C",
+    "case_flags": [
+      "C",
+      "E"
+    ]
+  },
+  "66": {
+    "frame_no": 66,
+    "fname": "VID_E_f000066.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000066.jpg",
+    "ts_sec": 6.6,
+    "diff": 11.12,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.5562,
+        "cx_n": 0.2655,
+        "cy_n": 0.2457,
+        "w_n": 0.062,
+        "h_n": 0.1168,
+        "x1r": 266.0856628417969,
+        "y1r": 88.3861312866211,
+        "x2r": 336.4967956542969,
+        "y2r": 143.535400390625,
+        "clipped": false,
+        "case": "A",
+        "track_len": 8,
+        "gt_source": "yolo_high"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2911,
+        "cx_n": 0.5256,
+        "cy_n": 0.2274,
+        "w_n": 0.051,
+        "h_n": 0.1481,
+        "x1r": 567.5647583007812,
+        "y1r": 72.36237335205078,
+        "x2r": 625.4759521484375,
+        "y2r": 142.25828552246094,
+        "clipped": false,
+        "case": "C",
+        "track_len": 4,
+        "gt_source": "yolo_mid_track"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.5562,
+        "cx_n": 0.2655,
+        "cy_n": 0.2457,
+        "w_n": 0.062,
+        "h_n": 0.1168,
+        "x1r": 266.0856628417969,
+        "y1r": 88.3861312866211,
+        "x2r": 336.4967956542969,
+        "y2r": 143.535400390625,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2911,
+        "cx_n": 0.5256,
+        "cy_n": 0.2274,
+        "w_n": 0.051,
+        "h_n": 0.1481,
+        "x1r": 567.5647583007812,
+        "y1r": 72.36237335205078,
+        "x2r": 625.4759521484375,
+        "y2r": 142.25828552246094,
+        "clipped": false
+      }
+    ],
+    "case": "A",
+    "case_flags": [
+      "C",
+      "A"
+    ]
+  },
+  "69": {
+    "frame_no": 69,
+    "fname": "VID_E_f000069.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000069.jpg",
+    "ts_sec": 6.9,
+    "diff": 0.51,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.5444,
+        "cx_n": 0.2654,
+        "cy_n": 0.2456,
+        "w_n": 0.0628,
+        "h_n": 0.1167,
+        "x1r": 265.56036376953125,
+        "y1r": 88.3905029296875,
+        "x2r": 336.8756408691406,
+        "y2r": 143.46694946289062,
+        "clipped": false,
+        "case": "A",
+        "track_len": 8,
+        "gt_source": "yolo_high"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2747,
+        "cx_n": 0.5256,
+        "cy_n": 0.2274,
+        "w_n": 0.051,
+        "h_n": 0.1485,
+        "x1r": 567.5980224609375,
+        "y1r": 72.30184173583984,
+        "x2r": 625.5280151367188,
+        "y2r": 142.38009643554688,
+        "clipped": false,
+        "case": "C",
+        "track_len": 4,
+        "gt_source": "yolo_mid_track"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.5444,
+        "cx_n": 0.2654,
+        "cy_n": 0.2456,
+        "w_n": 0.0628,
+        "h_n": 0.1167,
+        "x1r": 265.56036376953125,
+        "y1r": 88.3905029296875,
+        "x2r": 336.8756408691406,
+        "y2r": 143.46694946289062,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2747,
+        "cx_n": 0.5256,
+        "cy_n": 0.2274,
+        "w_n": 0.051,
+        "h_n": 0.1485,
+        "x1r": 567.5980224609375,
+        "y1r": 72.30184173583984,
+        "x2r": 625.5280151367188,
+        "y2r": 142.38009643554688,
+        "clipped": false
+      }
+    ],
+    "case": "A",
+    "case_flags": [
+      "C",
+      "A"
+    ]
+  },
+  "75": {
+    "frame_no": 75,
+    "fname": "VID_E_f000075.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000075.jpg",
+    "ts_sec": 7.5,
+    "diff": 2.9,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.289,
+        "cx_n": 0.2693,
+        "cy_n": 0.2434,
+        "w_n": 0.0747,
+        "h_n": 0.1193,
+        "x1r": 263.2331848144531,
+        "y1r": 86.74250793457031,
+        "x2r": 347.99163818359375,
+        "y2r": 143.05589294433594,
+        "clipped": false,
+        "case": "C",
+        "track_len": 8,
+        "gt_source": "yolo_mid_track"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.289,
+        "cx_n": 0.2693,
+        "cy_n": 0.2434,
+        "w_n": 0.0747,
+        "h_n": 0.1193,
+        "x1r": 263.2331848144531,
+        "y1r": 86.74250793457031,
+        "x2r": 347.99163818359375,
+        "y2r": 143.05589294433594,
+        "clipped": false
+      }
+    ],
+    "case": "C",
+    "case_flags": [
+      "C"
+    ]
+  },
+  "78": {
+    "frame_no": 78,
+    "fname": "VID_E_f000078.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000078.jpg",
+    "ts_sec": 7.8,
+    "diff": 0.49,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2056,
+        "cx_n": 0.2565,
+        "cy_n": 0.2477,
+        "w_n": 0.0624,
+        "h_n": 0.1135,
+        "x1r": 255.70008850097656,
+        "y1r": 90.1495361328125,
+        "x2r": 326.563720703125,
+        "y2r": 143.72421264648438,
+        "clipped": false,
+        "case": "B",
+        "track_len": 8,
+        "gt_source": "track_interpolated"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2056,
+        "cx_n": 0.2565,
+        "cy_n": 0.2477,
+        "w_n": 0.0624,
+        "h_n": 0.1135,
+        "x1r": 255.70008850097656,
+        "y1r": 90.1495361328125,
+        "x2r": 326.563720703125,
+        "y2r": 143.72421264648438,
+        "clipped": false
+      }
+    ],
+    "case": "B",
+    "case_flags": [
+      "B"
+    ]
+  },
+  "84": {
+    "frame_no": 84,
+    "fname": "VID_E_f000084.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000084.jpg",
+    "ts_sec": 8.4,
+    "diff": 0.85,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2177,
+        "cx_n": 0.257,
+        "cy_n": 0.2472,
+        "w_n": 0.0628,
+        "h_n": 0.1142,
+        "x1r": 256.0853576660156,
+        "y1r": 89.7168197631836,
+        "x2r": 327.37408447265625,
+        "y2r": 143.62681579589844,
+        "clipped": false,
+        "case": "B",
+        "track_len": 8,
+        "gt_source": "track_interpolated"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2177,
+        "cx_n": 0.257,
+        "cy_n": 0.2472,
+        "w_n": 0.0628,
+        "h_n": 0.1142,
+        "x1r": 256.0853576660156,
+        "y1r": 89.7168197631836,
+        "x2r": 327.37408447265625,
+        "y2r": 143.62681579589844,
+        "clipped": false
+      }
+    ],
+    "case": "B",
+    "case_flags": [
+      "B"
+    ]
+  },
+  "90": {
+    "frame_no": 90,
+    "fname": "VID_E_f000090.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000090.jpg",
+    "ts_sec": 9.0,
+    "diff": 0.9,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.3809,
+        "cx_n": 0.2715,
+        "cy_n": 0.2424,
+        "w_n": 0.0816,
+        "h_n": 0.1212,
+        "x1r": 261.8115539550781,
+        "y1r": 85.80155944824219,
+        "x2r": 354.4395446777344,
+        "y2r": 143.0138397216797,
+        "clipped": false,
+        "case": "C",
+        "track_len": 8,
+        "gt_source": "yolo_mid_track"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.3809,
+        "cx_n": 0.2715,
+        "cy_n": 0.2424,
+        "w_n": 0.0816,
+        "h_n": 0.1212,
+        "x1r": 261.8115539550781,
+        "y1r": 85.80155944824219,
+        "x2r": 354.4395446777344,
+        "y2r": 143.0138397216797,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1397,
+        "cx_n": 0.3628,
+        "cy_n": 0.1999,
+        "w_n": 0.0428,
+        "h_n": 0.1423,
+        "x1r": 387.53607177734375,
+        "y1r": 60.76364517211914,
+        "x2r": 436.1143493652344,
+        "y2r": 127.9183578491211,
+        "clipped": false
+      }
+    ],
+    "case": "C",
+    "case_flags": [
+      "C",
+      "E"
+    ]
+  },
+  "96": {
+    "frame_no": 96,
+    "fname": "VID_E_f000096.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000096.jpg",
+    "ts_sec": 9.6,
+    "diff": 0.99,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.3576,
+        "cx_n": 0.2714,
+        "cy_n": 0.2424,
+        "w_n": 0.0813,
+        "h_n": 0.1209,
+        "x1r": 261.8752746582031,
+        "y1r": 85.8671875,
+        "x2r": 354.2047424316406,
+        "y2r": 142.95138549804688,
+        "clipped": false,
+        "case": "C",
+        "track_len": 8,
+        "gt_source": "yolo_mid_track"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.3576,
+        "cx_n": 0.2714,
+        "cy_n": 0.2424,
+        "w_n": 0.0813,
+        "h_n": 0.1209,
+        "x1r": 261.8752746582031,
+        "y1r": 85.8671875,
+        "x2r": 354.2047424316406,
+        "y2r": 142.95138549804688,
+        "clipped": false
+      }
+    ],
+    "case": "C",
+    "case_flags": [
+      "C"
+    ]
+  },
+  "102": {
+    "frame_no": 102,
+    "fname": "VID_E_f000102.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000102.jpg",
+    "ts_sec": 10.2,
+    "diff": 1.23,
+    "gt_dets": [],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1472,
+        "cx_n": 0.4361,
+        "cy_n": 0.1873,
+        "w_n": 0.0751,
+        "h_n": 0.238,
+        "x1r": 452.36138916015625,
+        "y1r": 32.261051177978516,
+        "x2r": 537.5905151367188,
+        "y2r": 144.5785675048828,
+        "clipped": false
+      }
+    ],
+    "case": "EMPTY",
+    "case_flags": []
+  },
+  "108": {
+    "frame_no": 108,
+    "fname": "VID_E_f000108.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000108.jpg",
+    "ts_sec": 10.8,
+    "diff": 0.8,
+    "gt_dets": [],
+    "yolo_dets": [],
+    "case": "EMPTY",
+    "case_flags": []
+  },
+  "114": {
+    "frame_no": 114,
+    "fname": "VID_E_f000114.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000114.jpg",
+    "ts_sec": 11.4,
+    "diff": 1.2,
+    "gt_dets": [],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2242,
+        "cx_n": 0.4623,
+        "cy_n": 0.2087,
+        "w_n": 0.0736,
+        "h_n": 0.26,
+        "x1r": 482.97900390625,
+        "y1r": 37.1622314453125,
+        "x2r": 566.5531005859375,
+        "y2r": 159.88677978515625,
+        "clipped": false
+      }
+    ],
+    "case": "EMPTY",
+    "case_flags": []
+  },
+  "120": {
+    "frame_no": 120,
+    "fname": "VID_E_f000120.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000120.jpg",
+    "ts_sec": 12.0,
+    "diff": 0.87,
+    "gt_dets": [],
+    "yolo_dets": [],
+    "case": "EMPTY",
+    "case_flags": []
+  },
+  "126": {
+    "frame_no": 126,
+    "fname": "VID_E_f000126.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000126.jpg",
+    "ts_sec": 12.6,
+    "diff": 1.23,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1223,
+        "cx_n": 0.4323,
+        "cy_n": 0.2757,
+        "w_n": 0.0278,
+        "h_n": 0.1029,
+        "x1r": 474.948974609375,
+        "y1r": 105.84233856201172,
+        "x2r": 506.48248291015625,
+        "y2r": 154.4005889892578,
+        "clipped": false,
+        "case": "B",
+        "track_len": 4,
+        "gt_source": "track_interpolated"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1223,
+        "cx_n": 0.4323,
+        "cy_n": 0.2757,
+        "w_n": 0.0278,
+        "h_n": 0.1029,
+        "x1r": 474.948974609375,
+        "y1r": 105.84233856201172,
+        "x2r": 506.48248291015625,
+        "y2r": 154.4005889892578,
+        "clipped": false
+      }
+    ],
+    "case": "B",
+    "case_flags": [
+      "B"
+    ]
+  },
+  "132": {
+    "frame_no": 132,
+    "fname": "VID_E_f000132.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000132.jpg",
+    "ts_sec": 13.2,
+    "diff": 1.2,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.6571,
+        "cx_n": 0.4292,
+        "cy_n": 0.2642,
+        "w_n": 0.037,
+        "h_n": 0.1025,
+        "x1r": 466.15008544921875,
+        "y1r": 100.52351379394531,
+        "x2r": 508.12353515625,
+        "y2r": 148.91587829589844,
+        "clipped": false,
+        "case": "A",
+        "track_len": 4,
+        "gt_source": "yolo_high"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.6571,
+        "cx_n": 0.4292,
+        "cy_n": 0.2642,
+        "w_n": 0.037,
+        "h_n": 0.1025,
+        "x1r": 466.15008544921875,
+        "y1r": 100.52351379394531,
+        "x2r": 508.12353515625,
+        "y2r": 148.91587829589844,
+        "clipped": false
+      }
+    ],
+    "case": "A",
+    "case_flags": [
+      "A"
+    ]
+  },
+  "138": {
+    "frame_no": 138,
+    "fname": "VID_E_f000138.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000138.jpg",
+    "ts_sec": 13.8,
+    "diff": 16.24,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1096,
+        "cx_n": 0.4153,
+        "cy_n": 0.2849,
+        "w_n": 0.0441,
+        "h_n": 0.1348,
+        "x1r": 446.3658142089844,
+        "y1r": 102.66200256347656,
+        "x2r": 496.390625,
+        "y2r": 166.28228759765625,
+        "clipped": false,
+        "case": "B",
+        "track_len": 4,
+        "gt_source": "track_interpolated"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1096,
+        "cx_n": 0.4153,
+        "cy_n": 0.2849,
+        "w_n": 0.0441,
+        "h_n": 0.1348,
+        "x1r": 446.3658142089844,
+        "y1r": 102.66200256347656,
+        "x2r": 496.390625,
+        "y2r": 166.28228759765625,
+        "clipped": false
+      }
+    ],
+    "case": "B",
+    "case_flags": [
+      "B"
+    ]
+  },
+  "140": {
+    "frame_no": 140,
+    "fname": "VID_E_f000140.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000140.jpg",
+    "ts_sec": 14.0,
+    "diff": 13.21,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.197,
+        "cx_n": 0.3975,
+        "cy_n": 0.2916,
+        "w_n": 0.0341,
+        "h_n": 0.1119,
+        "x1r": 431.7731018066406,
+        "y1r": 111.22724914550781,
+        "x2r": 470.52581787109375,
+        "y2r": 164.05909729003906,
+        "clipped": false,
+        "case": "B",
+        "track_len": 4,
+        "gt_source": "track_interpolated"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.197,
+        "cx_n": 0.3975,
+        "cy_n": 0.2916,
+        "w_n": 0.0341,
+        "h_n": 0.1119,
+        "x1r": 431.7731018066406,
+        "y1r": 111.22724914550781,
+        "x2r": 470.52581787109375,
+        "y2r": 164.05909729003906,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1122,
+        "cx_n": 0.5791,
+        "cy_n": 0.7329,
+        "w_n": 0.0441,
+        "h_n": 0.166,
+        "x1r": 632.240234375,
+        "y1r": 306.7595520019531,
+        "x2r": 682.26904296875,
+        "y2r": 385.1322021484375,
+        "clipped": false
+      }
+    ],
+    "case": "B",
+    "case_flags": [
+      "B",
+      "E"
+    ]
+  },
+  "142": {
+    "frame_no": 142,
+    "fname": "VID_E_f000142.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000142.jpg",
+    "ts_sec": 14.2,
+    "diff": 14.67,
+    "gt_dets": [],
+    "yolo_dets": [],
+    "case": "EMPTY",
+    "case_flags": []
+  },
+  "144": {
+    "frame_no": 144,
+    "fname": "VID_E_f000144.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000144.jpg",
+    "ts_sec": 14.4,
+    "diff": 14.99,
+    "gt_dets": [],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1665,
+        "cx_n": 0.3054,
+        "cy_n": 0.246,
+        "w_n": 0.0797,
+        "h_n": 0.2377,
+        "x1r": 301.3739318847656,
+        "y1r": 60.03874588012695,
+        "x2r": 391.8539733886719,
+        "y2r": 172.21124267578125,
+        "clipped": false
+      }
+    ],
+    "case": "E",
+    "case_flags": [
+      "E"
+    ]
+  },
+  "146": {
+    "frame_no": 146,
+    "fname": "VID_E_f000146.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000146.jpg",
+    "ts_sec": 14.6,
+    "diff": 14.0,
+    "gt_dets": [],
+    "yolo_dets": [],
+    "case": "EMPTY",
+    "case_flags": []
+  },
+  "148": {
+    "frame_no": 148,
+    "fname": "VID_E_f000148.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000148.jpg",
+    "ts_sec": 14.8,
+    "diff": 14.73,
+    "gt_dets": [],
+    "yolo_dets": [],
+    "case": "EMPTY",
+    "case_flags": []
+  },
+  "150": {
+    "frame_no": 150,
+    "fname": "VID_E_f000150.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000150.jpg",
+    "ts_sec": 15.0,
+    "diff": 15.32,
+    "gt_dets": [],
+    "yolo_dets": [],
+    "case": "EMPTY",
+    "case_flags": []
+  },
+  "152": {
+    "frame_no": 152,
+    "fname": "VID_E_f000152.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000152.jpg",
+    "ts_sec": 15.2,
+    "diff": 15.45,
+    "gt_dets": [],
+    "yolo_dets": [],
+    "case": "EMPTY",
+    "case_flags": []
+  },
+  "154": {
+    "frame_no": 154,
+    "fname": "VID_E_f000154.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000154.jpg",
+    "ts_sec": 15.4,
+    "diff": 14.14,
+    "gt_dets": [],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1672,
+        "cx_n": 0.3397,
+        "cy_n": 0.4643,
+        "w_n": 0.0521,
+        "h_n": 0.1858,
+        "x1r": 355.9512939453125,
+        "y1r": 175.31248474121094,
+        "x2r": 415.140625,
+        "y2r": 262.9902038574219,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1579,
+        "cx_n": 0.0959,
+        "cy_n": 0.4018,
+        "w_n": 0.0404,
+        "h_n": 0.1185,
+        "x1r": 85.94979095458984,
+        "y1r": 161.66543579101562,
+        "x2r": 131.75804138183594,
+        "y2r": 217.60931396484375,
+        "clipped": false
+      }
+    ],
+    "case": "EMPTY",
+    "case_flags": []
+  },
+  "156": {
+    "frame_no": 156,
+    "fname": "VID_E_f000156.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000156.jpg",
+    "ts_sec": 15.6,
+    "diff": 15.16,
+    "gt_dets": [],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1144,
+        "cx_n": 0.0972,
+        "cy_n": 0.4419,
+        "w_n": 0.0424,
+        "h_n": 0.1058,
+        "x1r": 86.20452880859375,
+        "y1r": 183.62747192382812,
+        "x2r": 134.34422302246094,
+        "y2r": 233.5713348388672,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1109,
+        "cx_n": 0.3378,
+        "cy_n": 0.4901,
+        "w_n": 0.0548,
+        "h_n": 0.229,
+        "x1r": 352.2885437011719,
+        "y1r": 177.26898193359375,
+        "x2r": 414.54266357421875,
+        "y2r": 285.3680419921875,
+        "clipped": false
+      }
+    ],
+    "case": "EMPTY",
+    "case_flags": []
+  },
+  "158": {
+    "frame_no": 158,
+    "fname": "VID_E_f000158.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000158.jpg",
+    "ts_sec": 15.8,
+    "diff": 15.19,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.3824,
+        "cx_n": 0.3882,
+        "cy_n": 0.5331,
+        "w_n": 0.0591,
+        "h_n": 0.2117,
+        "x1r": 407.0469970703125,
+        "y1r": 201.6692657470703,
+        "x2r": 474.152099609375,
+        "y2r": 301.585205078125,
+        "clipped": false,
+        "case": "C",
+        "track_len": 3,
+        "gt_source": "yolo_mid_track"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.3824,
+        "cx_n": 0.3882,
+        "cy_n": 0.5331,
+        "w_n": 0.0591,
+        "h_n": 0.2117,
+        "x1r": 407.0469970703125,
+        "y1r": 201.6692657470703,
+        "x2r": 474.152099609375,
+        "y2r": 301.585205078125,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1803,
+        "cx_n": 0.0945,
+        "cy_n": 0.4887,
+        "w_n": 0.0441,
+        "h_n": 0.1038,
+        "x1r": 82.25859069824219,
+        "y1r": 206.17184448242188,
+        "x2r": 132.32928466796875,
+        "y2r": 255.16253662109375,
+        "clipped": false
+      }
+    ],
+    "case": "C",
+    "case_flags": [
+      "C"
+    ]
+  },
+  "160": {
+    "frame_no": 160,
+    "fname": "VID_E_f000160.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000160.jpg",
+    "ts_sec": 16.0,
+    "diff": 13.81,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.3586,
+        "cx_n": 0.3878,
+        "cy_n": 0.5675,
+        "w_n": 0.053,
+        "h_n": 0.1906,
+        "x1r": 410.1146240234375,
+        "y1r": 222.88973999023438,
+        "x2r": 470.2130432128906,
+        "y2r": 312.8505554199219,
+        "clipped": false,
+        "case": "C",
+        "track_len": 3,
+        "gt_source": "yolo_mid_track"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.3586,
+        "cx_n": 0.3878,
+        "cy_n": 0.5675,
+        "w_n": 0.053,
+        "h_n": 0.1906,
+        "x1r": 410.1146240234375,
+        "y1r": 222.88973999023438,
+        "x2r": 470.2130432128906,
+        "y2r": 312.8505554199219,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1217,
+        "cx_n": 0.3327,
+        "cy_n": 0.5484,
+        "w_n": 0.056,
+        "h_n": 0.2185,
+        "x1r": 345.7953796386719,
+        "y1r": 207.27700805664062,
+        "x2r": 409.3337707519531,
+        "y2r": 310.4172668457031,
+        "clipped": false
+      }
+    ],
+    "case": "C",
+    "case_flags": [
+      "C"
+    ]
+  },
+  "162": {
+    "frame_no": 162,
+    "fname": "VID_E_f000162.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000162.jpg",
+    "ts_sec": 16.2,
+    "diff": 14.9,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.301,
+        "cx_n": 0.3771,
+        "cy_n": 0.5364,
+        "w_n": 0.0579,
+        "h_n": 0.2647,
+        "x1r": 395.1901550292969,
+        "y1r": 190.73069763183594,
+        "x2r": 460.9140930175781,
+        "y2r": 315.64990234375,
+        "clipped": false,
+        "case": "C",
+        "track_len": 3,
+        "gt_source": "yolo_mid_track"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.301,
+        "cx_n": 0.3771,
+        "cy_n": 0.5364,
+        "w_n": 0.0579,
+        "h_n": 0.2647,
+        "x1r": 395.1901550292969,
+        "y1r": 190.73069763183594,
+        "x2r": 460.9140930175781,
+        "y2r": 315.64990234375,
+        "clipped": false
+      }
+    ],
+    "case": "C",
+    "case_flags": [
+      "C"
+    ]
+  },
+  "164": {
+    "frame_no": 164,
+    "fname": "VID_E_f000164.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000164.jpg",
+    "ts_sec": 16.4,
+    "diff": 14.28,
+    "gt_dets": [],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1867,
+        "cx_n": 0.5309,
+        "cy_n": 0.3964,
+        "w_n": 0.0905,
+        "h_n": 0.2157,
+        "x1r": 551.2353515625,
+        "y1r": 136.19696044921875,
+        "x2r": 653.9336547851562,
+        "y2r": 237.99810791015625,
+        "clipped": false
+      }
+    ],
+    "case": "EMPTY",
+    "case_flags": []
+  },
+  "166": {
+    "frame_no": 166,
+    "fname": "VID_E_f000166.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000166.jpg",
+    "ts_sec": 16.6,
+    "diff": 14.09,
+    "gt_dets": [],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1865,
+        "cx_n": 0.5257,
+        "cy_n": 0.2261,
+        "w_n": 0.0508,
+        "h_n": 0.148,
+        "x1r": 567.84326171875,
+        "y1r": 71.81739044189453,
+        "x2r": 625.4600830078125,
+        "y2r": 141.66165161132812,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1282,
+        "cx_n": 0.531,
+        "cy_n": 0.4051,
+        "w_n": 0.0904,
+        "h_n": 0.2202,
+        "x1r": 551.3621215820312,
+        "y1r": 139.25563049316406,
+        "x2r": 653.9822998046875,
+        "y2r": 243.1855010986328,
+        "clipped": false
+      }
+    ],
+    "case": "EMPTY",
+    "case_flags": []
+  },
+  "168": {
+    "frame_no": 168,
+    "fname": "VID_E_f000168.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000168.jpg",
+    "ts_sec": 16.8,
+    "diff": 13.66,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.4915,
+        "cx_n": 0.3666,
+        "cy_n": 0.6625,
+        "w_n": 0.0559,
+        "h_n": 0.2413,
+        "x1r": 384.4211120605469,
+        "y1r": 255.76333618164062,
+        "x2r": 447.8599853515625,
+        "y2r": 369.6693420410156,
+        "clipped": false,
+        "case": "C",
+        "track_len": 28,
+        "gt_source": "yolo_mid_track"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.4915,
+        "cx_n": 0.3666,
+        "cy_n": 0.6625,
+        "w_n": 0.0559,
+        "h_n": 0.2413,
+        "x1r": 384.4211120605469,
+        "y1r": 255.76333618164062,
+        "x2r": 447.8599853515625,
+        "y2r": 369.6693420410156,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2137,
+        "cx_n": 0.533,
+        "cy_n": 0.4094,
+        "w_n": 0.0898,
+        "h_n": 0.2292,
+        "x1r": 554.0665283203125,
+        "y1r": 139.1546173095703,
+        "x2r": 655.93701171875,
+        "y2r": 247.3515167236328,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1001,
+        "cx_n": 0.2853,
+        "cy_n": 0.2313,
+        "w_n": 0.0272,
+        "h_n": 0.0496,
+        "x1r": 308.4017028808594,
+        "y1r": 97.47660064697266,
+        "x2r": 339.24462890625,
+        "y2r": 120.90658569335938,
+        "clipped": false
+      }
+    ],
+    "case": "C",
+    "case_flags": [
+      "C",
+      "E"
+    ]
+  },
+  "170": {
+    "frame_no": 170,
+    "fname": "VID_E_f000170.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000170.jpg",
+    "ts_sec": 17.0,
+    "diff": 14.04,
+    "gt_dets": [],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1253,
+        "cx_n": 0.5255,
+        "cy_n": 0.4282,
+        "w_n": 0.0861,
+        "h_n": 0.2115,
+        "x1r": 547.5186767578125,
+        "y1r": 152.1689910888672,
+        "x2r": 645.2620239257812,
+        "y2r": 252.01739501953125,
+        "clipped": false
+      }
+    ],
+    "case": "EMPTY",
+    "case_flags": []
+  },
+  "172": {
+    "frame_no": 172,
+    "fname": "VID_E_f000172.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000172.jpg",
+    "ts_sec": 17.2,
+    "diff": 13.98,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1072,
+        "cx_n": 0.3504,
+        "cy_n": 0.6328,
+        "w_n": 0.0744,
+        "h_n": 0.2333,
+        "x1r": 355.41326904296875,
+        "y1r": 243.63345336914062,
+        "x2r": 439.9052734375,
+        "y2r": 353.7609558105469,
+        "clipped": false,
+        "case": "B",
+        "track_len": 28,
+        "gt_source": "track_interpolated"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1072,
+        "cx_n": 0.3504,
+        "cy_n": 0.6328,
+        "w_n": 0.0744,
+        "h_n": 0.2333,
+        "x1r": 355.41326904296875,
+        "y1r": 243.63345336914062,
+        "x2r": 439.9052734375,
+        "y2r": 353.7609558105469,
+        "clipped": false
+      }
+    ],
+    "case": "B",
+    "case_flags": [
+      "B"
+    ]
+  },
+  "174": {
+    "frame_no": 174,
+    "fname": "VID_E_f000174.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000174.jpg",
+    "ts_sec": 17.4,
+    "diff": 13.57,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.8108,
+        "cx_n": 0.3344,
+        "cy_n": 0.65,
+        "w_n": 0.0859,
+        "h_n": 0.2665,
+        "x1r": 330.81304931640625,
+        "y1r": 243.89480590820312,
+        "x2r": 428.29052734375,
+        "y2r": 369.6861267089844,
+        "clipped": false,
+        "case": "A",
+        "track_len": 28,
+        "gt_source": "yolo_high"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.8108,
+        "cx_n": 0.3344,
+        "cy_n": 0.65,
+        "w_n": 0.0859,
+        "h_n": 0.2665,
+        "x1r": 330.81304931640625,
+        "y1r": 243.89480590820312,
+        "x2r": 428.29052734375,
+        "y2r": 369.6861267089844,
+        "clipped": false
+      }
+    ],
+    "case": "A",
+    "case_flags": [
+      "A"
+    ]
+  },
+  "176": {
+    "frame_no": 176,
+    "fname": "VID_E_f000176.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000176.jpg",
+    "ts_sec": 17.6,
+    "diff": 14.12,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.7402,
+        "cx_n": 0.3137,
+        "cy_n": 0.679,
+        "w_n": 0.0814,
+        "h_n": 0.2674,
+        "x1r": 309.88580322265625,
+        "y1r": 257.3980407714844,
+        "x2r": 402.28717041015625,
+        "y2r": 383.6158447265625,
+        "clipped": false,
+        "case": "A",
+        "track_len": 28,
+        "gt_source": "yolo_high"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.3644,
+        "cx_n": 0.3406,
+        "cy_n": 0.6245,
+        "w_n": 0.056,
+        "h_n": 0.1664,
+        "x1r": 354.7536926269531,
+        "y1r": 255.4625244140625,
+        "x2r": 418.3518371582031,
+        "y2r": 334.0243835449219,
+        "clipped": false,
+        "case": "C",
+        "track_len": 28,
+        "gt_source": "yolo_mid_track"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1853,
+        "cx_n": 0.8338,
+        "cy_n": 0.055,
+        "w_n": 0.0635,
+        "h_n": 0.1099,
+        "x1r": 910.29931640625,
+        "y1r": 0,
+        "x2r": 982.3993530273438,
+        "y2r": 51.88673400878906,
+        "clipped": false,
+        "case": "B",
+        "track_len": 11,
+        "gt_source": "track_interpolated"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.7402,
+        "cx_n": 0.3137,
+        "cy_n": 0.679,
+        "w_n": 0.0814,
+        "h_n": 0.2674,
+        "x1r": 309.88580322265625,
+        "y1r": 257.3980407714844,
+        "x2r": 402.28717041015625,
+        "y2r": 383.6158447265625,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.3644,
+        "cx_n": 0.3406,
+        "cy_n": 0.6245,
+        "w_n": 0.056,
+        "h_n": 0.1664,
+        "x1r": 354.7536926269531,
+        "y1r": 255.4625244140625,
+        "x2r": 418.3518371582031,
+        "y2r": 334.0243835449219,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1952,
+        "cx_n": 0.5281,
+        "cy_n": 0.4428,
+        "w_n": 0.0912,
+        "h_n": 0.226,
+        "x1r": 547.6825561523438,
+        "y1r": 155.64593505859375,
+        "x2r": 651.1661376953125,
+        "y2r": 262.3390808105469,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1853,
+        "cx_n": 0.8338,
+        "cy_n": 0.055,
+        "w_n": 0.0635,
+        "h_n": 0.1099,
+        "x1r": 910.29931640625,
+        "y1r": 0,
+        "x2r": 982.3993530273438,
+        "y2r": 51.88673400878906,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1061,
+        "cx_n": 0.526,
+        "cy_n": 0.2291,
+        "w_n": 0.0516,
+        "h_n": 0.146,
+        "x1r": 567.7037963867188,
+        "y1r": 73.6795883178711,
+        "x2r": 626.2728881835938,
+        "y2r": 142.5915069580078,
+        "clipped": false
+      }
+    ],
+    "case": "B",
+    "case_flags": [
+      "B",
+      "C",
+      "A"
+    ]
+  },
+  "178": {
+    "frame_no": 178,
+    "fname": "VID_E_f000178.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000178.jpg",
+    "ts_sec": 17.8,
+    "diff": 13.88,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.6607,
+        "cx_n": 0.2987,
+        "cy_n": 0.6665,
+        "w_n": 0.093,
+        "h_n": 0.2705,
+        "x1r": 286.2261962890625,
+        "y1r": 250.7218475341797,
+        "x2r": 391.8223876953125,
+        "y2r": 378.41778564453125,
+        "clipped": false,
+        "case": "A",
+        "track_len": 28,
+        "gt_source": "yolo_high"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.3418,
+        "cx_n": 0.815,
+        "cy_n": 0.068,
+        "w_n": 0.0628,
+        "h_n": 0.136,
+        "x1r": 889.4330444335938,
+        "y1r": 0,
+        "x2r": 960.6994018554688,
+        "y2r": 64.1818618774414,
+        "clipped": false,
+        "case": "C",
+        "track_len": 11,
+        "gt_source": "yolo_mid_track"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.6607,
+        "cx_n": 0.2987,
+        "cy_n": 0.6665,
+        "w_n": 0.093,
+        "h_n": 0.2705,
+        "x1r": 286.2261962890625,
+        "y1r": 250.7218475341797,
+        "x2r": 391.8223876953125,
+        "y2r": 378.41778564453125,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.3418,
+        "cx_n": 0.815,
+        "cy_n": 0.068,
+        "w_n": 0.0628,
+        "h_n": 0.136,
+        "x1r": 889.4330444335938,
+        "y1r": 0,
+        "x2r": 960.6994018554688,
+        "y2r": 64.1818618774414,
+        "clipped": false
+      }
+    ],
+    "case": "A",
+    "case_flags": [
+      "C",
+      "A"
+    ]
+  },
+  "180": {
+    "frame_no": 180,
+    "fname": "VID_E_f000180.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000180.jpg",
+    "ts_sec": 18.0,
+    "diff": 13.33,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.6914,
+        "cx_n": 0.8005,
+        "cy_n": 0.072,
+        "w_n": 0.0656,
+        "h_n": 0.1441,
+        "x1r": 871.2858276367188,
+        "y1r": 0,
+        "x2r": 945.7914428710938,
+        "y2r": 67.99215698242188,
+        "clipped": false,
+        "case": "A",
+        "track_len": 11,
+        "gt_source": "yolo_high"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.536,
+        "cx_n": 0.2913,
+        "cy_n": 0.6286,
+        "w_n": 0.0959,
+        "h_n": 0.2287,
+        "x1r": 276.16424560546875,
+        "y1r": 242.75355529785156,
+        "x2r": 385.0008544921875,
+        "y2r": 350.68310546875,
+        "clipped": false,
+        "case": "A",
+        "track_len": 28,
+        "gt_source": "yolo_high"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.3514,
+        "cx_n": 0.4604,
+        "cy_n": 0.7891,
+        "w_n": 0.045,
+        "h_n": 0.1659,
+        "x1r": 497.0431823730469,
+        "y1r": 333.2833251953125,
+        "x2r": 548.09130859375,
+        "y2r": 411.6026611328125,
+        "clipped": false,
+        "case": "HARD",
+        "track_len": 0,
+        "gt_source": "yolo_mid_notrack"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.6914,
+        "cx_n": 0.8005,
+        "cy_n": 0.072,
+        "w_n": 0.0656,
+        "h_n": 0.1441,
+        "x1r": 871.2858276367188,
+        "y1r": 0,
+        "x2r": 945.7914428710938,
+        "y2r": 67.99215698242188,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.536,
+        "cx_n": 0.2913,
+        "cy_n": 0.6286,
+        "w_n": 0.0959,
+        "h_n": 0.2287,
+        "x1r": 276.16424560546875,
+        "y1r": 242.75355529785156,
+        "x2r": 385.0008544921875,
+        "y2r": 350.68310546875,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.3514,
+        "cx_n": 0.4604,
+        "cy_n": 0.7891,
+        "w_n": 0.045,
+        "h_n": 0.1659,
+        "x1r": 497.0431823730469,
+        "y1r": 333.2833251953125,
+        "x2r": 548.09130859375,
+        "y2r": 411.6026611328125,
+        "clipped": false
+      }
+    ],
+    "case": "A",
+    "case_flags": [
+      "HARD",
+      "A"
+    ]
+  },
+  "182": {
+    "frame_no": 182,
+    "fname": "VID_E_f000182.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000182.jpg",
+    "ts_sec": 18.2,
+    "diff": 13.94,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.709,
+        "cx_n": 0.2692,
+        "cy_n": 0.667,
+        "w_n": 0.0962,
+        "h_n": 0.2714,
+        "x1r": 250.911865234375,
+        "y1r": 250.76390075683594,
+        "x2r": 360.08251953125,
+        "y2r": 378.8546142578125,
+        "clipped": false,
+        "case": "A",
+        "track_len": 28,
+        "gt_source": "yolo_high"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.709,
+        "cx_n": 0.2692,
+        "cy_n": 0.667,
+        "w_n": 0.0962,
+        "h_n": 0.2714,
+        "x1r": 250.911865234375,
+        "y1r": 250.76390075683594,
+        "x2r": 360.08251953125,
+        "y2r": 378.8546142578125,
+        "clipped": false
+      }
+    ],
+    "case": "A",
+    "case_flags": [
+      "A"
+    ]
+  },
+  "184": {
+    "frame_no": 184,
+    "fname": "VID_E_f000184.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000184.jpg",
+    "ts_sec": 18.4,
+    "diff": 13.28,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.7933,
+        "cx_n": 0.244,
+        "cy_n": 0.6872,
+        "w_n": 0.0837,
+        "h_n": 0.2711,
+        "x1r": 229.48394775390625,
+        "y1r": 260.3955993652344,
+        "x2r": 324.4888610839844,
+        "y2r": 388.3464050292969,
+        "clipped": false,
+        "case": "A",
+        "track_len": 2,
+        "gt_source": "yolo_high"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.3159,
+        "cx_n": 0.2737,
+        "cy_n": 0.6117,
+        "w_n": 0.0367,
+        "h_n": 0.1134,
+        "x1r": 289.8076171875,
+        "y1r": 261.9532165527344,
+        "x2r": 331.50396728515625,
+        "y2r": 315.4804992675781,
+        "clipped": false,
+        "case": "C",
+        "track_len": 2,
+        "gt_source": "yolo_mid_track"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2874,
+        "cx_n": 0.2495,
+        "cy_n": 0.6115,
+        "w_n": 0.0842,
+        "h_n": 0.1267,
+        "x1r": 235.45265197753906,
+        "y1r": 258.69952392578125,
+        "x2r": 331.023681640625,
+        "y2r": 318.5145568847656,
+        "clipped": false,
+        "case": "C",
+        "track_len": 2,
+        "gt_source": "yolo_mid_track"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2104,
+        "cx_n": 0.7637,
+        "cy_n": 0.1002,
+        "w_n": 0.0668,
+        "h_n": 0.1799,
+        "x1r": 828.9095458984375,
+        "y1r": 4.822020530700684,
+        "x2r": 904.7601318359375,
+        "y2r": 89.73949432373047,
+        "clipped": false,
+        "case": "B",
+        "track_len": 11,
+        "gt_source": "track_interpolated"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.7933,
+        "cx_n": 0.244,
+        "cy_n": 0.6872,
+        "w_n": 0.0837,
+        "h_n": 0.2711,
+        "x1r": 229.48394775390625,
+        "y1r": 260.3955993652344,
+        "x2r": 324.4888610839844,
+        "y2r": 388.3464050292969,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.3159,
+        "cx_n": 0.2737,
+        "cy_n": 0.6117,
+        "w_n": 0.0367,
+        "h_n": 0.1134,
+        "x1r": 289.8076171875,
+        "y1r": 261.9532165527344,
+        "x2r": 331.50396728515625,
+        "y2r": 315.4804992675781,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2874,
+        "cx_n": 0.2495,
+        "cy_n": 0.6115,
+        "w_n": 0.0842,
+        "h_n": 0.1267,
+        "x1r": 235.45265197753906,
+        "y1r": 258.69952392578125,
+        "x2r": 331.023681640625,
+        "y2r": 318.5145568847656,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2104,
+        "cx_n": 0.7637,
+        "cy_n": 0.1002,
+        "w_n": 0.0668,
+        "h_n": 0.1799,
+        "x1r": 828.9095458984375,
+        "y1r": 4.822020530700684,
+        "x2r": 904.7601318359375,
+        "y2r": 89.73949432373047,
+        "clipped": false
+      }
+    ],
+    "case": "B",
+    "case_flags": [
+      "B",
+      "C",
+      "A"
+    ]
+  },
+  "186": {
+    "frame_no": 186,
+    "fname": "VID_E_f000186.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000186.jpg",
+    "ts_sec": 18.6,
+    "diff": 12.92,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.7669,
+        "cx_n": 0.2251,
+        "cy_n": 0.7057,
+        "w_n": 0.0848,
+        "h_n": 0.2767,
+        "x1r": 207.37770080566406,
+        "y1r": 267.7946472167969,
+        "x2r": 303.6507568359375,
+        "y2r": 398.3856506347656,
+        "clipped": false,
+        "case": "A",
+        "track_len": 28,
+        "gt_source": "yolo_high"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.7561,
+        "cx_n": 0.7428,
+        "cy_n": 0.1225,
+        "w_n": 0.0697,
+        "h_n": 0.1721,
+        "x1r": 803.5450439453125,
+        "y1r": 17.20799446105957,
+        "x2r": 882.6591796875,
+        "y2r": 98.42855834960938,
+        "clipped": false,
+        "case": "A",
+        "track_len": 11,
+        "gt_source": "yolo_high"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.7669,
+        "cx_n": 0.2251,
+        "cy_n": 0.7057,
+        "w_n": 0.0848,
+        "h_n": 0.2767,
+        "x1r": 207.37770080566406,
+        "y1r": 267.7946472167969,
+        "x2r": 303.6507568359375,
+        "y2r": 398.3856506347656,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.7561,
+        "cx_n": 0.7428,
+        "cy_n": 0.1225,
+        "w_n": 0.0697,
+        "h_n": 0.1721,
+        "x1r": 803.5450439453125,
+        "y1r": 17.20799446105957,
+        "x2r": 882.6591796875,
+        "y2r": 98.42855834960938,
+        "clipped": false
+      }
+    ],
+    "case": "A",
+    "case_flags": [
+      "A"
+    ]
+  },
+  "188": {
+    "frame_no": 188,
+    "fname": "VID_E_f000188.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000188.jpg",
+    "ts_sec": 18.8,
+    "diff": 11.93,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.6691,
+        "cx_n": 0.2201,
+        "cy_n": 0.6705,
+        "w_n": 0.0946,
+        "h_n": 0.2332,
+        "x1r": 196.09828186035156,
+        "y1r": 261.45123291015625,
+        "x2r": 303.42108154296875,
+        "y2r": 371.4987487792969,
+        "clipped": false,
+        "case": "A",
+        "track_len": 2,
+        "gt_source": "yolo_high"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.5631,
+        "cx_n": 0.7332,
+        "cy_n": 0.1328,
+        "w_n": 0.0639,
+        "h_n": 0.1889,
+        "x1r": 795.957275390625,
+        "y1r": 18.119077682495117,
+        "x2r": 868.4452514648438,
+        "y2r": 107.27677917480469,
+        "clipped": false,
+        "case": "A",
+        "track_len": 11,
+        "gt_source": "yolo_high"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.6691,
+        "cx_n": 0.2201,
+        "cy_n": 0.6705,
+        "w_n": 0.0946,
+        "h_n": 0.2332,
+        "x1r": 196.09828186035156,
+        "y1r": 261.45123291015625,
+        "x2r": 303.42108154296875,
+        "y2r": 371.4987487792969,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.5631,
+        "cx_n": 0.7332,
+        "cy_n": 0.1328,
+        "w_n": 0.0639,
+        "h_n": 0.1889,
+        "x1r": 795.957275390625,
+        "y1r": 18.119077682495117,
+        "x2r": 868.4452514648438,
+        "y2r": 107.27677917480469,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1227,
+        "cx_n": 0.2456,
+        "cy_n": 0.6568,
+        "w_n": 0.0479,
+        "h_n": 0.1822,
+        "x1r": 251.51953125,
+        "y1r": 266.9900207519531,
+        "x2r": 305.9397277832031,
+        "y2r": 353.009765625,
+        "clipped": false
+      }
+    ],
+    "case": "A",
+    "case_flags": [
+      "A"
+    ]
+  },
+  "190": {
+    "frame_no": 190,
+    "fname": "VID_E_f000190.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000190.jpg",
+    "ts_sec": 19.0,
+    "diff": 12.63,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.6716,
+        "cx_n": 0.2,
+        "cy_n": 0.6839,
+        "w_n": 0.093,
+        "h_n": 0.2537,
+        "x1r": 174.18617248535156,
+        "y1r": 262.9295959472656,
+        "x2r": 279.7876892089844,
+        "y2r": 382.66650390625,
+        "clipped": false,
+        "case": "A",
+        "track_len": 28,
+        "gt_source": "yolo_high"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1355,
+        "cx_n": 0.712,
+        "cy_n": 0.161,
+        "w_n": 0.0631,
+        "h_n": 0.1846,
+        "x1r": 772.3779296875,
+        "y1r": 32.41106414794922,
+        "x2r": 843.9451904296875,
+        "y2r": 119.55776977539062,
+        "clipped": false,
+        "case": "B",
+        "track_len": 11,
+        "gt_source": "track_interpolated"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.6716,
+        "cx_n": 0.2,
+        "cy_n": 0.6839,
+        "w_n": 0.093,
+        "h_n": 0.2537,
+        "x1r": 174.18617248535156,
+        "y1r": 262.9295959472656,
+        "x2r": 279.7876892089844,
+        "y2r": 382.66650390625,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1355,
+        "cx_n": 0.712,
+        "cy_n": 0.161,
+        "w_n": 0.0631,
+        "h_n": 0.1846,
+        "x1r": 772.3779296875,
+        "y1r": 32.41106414794922,
+        "x2r": 843.9451904296875,
+        "y2r": 119.55776977539062,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1132,
+        "cx_n": 0.5242,
+        "cy_n": 0.2308,
+        "w_n": 0.0511,
+        "h_n": 0.1479,
+        "x1r": 565.985107421875,
+        "y1r": 74.03468322753906,
+        "x2r": 624.0211181640625,
+        "y2r": 143.82449340820312,
+        "clipped": false
+      }
+    ],
+    "case": "B",
+    "case_flags": [
+      "B",
+      "E",
+      "A"
+    ]
+  },
+  "192": {
+    "frame_no": 192,
+    "fname": "VID_E_f000192.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000192.jpg",
+    "ts_sec": 19.2,
+    "diff": 2.54,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.7472,
+        "cx_n": 0.7172,
+        "cy_n": 0.1593,
+        "w_n": 0.0674,
+        "h_n": 0.1996,
+        "x1r": 775.7527465820312,
+        "y1r": 28.094789505004883,
+        "x2r": 852.2194213867188,
+        "y2r": 122.28522491455078,
+        "clipped": false,
+        "case": "A",
+        "track_len": 11,
+        "gt_source": "yolo_high"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.7355,
+        "cx_n": 0.1999,
+        "cy_n": 0.6831,
+        "w_n": 0.0934,
+        "h_n": 0.2527,
+        "x1r": 173.88729858398438,
+        "y1r": 262.7878112792969,
+        "x2r": 279.8608703613281,
+        "y2r": 382.05938720703125,
+        "clipped": false,
+        "case": "A",
+        "track_len": 28,
+        "gt_source": "yolo_high"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.7472,
+        "cx_n": 0.7172,
+        "cy_n": 0.1593,
+        "w_n": 0.0674,
+        "h_n": 0.1996,
+        "x1r": 775.7527465820312,
+        "y1r": 28.094789505004883,
+        "x2r": 852.2194213867188,
+        "y2r": 122.28522491455078,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.7355,
+        "cx_n": 0.1999,
+        "cy_n": 0.6831,
+        "w_n": 0.0934,
+        "h_n": 0.2527,
+        "x1r": 173.88729858398438,
+        "y1r": 262.7878112792969,
+        "x2r": 279.8608703613281,
+        "y2r": 382.05938720703125,
+        "clipped": false
+      }
+    ],
+    "case": "A",
+    "case_flags": [
+      "A"
+    ]
+  },
+  "195": {
+    "frame_no": 195,
+    "fname": "VID_E_f000195.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000195.jpg",
+    "ts_sec": 19.5,
+    "diff": 1.16,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.7552,
+        "cx_n": 0.7156,
+        "cy_n": 0.1617,
+        "w_n": 0.0651,
+        "h_n": 0.1954,
+        "x1r": 775.2841796875,
+        "y1r": 30.217565536499023,
+        "x2r": 849.119873046875,
+        "y2r": 122.46589660644531,
+        "clipped": false,
+        "case": "A",
+        "track_len": 11,
+        "gt_source": "yolo_high"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.5873,
+        "cx_n": 0.1961,
+        "cy_n": 0.6681,
+        "w_n": 0.0957,
+        "h_n": 0.2776,
+        "x1r": 168.2196807861328,
+        "y1r": 249.837646484375,
+        "x2r": 276.8433532714844,
+        "y2r": 380.8626403808594,
+        "clipped": false,
+        "case": "A",
+        "track_len": 28,
+        "gt_source": "yolo_high"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.7552,
+        "cx_n": 0.7156,
+        "cy_n": 0.1617,
+        "w_n": 0.0651,
+        "h_n": 0.1954,
+        "x1r": 775.2841796875,
+        "y1r": 30.217565536499023,
+        "x2r": 849.119873046875,
+        "y2r": 122.46589660644531,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.5873,
+        "cx_n": 0.1961,
+        "cy_n": 0.6681,
+        "w_n": 0.0957,
+        "h_n": 0.2776,
+        "x1r": 168.2196807861328,
+        "y1r": 249.837646484375,
+        "x2r": 276.8433532714844,
+        "y2r": 380.8626403808594,
+        "clipped": false
+      }
+    ],
+    "case": "A",
+    "case_flags": [
+      "A"
+    ]
+  },
+  "201": {
+    "frame_no": 201,
+    "fname": "VID_E_f000201.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000201.jpg",
+    "ts_sec": 20.1,
+    "diff": 1.27,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.7334,
+        "cx_n": 0.711,
+        "cy_n": 0.1686,
+        "w_n": 0.061,
+        "h_n": 0.1941,
+        "x1r": 772.3602905273438,
+        "y1r": 33.74953079223633,
+        "x2r": 841.604248046875,
+        "y2r": 125.36549377441406,
+        "clipped": false,
+        "case": "A",
+        "track_len": 11,
+        "gt_source": "yolo_high"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.6507,
+        "cx_n": 0.2139,
+        "cy_n": 0.6193,
+        "w_n": 0.0828,
+        "h_n": 0.2871,
+        "x1r": 195.75637817382812,
+        "y1r": 224.56900024414062,
+        "x2r": 289.69293212890625,
+        "y2r": 360.08099365234375,
+        "clipped": false,
+        "case": "A",
+        "track_len": 28,
+        "gt_source": "yolo_high"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.7334,
+        "cx_n": 0.711,
+        "cy_n": 0.1686,
+        "w_n": 0.061,
+        "h_n": 0.1941,
+        "x1r": 772.3602905273438,
+        "y1r": 33.74953079223633,
+        "x2r": 841.604248046875,
+        "y2r": 125.36549377441406,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.6507,
+        "cx_n": 0.2139,
+        "cy_n": 0.6193,
+        "w_n": 0.0828,
+        "h_n": 0.2871,
+        "x1r": 195.75637817382812,
+        "y1r": 224.56900024414062,
+        "x2r": 289.69293212890625,
+        "y2r": 360.08099365234375,
+        "clipped": false
+      }
+    ],
+    "case": "A",
+    "case_flags": [
+      "A"
+    ]
+  },
+  "207": {
+    "frame_no": 207,
+    "fname": "VID_E_f000207.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000207.jpg",
+    "ts_sec": 20.7,
+    "diff": 1.32,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.7323,
+        "cx_n": 0.2329,
+        "cy_n": 0.5939,
+        "w_n": 0.0899,
+        "h_n": 0.269,
+        "x1r": 213.2914581298828,
+        "y1r": 216.84695434570312,
+        "x2r": 315.3628234863281,
+        "y2r": 343.8250427246094,
+        "clipped": false,
+        "case": "A",
+        "track_len": 28,
+        "gt_source": "yolo_high"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1663,
+        "cx_n": 0.716,
+        "cy_n": 0.2248,
+        "w_n": 0.0548,
+        "h_n": 0.1941,
+        "x1r": 781.5029907226562,
+        "y1r": 60.277801513671875,
+        "x2r": 843.7348022460938,
+        "y2r": 151.89967346191406,
+        "clipped": false,
+        "case": "B",
+        "track_len": 11,
+        "gt_source": "track_interpolated"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.7323,
+        "cx_n": 0.2329,
+        "cy_n": 0.5939,
+        "w_n": 0.0899,
+        "h_n": 0.269,
+        "x1r": 213.2914581298828,
+        "y1r": 216.84695434570312,
+        "x2r": 315.3628234863281,
+        "y2r": 343.8250427246094,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1663,
+        "cx_n": 0.716,
+        "cy_n": 0.2248,
+        "w_n": 0.0548,
+        "h_n": 0.1941,
+        "x1r": 781.5029907226562,
+        "y1r": 60.277801513671875,
+        "x2r": 843.7348022460938,
+        "y2r": 151.89967346191406,
+        "clipped": false
+      }
+    ],
+    "case": "B",
+    "case_flags": [
+      "B",
+      "A"
+    ]
+  },
+  "213": {
+    "frame_no": 213,
+    "fname": "VID_E_f000213.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000213.jpg",
+    "ts_sec": 21.3,
+    "diff": 1.39,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.7005,
+        "cx_n": 0.2527,
+        "cy_n": 0.5679,
+        "w_n": 0.0807,
+        "h_n": 0.2718,
+        "x1r": 240.9764404296875,
+        "y1r": 203.8900604248047,
+        "x2r": 332.60577392578125,
+        "y2r": 332.177978515625,
+        "clipped": false,
+        "case": "A",
+        "track_len": 28,
+        "gt_source": "yolo_high"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.7005,
+        "cx_n": 0.2527,
+        "cy_n": 0.5679,
+        "w_n": 0.0807,
+        "h_n": 0.2718,
+        "x1r": 240.9764404296875,
+        "y1r": 203.8900604248047,
+        "x2r": 332.60577392578125,
+        "y2r": 332.177978515625,
+        "clipped": false
+      }
+    ],
+    "case": "A",
+    "case_flags": [
+      "A"
+    ]
+  },
+  "219": {
+    "frame_no": 219,
+    "fname": "VID_E_f000219.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000219.jpg",
+    "ts_sec": 21.9,
+    "diff": 1.38,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.7131,
+        "cx_n": 0.2646,
+        "cy_n": 0.5664,
+        "w_n": 0.0751,
+        "h_n": 0.2666,
+        "x1r": 257.72625732421875,
+        "y1r": 204.40658569335938,
+        "x2r": 343.0090026855469,
+        "y2r": 330.2557067871094,
+        "clipped": false,
+        "case": "A",
+        "track_len": 28,
+        "gt_source": "yolo_high"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.7131,
+        "cx_n": 0.2646,
+        "cy_n": 0.5664,
+        "w_n": 0.0751,
+        "h_n": 0.2666,
+        "x1r": 257.72625732421875,
+        "y1r": 204.40658569335938,
+        "x2r": 343.0090026855469,
+        "y2r": 330.2557067871094,
+        "clipped": false
+      }
+    ],
+    "case": "A",
+    "case_flags": [
+      "A"
+    ]
+  },
+  "225": {
+    "frame_no": 225,
+    "fname": "VID_E_f000225.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000225.jpg",
+    "ts_sec": 22.5,
+    "diff": 1.83,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2895,
+        "cx_n": 0.3194,
+        "cy_n": 0.4954,
+        "w_n": 0.0424,
+        "h_n": 0.1685,
+        "x1r": 338.43145751953125,
+        "y1r": 194.07351684570312,
+        "x2r": 386.58984375,
+        "y2r": 273.5866394042969,
+        "clipped": false,
+        "case": "HARD",
+        "track_len": 0,
+        "gt_source": "yolo_mid_notrack"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1334,
+        "cx_n": 0.275,
+        "cy_n": 0.5281,
+        "w_n": 0.0913,
+        "h_n": 0.2453,
+        "x1r": 260.3408203125,
+        "y1r": 191.372802734375,
+        "x2r": 364.0131530761719,
+        "y2r": 307.1720886230469,
+        "clipped": false,
+        "case": "B",
+        "track_len": 28,
+        "gt_source": "track_interpolated"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2895,
+        "cx_n": 0.3194,
+        "cy_n": 0.4954,
+        "w_n": 0.0424,
+        "h_n": 0.1685,
+        "x1r": 338.43145751953125,
+        "y1r": 194.07351684570312,
+        "x2r": 386.58984375,
+        "y2r": 273.5866394042969,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1334,
+        "cx_n": 0.275,
+        "cy_n": 0.5281,
+        "w_n": 0.0913,
+        "h_n": 0.2453,
+        "x1r": 260.3408203125,
+        "y1r": 191.372802734375,
+        "x2r": 364.0131530761719,
+        "y2r": 307.1720886230469,
+        "clipped": false
+      }
+    ],
+    "case": "B",
+    "case_flags": [
+      "B",
+      "HARD"
+    ]
+  },
+  "231": {
+    "frame_no": 231,
+    "fname": "VID_E_f000231.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000231.jpg",
+    "ts_sec": 23.1,
+    "diff": 2.01,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.6784,
+        "cx_n": 0.3051,
+        "cy_n": 0.5164,
+        "w_n": 0.0741,
+        "h_n": 0.2814,
+        "x1r": 304.1907043457031,
+        "y1r": 177.34375,
+        "x2r": 388.2971496582031,
+        "y2r": 310.1465148925781,
+        "clipped": false,
+        "case": "A",
+        "track_len": 28,
+        "gt_source": "yolo_high"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.6784,
+        "cx_n": 0.3051,
+        "cy_n": 0.5164,
+        "w_n": 0.0741,
+        "h_n": 0.2814,
+        "x1r": 304.1907043457031,
+        "y1r": 177.34375,
+        "x2r": 388.2971496582031,
+        "y2r": 310.1465148925781,
+        "clipped": false
+      }
+    ],
+    "case": "A",
+    "case_flags": [
+      "A"
+    ]
+  },
+  "234": {
+    "frame_no": 234,
+    "fname": "VID_E_f000234.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000234.jpg",
+    "ts_sec": 23.4,
+    "diff": 1.12,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.7258,
+        "cx_n": 0.3098,
+        "cy_n": 0.4935,
+        "w_n": 0.0872,
+        "h_n": 0.2623,
+        "x1r": 302.1054382324219,
+        "y1r": 171.0397491455078,
+        "x2r": 401.07696533203125,
+        "y2r": 294.8442687988281,
+        "clipped": false,
+        "case": "A",
+        "track_len": 28,
+        "gt_source": "yolo_high"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.299,
+        "cx_n": 0.7129,
+        "cy_n": 0.5189,
+        "w_n": 0.0618,
+        "h_n": 0.1764,
+        "x1r": 774.0601196289062,
+        "y1r": 203.29603576660156,
+        "x2r": 844.2284545898438,
+        "y2r": 286.5525207519531,
+        "clipped": false,
+        "case": "C",
+        "track_len": 3,
+        "gt_source": "yolo_mid_track"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.7258,
+        "cx_n": 0.3098,
+        "cy_n": 0.4935,
+        "w_n": 0.0872,
+        "h_n": 0.2623,
+        "x1r": 302.1054382324219,
+        "y1r": 171.0397491455078,
+        "x2r": 401.07696533203125,
+        "y2r": 294.8442687988281,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.299,
+        "cx_n": 0.7129,
+        "cy_n": 0.5189,
+        "w_n": 0.0618,
+        "h_n": 0.1764,
+        "x1r": 774.0601196289062,
+        "y1r": 203.29603576660156,
+        "x2r": 844.2284545898438,
+        "y2r": 286.5525207519531,
+        "clipped": false
+      }
+    ],
+    "case": "A",
+    "case_flags": [
+      "C",
+      "A"
+    ]
+  },
+  "240": {
+    "frame_no": 240,
+    "fname": "VID_E_f000240.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000240.jpg",
+    "ts_sec": 24.0,
+    "diff": 2.32,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.6976,
+        "cx_n": 0.3372,
+        "cy_n": 0.4711,
+        "w_n": 0.085,
+        "h_n": 0.2531,
+        "x1r": 334.4105224609375,
+        "y1r": 162.6024932861328,
+        "x2r": 430.9338684082031,
+        "y2r": 282.0889892578125,
+        "clipped": false,
+        "case": "A",
+        "track_len": 28,
+        "gt_source": "yolo_high"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.308,
+        "cx_n": 0.7111,
+        "cy_n": 0.2125,
+        "w_n": 0.0378,
+        "h_n": 0.0581,
+        "x1r": 785.7221069335938,
+        "y1r": 86.60192108154297,
+        "x2r": 828.5690307617188,
+        "y2r": 114.00895690917969,
+        "clipped": false,
+        "case": "C",
+        "track_len": 21,
+        "gt_source": "yolo_mid_track"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.6976,
+        "cx_n": 0.3372,
+        "cy_n": 0.4711,
+        "w_n": 0.085,
+        "h_n": 0.2531,
+        "x1r": 334.4105224609375,
+        "y1r": 162.6024932861328,
+        "x2r": 430.9338684082031,
+        "y2r": 282.0889892578125,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.308,
+        "cx_n": 0.7111,
+        "cy_n": 0.2125,
+        "w_n": 0.0378,
+        "h_n": 0.0581,
+        "x1r": 785.7221069335938,
+        "y1r": 86.60192108154297,
+        "x2r": 828.5690307617188,
+        "y2r": 114.00895690917969,
+        "clipped": false
+      }
+    ],
+    "case": "A",
+    "case_flags": [
+      "C",
+      "A"
+    ]
+  },
+  "243": {
+    "frame_no": 243,
+    "fname": "VID_E_f000243.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000243.jpg",
+    "ts_sec": 24.3,
+    "diff": 1.35,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.6837,
+        "cx_n": 0.3445,
+        "cy_n": 0.4741,
+        "w_n": 0.0734,
+        "h_n": 0.2685,
+        "x1r": 349.349609375,
+        "y1r": 160.41949462890625,
+        "x2r": 432.61102294921875,
+        "y2r": 287.1666564941406,
+        "clipped": false,
+        "case": "A",
+        "track_len": 28,
+        "gt_source": "yolo_high"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.3715,
+        "cx_n": 0.7111,
+        "cy_n": 0.2127,
+        "w_n": 0.0375,
+        "h_n": 0.0571,
+        "x1r": 785.769287109375,
+        "y1r": 86.94874572753906,
+        "x2r": 828.3635864257812,
+        "y2r": 113.88172149658203,
+        "clipped": false,
+        "case": "C",
+        "track_len": 21,
+        "gt_source": "yolo_mid_track"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.6837,
+        "cx_n": 0.3445,
+        "cy_n": 0.4741,
+        "w_n": 0.0734,
+        "h_n": 0.2685,
+        "x1r": 349.349609375,
+        "y1r": 160.41949462890625,
+        "x2r": 432.61102294921875,
+        "y2r": 287.1666564941406,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.3715,
+        "cx_n": 0.7111,
+        "cy_n": 0.2127,
+        "w_n": 0.0375,
+        "h_n": 0.0571,
+        "x1r": 785.769287109375,
+        "y1r": 86.94874572753906,
+        "x2r": 828.3635864257812,
+        "y2r": 113.88172149658203,
+        "clipped": false
+      }
+    ],
+    "case": "A",
+    "case_flags": [
+      "C",
+      "A"
+    ]
+  },
+  "249": {
+    "frame_no": 249,
+    "fname": "VID_E_f000249.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000249.jpg",
+    "ts_sec": 24.9,
+    "diff": 1.32,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.7365,
+        "cx_n": 0.351,
+        "cy_n": 0.454,
+        "w_n": 0.0849,
+        "h_n": 0.2876,
+        "x1r": 350.1729431152344,
+        "y1r": 146.3881072998047,
+        "x2r": 446.5279541015625,
+        "y2r": 282.148193359375,
+        "clipped": false,
+        "case": "A",
+        "track_len": 28,
+        "gt_source": "yolo_high"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.3241,
+        "cx_n": 0.7111,
+        "cy_n": 0.2126,
+        "w_n": 0.0377,
+        "h_n": 0.0577,
+        "x1r": 785.7303466796875,
+        "y1r": 86.73126983642578,
+        "x2r": 828.5167236328125,
+        "y2r": 113.96733856201172,
+        "clipped": false,
+        "case": "C",
+        "track_len": 21,
+        "gt_source": "yolo_mid_track"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.217,
+        "cx_n": 0.7127,
+        "cy_n": 0.6341,
+        "w_n": 0.0719,
+        "h_n": 0.2329,
+        "x1r": 768.0384521484375,
+        "y1r": 244.3084259033203,
+        "x2r": 849.6824951171875,
+        "y2r": 354.25799560546875,
+        "clipped": false,
+        "case": "B",
+        "track_len": 3,
+        "gt_source": "track_interpolated"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.7365,
+        "cx_n": 0.351,
+        "cy_n": 0.454,
+        "w_n": 0.0849,
+        "h_n": 0.2876,
+        "x1r": 350.1729431152344,
+        "y1r": 146.3881072998047,
+        "x2r": 446.5279541015625,
+        "y2r": 282.148193359375,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.3241,
+        "cx_n": 0.7111,
+        "cy_n": 0.2126,
+        "w_n": 0.0377,
+        "h_n": 0.0577,
+        "x1r": 785.7303466796875,
+        "y1r": 86.73126983642578,
+        "x2r": 828.5167236328125,
+        "y2r": 113.96733856201172,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.217,
+        "cx_n": 0.7127,
+        "cy_n": 0.6341,
+        "w_n": 0.0719,
+        "h_n": 0.2329,
+        "x1r": 768.0384521484375,
+        "y1r": 244.3084259033203,
+        "x2r": 849.6824951171875,
+        "y2r": 354.25799560546875,
+        "clipped": false
+      }
+    ],
+    "case": "B",
+    "case_flags": [
+      "B",
+      "C",
+      "A"
+    ]
+  },
+  "255": {
+    "frame_no": 255,
+    "fname": "VID_E_f000255.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000255.jpg",
+    "ts_sec": 25.5,
+    "diff": 1.73,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.5993,
+        "cx_n": 0.7168,
+        "cy_n": 0.6928,
+        "w_n": 0.0664,
+        "h_n": 0.2139,
+        "x1r": 775.8932495117188,
+        "y1r": 276.4956970214844,
+        "x2r": 851.2703857421875,
+        "y2r": 377.46893310546875,
+        "clipped": false,
+        "case": "A",
+        "track_len": 3,
+        "gt_source": "yolo_high"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.3255,
+        "cx_n": 0.7111,
+        "cy_n": 0.2126,
+        "w_n": 0.0377,
+        "h_n": 0.0577,
+        "x1r": 785.7325439453125,
+        "y1r": 86.73495483398438,
+        "x2r": 828.5104370117188,
+        "y2r": 113.97216796875,
+        "clipped": false,
+        "case": "C",
+        "track_len": 21,
+        "gt_source": "yolo_mid_track"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.3111,
+        "cx_n": 0.3742,
+        "cy_n": 0.4244,
+        "w_n": 0.0845,
+        "h_n": 0.2825,
+        "x1r": 376.7982177734375,
+        "y1r": 133.64254760742188,
+        "x2r": 472.6515197753906,
+        "y2r": 266.9653015136719,
+        "clipped": false,
+        "case": "C",
+        "track_len": 28,
+        "gt_source": "yolo_mid_track"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.5993,
+        "cx_n": 0.7168,
+        "cy_n": 0.6928,
+        "w_n": 0.0664,
+        "h_n": 0.2139,
+        "x1r": 775.8932495117188,
+        "y1r": 276.4956970214844,
+        "x2r": 851.2703857421875,
+        "y2r": 377.46893310546875,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.3255,
+        "cx_n": 0.7111,
+        "cy_n": 0.2126,
+        "w_n": 0.0377,
+        "h_n": 0.0577,
+        "x1r": 785.7325439453125,
+        "y1r": 86.73495483398438,
+        "x2r": 828.5104370117188,
+        "y2r": 113.97216796875,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.3111,
+        "cx_n": 0.3742,
+        "cy_n": 0.4244,
+        "w_n": 0.0845,
+        "h_n": 0.2825,
+        "x1r": 376.7982177734375,
+        "y1r": 133.64254760742188,
+        "x2r": 472.6515197753906,
+        "y2r": 266.9653015136719,
+        "clipped": false
+      }
+    ],
+    "case": "A",
+    "case_flags": [
+      "C",
+      "A"
+    ]
+  },
+  "261": {
+    "frame_no": 261,
+    "fname": "VID_E_f000261.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000261.jpg",
+    "ts_sec": 26.1,
+    "diff": 1.79,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.6162,
+        "cx_n": 0.3905,
+        "cy_n": 0.4055,
+        "w_n": 0.0857,
+        "h_n": 0.2685,
+        "x1r": 394.5440673828125,
+        "y1r": 128.02638244628906,
+        "x2r": 491.8102722167969,
+        "y2r": 254.75189208984375,
+        "clipped": false,
+        "case": "A",
+        "track_len": 28,
+        "gt_source": "yolo_high"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2971,
+        "cx_n": 0.7112,
+        "cy_n": 0.2125,
+        "w_n": 0.0378,
+        "h_n": 0.0581,
+        "x1r": 785.7027587890625,
+        "y1r": 86.58174896240234,
+        "x2r": 828.6348876953125,
+        "y2r": 114.00666046142578,
+        "clipped": false,
+        "case": "C",
+        "track_len": 21,
+        "gt_source": "yolo_mid_track"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.6162,
+        "cx_n": 0.3905,
+        "cy_n": 0.4055,
+        "w_n": 0.0857,
+        "h_n": 0.2685,
+        "x1r": 394.5440673828125,
+        "y1r": 128.02638244628906,
+        "x2r": 491.8102722167969,
+        "y2r": 254.75189208984375,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2971,
+        "cx_n": 0.7112,
+        "cy_n": 0.2125,
+        "w_n": 0.0378,
+        "h_n": 0.0581,
+        "x1r": 785.7027587890625,
+        "y1r": 86.58174896240234,
+        "x2r": 828.6348876953125,
+        "y2r": 114.00666046142578,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2323,
+        "cx_n": 0.4171,
+        "cy_n": 0.5903,
+        "w_n": 0.0929,
+        "h_n": 0.2089,
+        "x1r": 420.69476318359375,
+        "y1r": 229.32569885253906,
+        "x2r": 526.144775390625,
+        "y2r": 327.9324645996094,
+        "clipped": false
+      }
+    ],
+    "case": "A",
+    "case_flags": [
+      "C",
+      "E",
+      "A"
+    ]
+  },
+  "267": {
+    "frame_no": 267,
+    "fname": "VID_E_f000267.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000267.jpg",
+    "ts_sec": 26.7,
+    "diff": 2.21,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.6268,
+        "cx_n": 0.4129,
+        "cy_n": 0.3731,
+        "w_n": 0.0845,
+        "h_n": 0.2581,
+        "x1r": 420.6972351074219,
+        "y1r": 115.19831848144531,
+        "x2r": 516.6588134765625,
+        "y2r": 237.0399932861328,
+        "clipped": false,
+        "case": "A",
+        "track_len": 28,
+        "gt_source": "yolo_high"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2519,
+        "cx_n": 0.7113,
+        "cy_n": 0.211,
+        "w_n": 0.0383,
+        "h_n": 0.0625,
+        "x1r": 785.6002197265625,
+        "y1r": 84.86798095703125,
+        "x2r": 829.028564453125,
+        "y2r": 114.35270690917969,
+        "clipped": false,
+        "case": "C",
+        "track_len": 21,
+        "gt_source": "yolo_mid_track"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.6268,
+        "cx_n": 0.4129,
+        "cy_n": 0.3731,
+        "w_n": 0.0845,
+        "h_n": 0.2581,
+        "x1r": 420.6972351074219,
+        "y1r": 115.19831848144531,
+        "x2r": 516.6588134765625,
+        "y2r": 237.0399932861328,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2519,
+        "cx_n": 0.7113,
+        "cy_n": 0.211,
+        "w_n": 0.0383,
+        "h_n": 0.0625,
+        "x1r": 785.6002197265625,
+        "y1r": 84.86798095703125,
+        "x2r": 829.028564453125,
+        "y2r": 114.35270690917969,
+        "clipped": false
+      }
+    ],
+    "case": "A",
+    "case_flags": [
+      "C",
+      "A"
+    ]
+  },
+  "270": {
+    "frame_no": 270,
+    "fname": "VID_E_f000270.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000270.jpg",
+    "ts_sec": 27.0,
+    "diff": 1.46,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.493,
+        "cx_n": 0.4232,
+        "cy_n": 0.3817,
+        "w_n": 0.0764,
+        "h_n": 0.265,
+        "x1r": 436.9378662109375,
+        "y1r": 117.61165618896484,
+        "x2r": 523.6304321289062,
+        "y2r": 242.6829071044922,
+        "clipped": false,
+        "case": "C",
+        "track_len": 28,
+        "gt_source": "yolo_mid_track"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2559,
+        "cx_n": 0.7113,
+        "cy_n": 0.2112,
+        "w_n": 0.0382,
+        "h_n": 0.062,
+        "x1r": 785.6209106445312,
+        "y1r": 85.03172302246094,
+        "x2r": 828.9849243164062,
+        "y2r": 114.31089782714844,
+        "clipped": false,
+        "case": "C",
+        "track_len": 21,
+        "gt_source": "yolo_mid_track"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.493,
+        "cx_n": 0.4232,
+        "cy_n": 0.3817,
+        "w_n": 0.0764,
+        "h_n": 0.265,
+        "x1r": 436.9378662109375,
+        "y1r": 117.61165618896484,
+        "x2r": 523.6304321289062,
+        "y2r": 242.6829071044922,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2559,
+        "cx_n": 0.7113,
+        "cy_n": 0.2112,
+        "w_n": 0.0382,
+        "h_n": 0.062,
+        "x1r": 785.6209106445312,
+        "y1r": 85.03172302246094,
+        "x2r": 828.9849243164062,
+        "y2r": 114.31089782714844,
+        "clipped": false
+      }
+    ],
+    "case": "C",
+    "case_flags": [
+      "C"
+    ]
+  },
+  "276": {
+    "frame_no": 276,
+    "fname": "VID_E_f000276.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000276.jpg",
+    "ts_sec": 27.6,
+    "diff": 1.9,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2554,
+        "cx_n": 0.7113,
+        "cy_n": 0.2111,
+        "w_n": 0.0382,
+        "h_n": 0.0624,
+        "x1r": 785.6109008789062,
+        "y1r": 84.9008560180664,
+        "x2r": 829.0187377929688,
+        "y2r": 114.33052062988281,
+        "clipped": false,
+        "case": "C",
+        "track_len": 21,
+        "gt_source": "yolo_mid_track"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2554,
+        "cx_n": 0.7113,
+        "cy_n": 0.2111,
+        "w_n": 0.0382,
+        "h_n": 0.0624,
+        "x1r": 785.6109008789062,
+        "y1r": 84.9008560180664,
+        "x2r": 829.0187377929688,
+        "y2r": 114.33052062988281,
+        "clipped": false
+      }
+    ],
+    "case": "C",
+    "case_flags": [
+      "C"
+    ]
+  },
+  "282": {
+    "frame_no": 282,
+    "fname": "VID_E_f000282.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000282.jpg",
+    "ts_sec": 28.2,
+    "diff": 1.94,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2564,
+        "cx_n": 0.7113,
+        "cy_n": 0.211,
+        "w_n": 0.0382,
+        "h_n": 0.0624,
+        "x1r": 785.6123657226562,
+        "y1r": 84.88078308105469,
+        "x2r": 829.0191650390625,
+        "y2r": 114.32754516601562,
+        "clipped": false,
+        "case": "C",
+        "track_len": 21,
+        "gt_source": "yolo_mid_track"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1238,
+        "cx_n": 0.4494,
+        "cy_n": 0.3298,
+        "w_n": 0.0774,
+        "h_n": 0.2748,
+        "x1r": 466.1883850097656,
+        "y1r": 90.81783294677734,
+        "x2r": 554.0516967773438,
+        "y2r": 220.52975463867188,
+        "clipped": false,
+        "case": "B",
+        "track_len": 28,
+        "gt_source": "track_interpolated"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2564,
+        "cx_n": 0.7113,
+        "cy_n": 0.211,
+        "w_n": 0.0382,
+        "h_n": 0.0624,
+        "x1r": 785.6123657226562,
+        "y1r": 84.88078308105469,
+        "x2r": 829.0191650390625,
+        "y2r": 114.32754516601562,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1238,
+        "cx_n": 0.4494,
+        "cy_n": 0.3298,
+        "w_n": 0.0774,
+        "h_n": 0.2748,
+        "x1r": 466.1883850097656,
+        "y1r": 90.81783294677734,
+        "x2r": 554.0516967773438,
+        "y2r": 220.52975463867188,
+        "clipped": false
+      }
+    ],
+    "case": "B",
+    "case_flags": [
+      "B",
+      "C"
+    ]
+  },
+  "288": {
+    "frame_no": 288,
+    "fname": "VID_E_f000288.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000288.jpg",
+    "ts_sec": 28.8,
+    "diff": 3.24,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.3001,
+        "cx_n": 0.7112,
+        "cy_n": 0.2115,
+        "w_n": 0.0381,
+        "h_n": 0.0611,
+        "x1r": 785.6428833007812,
+        "y1r": 85.41108703613281,
+        "x2r": 828.8895263671875,
+        "y2r": 114.25098419189453,
+        "clipped": false,
+        "case": "C",
+        "track_len": 21,
+        "gt_source": "yolo_mid_track"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.3001,
+        "cx_n": 0.7112,
+        "cy_n": 0.2115,
+        "w_n": 0.0381,
+        "h_n": 0.0611,
+        "x1r": 785.6428833007812,
+        "y1r": 85.41108703613281,
+        "x2r": 828.8895263671875,
+        "y2r": 114.25098419189453,
+        "clipped": false
+      }
+    ],
+    "case": "C",
+    "case_flags": [
+      "C"
+    ]
+  },
+  "291": {
+    "frame_no": 291,
+    "fname": "VID_E_f000291.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000291.jpg",
+    "ts_sec": 29.1,
+    "diff": 2.82,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2599,
+        "cx_n": 0.7113,
+        "cy_n": 0.2112,
+        "w_n": 0.0382,
+        "h_n": 0.062,
+        "x1r": 785.614990234375,
+        "y1r": 85.02440643310547,
+        "x2r": 828.9922485351562,
+        "y2r": 114.30755615234375,
+        "clipped": false,
+        "case": "C",
+        "track_len": 21,
+        "gt_source": "yolo_mid_track"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2599,
+        "cx_n": 0.7113,
+        "cy_n": 0.2112,
+        "w_n": 0.0382,
+        "h_n": 0.062,
+        "x1r": 785.614990234375,
+        "y1r": 85.02440643310547,
+        "x2r": 828.9922485351562,
+        "y2r": 114.30755615234375,
+        "clipped": false
+      }
+    ],
+    "case": "C",
+    "case_flags": [
+      "C"
+    ]
+  },
+  "294": {
+    "frame_no": 294,
+    "fname": "VID_E_f000294.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000294.jpg",
+    "ts_sec": 29.4,
+    "diff": 2.34,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.5456,
+        "cx_n": 0.2604,
+        "cy_n": 0.9056,
+        "w_n": 0.0542,
+        "h_n": 0.1667,
+        "x1r": 264.8511047363281,
+        "y1r": 388.1094055175781,
+        "x2r": 326.3548889160156,
+        "y2r": 466.7918395996094,
+        "clipped": false,
+        "case": "C",
+        "track_len": 0,
+        "gt_source": "yolo_high"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2749,
+        "cx_n": 0.7113,
+        "cy_n": 0.2114,
+        "w_n": 0.0381,
+        "h_n": 0.0615,
+        "x1r": 785.6382446289062,
+        "y1r": 85.24783325195312,
+        "x2r": 828.9301147460938,
+        "y2r": 114.27344512939453,
+        "clipped": false,
+        "case": "C",
+        "track_len": 21,
+        "gt_source": "yolo_mid_track"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.5456,
+        "cx_n": 0.2604,
+        "cy_n": 0.9056,
+        "w_n": 0.0542,
+        "h_n": 0.1667,
+        "x1r": 264.8511047363281,
+        "y1r": 388.1094055175781,
+        "x2r": 326.3548889160156,
+        "y2r": 466.7918395996094,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2749,
+        "cx_n": 0.7113,
+        "cy_n": 0.2114,
+        "w_n": 0.0381,
+        "h_n": 0.0615,
+        "x1r": 785.6382446289062,
+        "y1r": 85.24783325195312,
+        "x2r": 828.9301147460938,
+        "y2r": 114.27344512939453,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1486,
+        "cx_n": 0.8822,
+        "cy_n": 0.9017,
+        "w_n": 0.0693,
+        "h_n": 0.1631,
+        "x1r": 961.95556640625,
+        "y1r": 387.10919189453125,
+        "x2r": 1040.6322021484375,
+        "y2r": 464.0773010253906,
+        "clipped": false
+      }
+    ],
+    "case": "C",
+    "case_flags": [
+      "C",
+      "E"
+    ]
+  },
+  "297": {
+    "frame_no": 297,
+    "fname": "VID_E_f000297.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000297.jpg",
+    "ts_sec": 29.7,
+    "diff": 2.93,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.5128,
+        "cx_n": 0.2196,
+        "cy_n": 0.9072,
+        "w_n": 0.051,
+        "h_n": 0.1646,
+        "x1r": 220.37657165527344,
+        "y1r": 389.3819580078125,
+        "x2r": 278.2116394042969,
+        "y2r": 467.0596923828125,
+        "clipped": false,
+        "case": "A",
+        "track_len": 2,
+        "gt_source": "yolo_high"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.3069,
+        "cx_n": 0.7112,
+        "cy_n": 0.2115,
+        "w_n": 0.0381,
+        "h_n": 0.0611,
+        "x1r": 785.6368408203125,
+        "y1r": 85.42974853515625,
+        "x2r": 828.8895874023438,
+        "y2r": 114.25687408447266,
+        "clipped": false,
+        "case": "C",
+        "track_len": 21,
+        "gt_source": "yolo_mid_track"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.5128,
+        "cx_n": 0.2196,
+        "cy_n": 0.9072,
+        "w_n": 0.051,
+        "h_n": 0.1646,
+        "x1r": 220.37657165527344,
+        "y1r": 389.3819580078125,
+        "x2r": 278.2116394042969,
+        "y2r": 467.0596923828125,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.3069,
+        "cx_n": 0.7112,
+        "cy_n": 0.2115,
+        "w_n": 0.0381,
+        "h_n": 0.0611,
+        "x1r": 785.6368408203125,
+        "y1r": 85.42974853515625,
+        "x2r": 828.8895874023438,
+        "y2r": 114.25687408447266,
+        "clipped": false
+      }
+    ],
+    "case": "A",
+    "case_flags": [
+      "C",
+      "A"
+    ]
+  },
+  "300": {
+    "frame_no": 300,
+    "fname": "VID_E_f000300.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000300.jpg",
+    "ts_sec": 30.0,
+    "diff": 2.56,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.4189,
+        "cx_n": 0.4048,
+        "cy_n": 0.4409,
+        "w_n": 0.0537,
+        "h_n": 0.0937,
+        "x1r": 428.8937683105469,
+        "y1r": 185.9861602783203,
+        "x2r": 489.8923645019531,
+        "y2r": 230.2353973388672,
+        "clipped": false,
+        "case": "HARD",
+        "track_len": 0,
+        "gt_source": "yolo_mid_notrack"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.279,
+        "cx_n": 0.7113,
+        "cy_n": 0.2114,
+        "w_n": 0.0381,
+        "h_n": 0.0614,
+        "x1r": 785.6396484375,
+        "y1r": 85.28319549560547,
+        "x2r": 828.9070434570312,
+        "y2r": 114.27804565429688,
+        "clipped": false,
+        "case": "C",
+        "track_len": 21,
+        "gt_source": "yolo_mid_track"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1862,
+        "cx_n": 0.1967,
+        "cy_n": 0.9153,
+        "w_n": 0.0558,
+        "h_n": 0.161,
+        "x1r": 191.55093383789062,
+        "y1r": 394.0226745605469,
+        "x2r": 254.94003295898438,
+        "y2r": 470.0140075683594,
+        "clipped": false,
+        "case": "B",
+        "track_len": 2,
+        "gt_source": "track_interpolated"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.4189,
+        "cx_n": 0.4048,
+        "cy_n": 0.4409,
+        "w_n": 0.0537,
+        "h_n": 0.0937,
+        "x1r": 428.8937683105469,
+        "y1r": 185.9861602783203,
+        "x2r": 489.8923645019531,
+        "y2r": 230.2353973388672,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.279,
+        "cx_n": 0.7113,
+        "cy_n": 0.2114,
+        "w_n": 0.0381,
+        "h_n": 0.0614,
+        "x1r": 785.6396484375,
+        "y1r": 85.28319549560547,
+        "x2r": 828.9070434570312,
+        "y2r": 114.27804565429688,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.1862,
+        "cx_n": 0.1967,
+        "cy_n": 0.9153,
+        "w_n": 0.0558,
+        "h_n": 0.161,
+        "x1r": 191.55093383789062,
+        "y1r": 394.0226745605469,
+        "x2r": 254.94003295898438,
+        "y2r": 470.0140075683594,
+        "clipped": false
+      }
+    ],
+    "case": "B",
+    "case_flags": [
+      "B",
+      "HARD",
+      "C"
+    ]
+  },
+  "303": {
+    "frame_no": 303,
+    "fname": "VID_E_f000303.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000303.jpg",
+    "ts_sec": 30.3,
+    "diff": 2.57,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2658,
+        "cx_n": 0.7113,
+        "cy_n": 0.2113,
+        "w_n": 0.0382,
+        "h_n": 0.0617,
+        "x1r": 785.6270141601562,
+        "y1r": 85.16927337646484,
+        "x2r": 828.9430541992188,
+        "y2r": 114.2992935180664,
+        "clipped": false,
+        "case": "C",
+        "track_len": 21,
+        "gt_source": "yolo_mid_track"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2658,
+        "cx_n": 0.7113,
+        "cy_n": 0.2113,
+        "w_n": 0.0382,
+        "h_n": 0.0617,
+        "x1r": 785.6270141601562,
+        "y1r": 85.16927337646484,
+        "x2r": 828.9430541992188,
+        "y2r": 114.2992935180664,
+        "clipped": false
+      }
+    ],
+    "case": "C",
+    "case_flags": [
+      "C"
+    ]
+  },
+  "306": {
+    "frame_no": 306,
+    "fname": "VID_E_f000306.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000306.jpg",
+    "ts_sec": 30.6,
+    "diff": 2.53,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.3049,
+        "cx_n": 0.7112,
+        "cy_n": 0.2115,
+        "w_n": 0.0381,
+        "h_n": 0.0611,
+        "x1r": 785.6392822265625,
+        "y1r": 85.4133071899414,
+        "x2r": 828.882080078125,
+        "y2r": 114.25845336914062,
+        "clipped": false,
+        "case": "C",
+        "track_len": 21,
+        "gt_source": "yolo_mid_track"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.3049,
+        "cx_n": 0.7112,
+        "cy_n": 0.2115,
+        "w_n": 0.0381,
+        "h_n": 0.0611,
+        "x1r": 785.6392822265625,
+        "y1r": 85.4133071899414,
+        "x2r": 828.882080078125,
+        "y2r": 114.25845336914062,
+        "clipped": false
+      }
+    ],
+    "case": "C",
+    "case_flags": [
+      "C"
+    ]
+  },
+  "309": {
+    "frame_no": 309,
+    "fname": "VID_E_f000309.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000309.jpg",
+    "ts_sec": 30.9,
+    "diff": 1.11,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2904,
+        "cx_n": 0.7113,
+        "cy_n": 0.2113,
+        "w_n": 0.0381,
+        "h_n": 0.0615,
+        "x1r": 785.6297607421875,
+        "y1r": 85.23560333251953,
+        "x2r": 828.9249267578125,
+        "y2r": 114.2783432006836,
+        "clipped": false,
+        "case": "C",
+        "track_len": 21,
+        "gt_source": "yolo_mid_track"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2904,
+        "cx_n": 0.7113,
+        "cy_n": 0.2113,
+        "w_n": 0.0381,
+        "h_n": 0.0615,
+        "x1r": 785.6297607421875,
+        "y1r": 85.23560333251953,
+        "x2r": 828.9249267578125,
+        "y2r": 114.2783432006836,
+        "clipped": false
+      }
+    ],
+    "case": "C",
+    "case_flags": [
+      "C"
+    ]
+  },
+  "315": {
+    "frame_no": 315,
+    "fname": "VID_E_f000315.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000315.jpg",
+    "ts_sec": 31.5,
+    "diff": 2.25,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.3138,
+        "cx_n": 0.7112,
+        "cy_n": 0.2116,
+        "w_n": 0.0381,
+        "h_n": 0.0609,
+        "x1r": 785.6393432617188,
+        "y1r": 85.48957824707031,
+        "x2r": 828.8692626953125,
+        "y2r": 114.25086975097656,
+        "clipped": false,
+        "case": "C",
+        "track_len": 21,
+        "gt_source": "yolo_mid_track"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.3138,
+        "cx_n": 0.7112,
+        "cy_n": 0.2116,
+        "w_n": 0.0381,
+        "h_n": 0.0609,
+        "x1r": 785.6393432617188,
+        "y1r": 85.48957824707031,
+        "x2r": 828.8692626953125,
+        "y2r": 114.25086975097656,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.122,
+        "cx_n": 0.9159,
+        "cy_n": 0.9506,
+        "w_n": 0.0722,
+        "h_n": 0.0987,
+        "x1r": 998.5709228515625,
+        "y1r": 425.4128723144531,
+        "x2r": 1080.469482421875,
+        "y2r": 472,
+        "clipped": false
+      }
+    ],
+    "case": "C",
+    "case_flags": [
+      "C",
+      "E"
+    ]
+  },
+  "318": {
+    "frame_no": 318,
+    "fname": "VID_E_f000318.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000318.jpg",
+    "ts_sec": 31.8,
+    "diff": 1.3,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2634,
+        "cx_n": 0.7113,
+        "cy_n": 0.2111,
+        "w_n": 0.0382,
+        "h_n": 0.0621,
+        "x1r": 785.61328125,
+        "y1r": 85.00817108154297,
+        "x2r": 828.986083984375,
+        "y2r": 114.31183624267578,
+        "clipped": false,
+        "case": "C",
+        "track_len": 21,
+        "gt_source": "yolo_mid_track"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2634,
+        "cx_n": 0.7113,
+        "cy_n": 0.2111,
+        "w_n": 0.0382,
+        "h_n": 0.0621,
+        "x1r": 785.61328125,
+        "y1r": 85.00817108154297,
+        "x2r": 828.986083984375,
+        "y2r": 114.31183624267578,
+        "clipped": false
+      }
+    ],
+    "case": "C",
+    "case_flags": [
+      "C"
+    ]
+  },
+  "324": {
+    "frame_no": 324,
+    "fname": "VID_E_f000324.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000324.jpg",
+    "ts_sec": 32.4,
+    "diff": 1.58,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.3123,
+        "cx_n": 0.7112,
+        "cy_n": 0.2116,
+        "w_n": 0.0381,
+        "h_n": 0.061,
+        "x1r": 785.6365966796875,
+        "y1r": 85.45147705078125,
+        "x2r": 828.8767700195312,
+        "y2r": 114.25543975830078,
+        "clipped": false,
+        "case": "C",
+        "track_len": 21,
+        "gt_source": "yolo_mid_track"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.3123,
+        "cx_n": 0.7112,
+        "cy_n": 0.2116,
+        "w_n": 0.0381,
+        "h_n": 0.061,
+        "x1r": 785.6365966796875,
+        "y1r": 85.45147705078125,
+        "x2r": 828.8767700195312,
+        "y2r": 114.25543975830078,
+        "clipped": false
+      }
+    ],
+    "case": "C",
+    "case_flags": [
+      "C"
+    ]
+  },
+  "327": {
+    "frame_no": 327,
+    "fname": "VID_E_f000327.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000327.jpg",
+    "ts_sec": 32.7,
+    "diff": 28.24,
+    "gt_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.7496,
+        "cx_n": 0.4409,
+        "cy_n": 0.1987,
+        "w_n": 0.0333,
+        "h_n": 0.0675,
+        "x1r": 481.5687255859375,
+        "y1r": 77.84310150146484,
+        "x2r": 519.3837280273438,
+        "y2r": 109.70663452148438,
+        "clipped": false,
+        "case": "C",
+        "track_len": 0,
+        "gt_source": "yolo_high"
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2161,
+        "cx_n": 0.7093,
+        "cy_n": 0.2091,
+        "w_n": 0.0352,
+        "h_n": 0.0472,
+        "x1r": 785.0987548828125,
+        "y1r": 87.57042694091797,
+        "x2r": 825.0182495117188,
+        "y2r": 109.84069061279297,
+        "clipped": false,
+        "case": "B",
+        "track_len": 21,
+        "gt_source": "track_interpolated"
+      }
+    ],
+    "yolo_dets": [
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.7496,
+        "cx_n": 0.4409,
+        "cy_n": 0.1987,
+        "w_n": 0.0333,
+        "h_n": 0.0675,
+        "x1r": 481.5687255859375,
+        "y1r": 77.84310150146484,
+        "x2r": 519.3837280273438,
+        "y2r": 109.70663452148438,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.249,
+        "cx_n": 0.0152,
+        "cy_n": 0.697,
+        "w_n": 0.0304,
+        "h_n": 0.0823,
+        "x1r": 0,
+        "y1r": 309.5827941894531,
+        "x2r": 34.46880340576172,
+        "y2r": 348.41937255859375,
+        "clipped": false
+      },
+      {
+        "cls_id": 0,
+        "cls_name": "monster",
+        "conf": 0.2161,
+        "cx_n": 0.7093,
+        "cy_n": 0.2091,
+        "w_n": 0.0352,
+        "h_n": 0.0472,
+        "x1r": 785.0987548828125,
+        "y1r": 87.57042694091797,
+        "x2r": 825.0182495117188,
+        "y2r": 109.84069061279297,
+        "clipped": false
+      }
+    ],
+    "case": "B",
+    "case_flags": [
+      "B",
+      "C",
+      "E"
+    ]
+  },
+  "328": {
+    "frame_no": 328,
+    "fname": "VID_E_f000328.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000328.jpg",
+    "ts_sec": 32.8,
+    "diff": 51.42,
+    "gt_dets": [],
+    "yolo_dets": [],
+    "case": "EMPTY",
+    "case_flags": []
+  },
+  "330": {
+    "frame_no": 330,
+    "fname": "VID_E_f000330.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000330.jpg",
+    "ts_sec": 33.0,
+    "diff": 18.89,
+    "gt_dets": [],
+    "yolo_dets": [],
+    "case": "EMPTY",
+    "case_flags": []
+  },
+  "332": {
+    "frame_no": 332,
+    "fname": "VID_E_f000332.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000332.jpg",
+    "ts_sec": 33.2,
+    "diff": 20.33,
+    "gt_dets": [],
+    "yolo_dets": [],
+    "case": "EMPTY",
+    "case_flags": []
+  },
+  "333": {
+    "frame_no": 333,
+    "fname": "VID_E_f000333.jpg",
+    "path": "/home/user/monster_tracker/dataset_field_v1/frames/VID_E/VID_E_f000333.jpg",
+    "ts_sec": 33.3,
+    "diff": 16.22,
+    "gt_dets": [],
+    "yolo_dets": [],
+    "case": "EMPTY",
+    "case_flags": []
+  }
+}
