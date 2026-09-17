@@ -48,9 +48,10 @@ CASE A GT 생성 (영상 화면 기준, YOLO 결과 복사 금지)
     ↓
 stride 적용 (연속 중복 제거)
     ↓
-A급 데이터셋 생성 (dataset_field_A_vN/)
+기존 dataset_field_A_v1/ 에 누적 추가
+(새 영상 이미지/라벨을 train or val or test 폴더에 append)
     ↓
-Preview / Contact Sheet 생성
+Preview / Contact Sheet 생성 (새로 추가된 것만)
     ↓
 통계 보고 (아래 항목)
     ↓
@@ -58,7 +59,7 @@ Preview / Contact Sheet 생성
     ↓
 사용자가 "학습 시작" 명시적 승인
     ↓
-그때만 학습 실행
+dataset_field_A_v1/ 전체로 재학습 실행
 ```
 
 ---
@@ -100,7 +101,10 @@ Preview / Contact Sheet 생성
 ## 데이터셋 디렉터리 규칙
 
 - 기존 `dataset_field_v1/` 보존 (삭제/수정 금지)
-- 새 영상마다 독립 디렉터리 생성: `dataset_field_A_vN/`
+- A급 학습 데이터는 **`dataset_field_A_v1/` 하나로 누적 관리**
+  - 새 영상이 올 때마다 images/train|val|test 에 append
+  - labels/train|val|test 에 append
+  - 독립 디렉터리 신규 생성 금지 (vN/ 분산 금지)
 - 이미지는 images/로, 라벨은 labels/로, 미리보기는 previews/로
 
 ---
@@ -124,8 +128,10 @@ Preview / Contact Sheet 생성
 
 ## 데이터 축적 방식
 
+- **단일 누적**: `dataset_field_A_v1/` 하나에 계속 append
 - 새 영상 → 기존 A급에 없는 새로운 상황의 몬스터만 추가
 - 단순 프레임 수 늘리기 금지
 - 유지 우선: 위치/크기/자세/배경/화면위치 변화가 있는 프레임
-- 버전 관리: dataset_field_A_v1 → v2 → v3 ...
+- 학습은 매번 `dataset_field_A_v1/` 전체 데이터로 재학습
+- 모델 버전만 올림: `runs/detect/field_A_v1` → `field_A_v2` → ...
 
