@@ -1,0 +1,92 @@
+{
+  "generated_at": "2026-09-17 13:42:49",
+  "config": {
+    "case": "A_only",
+    "min_gap": 9
+  },
+  "raw": {
+    "total": 446,
+    "by_vid": {
+      "VID_A": 49,
+      "VID_B": 82,
+      "VID_C": 39,
+      "VID_D": 59,
+      "VID_E": 30,
+      "VID_F": 187
+    }
+  },
+  "filtered": {
+    "total": 171,
+    "by_vid": {
+      "VID_A": 16,
+      "VID_B": 32,
+      "VID_C": 15,
+      "VID_D": 30,
+      "VID_E": 14,
+      "VID_F": 64
+    },
+    "by_split": {
+      "train": 63,
+      "val": 44,
+      "test": 64
+    }
+  },
+  "stats": {
+    "raw": {
+      "total_frames": 446,
+      "bbox_total": 894,
+      "position": {
+        "RIGHT": 317,
+        "MIDDLE": 310,
+        "BOTTOM": 371,
+        "LEFT": 314,
+        "CENTER": 263,
+        "TOP": 213
+      },
+      "size": {
+        "SMALL": 165,
+        "MEDIUM": 566,
+        "LARGE": 163
+      },
+      "max_consecutive": 44
+    },
+    "filtered": {
+      "total_frames": 171,
+      "bbox_total": 357,
+      "position": {
+        "RIGHT": 131,
+        "MIDDLE": 135,
+        "BOTTOM": 132,
+        "LEFT": 123,
+        "CENTER": 103,
+        "TOP": 90
+      },
+      "size": {
+        "SMALL": 80,
+        "MEDIUM": 216,
+        "LARGE": 61
+      },
+      "max_consecutive": 0
+    }
+  },
+  "split_detail": {
+    "train": {
+      "images": 63,
+      "bbox": 134,
+      "empty": 0
+    },
+    "val": {
+      "images": 44,
+      "bbox": 82,
+      "empty": 0
+    },
+    "test": {
+      "images": 64,
+      "bbox": 141,
+      "empty": 0
+    }
+  },
+  "quality": {
+    "issues_total": 0
+  }
+}

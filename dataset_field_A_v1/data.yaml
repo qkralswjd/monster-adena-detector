@@ -1,0 +1,16 @@
+# dataset_field_A_v1
+# CASE A only (고신뢰 탐지 + 트랙 확정)
+# stride=9 적용 (연속 중복 프레임 감소)
+# 생성: 2026-09-17 13:42:49
+# 분할: Train=VID_A/B/C  Val=VID_D/E  Test=VID_F
+# 원본 dataset_field_v1 보존 (B/C 라벨 삭제하지 않음)
+
+path: /home/user/monster_tracker/dataset_field_A_v1
+train: images/train
+val:   images/val
+test:  images/test
+
+nc: 2
+names:
+  0: monster
+  1: adena
