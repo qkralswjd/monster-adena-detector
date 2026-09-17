@@ -1,0 +1,1086 @@
+[
+  {
+    "timestamp": "2026-09-17T09:10:38.087",
+    "event": "PATROL_START"
+  },
+  {
+    "timestamp": "2026-09-17T09:10:59.265",
+    "event": "TARGET_SELECTED",
+    "data": {
+      "cx": 140,
+      "cy": 151,
+      "conf": 0.33,
+      "abs_cx": 512,
+      "abs_cy": 410
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:10:59.265",
+    "event": "COMBAT_START",
+    "data": {
+      "cx": 140,
+      "cy": 151,
+      "conf": 0.33
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:11:02.835",
+    "event": "TARGET_LOST",
+    "data": {
+      "target": "cx=140 cy=151 conf=0.33",
+      "miss_timeout_sec": 3.5
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:11:07.547",
+    "event": "TARGET_SELECTED",
+    "data": {
+      "cx": 71,
+      "cy": 354,
+      "conf": 0.236,
+      "abs_cx": 443,
+      "abs_cy": 613
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:11:07.547",
+    "event": "COMBAT_START",
+    "data": {
+      "cx": 71,
+      "cy": 354,
+      "conf": 0.236
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:11:10.114",
+    "event": "COMBAT_BLOCK_NEW_ATTACK",
+    "data": {
+      "target": "cx=71 cy=354 conf=0.24"
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:11:12.694",
+    "event": "COMBAT_BLOCK_NEW_ATTACK",
+    "data": {
+      "target": "cx=71 cy=354 conf=0.24"
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:11:16.241",
+    "event": "TARGET_LOST",
+    "data": {
+      "target": "cx=71 cy=354 conf=0.24",
+      "miss_timeout_sec": 3.5
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:11:17.489",
+    "event": "TARGET_SELECTED",
+    "data": {
+      "cx": 544,
+      "cy": 412,
+      "conf": 0.404,
+      "abs_cx": 916,
+      "abs_cy": 671
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:11:17.493",
+    "event": "COMBAT_START",
+    "data": {
+      "cx": 544,
+      "cy": 412,
+      "conf": 0.404
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:11:21.052",
+    "event": "TARGET_LOST",
+    "data": {
+      "target": "cx=544 cy=412 conf=0.40",
+      "miss_timeout_sec": 3.5
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:11:22.851",
+    "event": "TARGET_SELECTED",
+    "data": {
+      "cx": 274,
+      "cy": 429,
+      "conf": 0.354,
+      "abs_cx": 646,
+      "abs_cy": 688
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:11:22.851",
+    "event": "COMBAT_START",
+    "data": {
+      "cx": 274,
+      "cy": 429,
+      "conf": 0.354
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:11:26.403",
+    "event": "TARGET_LOST",
+    "data": {
+      "target": "cx=274 cy=429 conf=0.35",
+      "miss_timeout_sec": 3.5
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:11:36.692",
+    "event": "TARGET_SELECTED",
+    "data": {
+      "cx": 53,
+      "cy": 424,
+      "conf": 0.376,
+      "abs_cx": 425,
+      "abs_cy": 683
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:11:36.692",
+    "event": "COMBAT_START",
+    "data": {
+      "cx": 53,
+      "cy": 424,
+      "conf": 0.376
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:11:36.720",
+    "event": "COMBAT_BLOCK_NEW_ATTACK",
+    "data": {
+      "target": "cx=53 cy=424 conf=0.38"
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:11:40.286",
+    "event": "TARGET_LOST",
+    "data": {
+      "target": "cx=53 cy=424 conf=0.38",
+      "miss_timeout_sec": 3.5
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:11:44.670",
+    "event": "LOOT_START",
+    "data": {
+      "count": 1,
+      "targets": [
+        [
+          154,
+          317
+        ]
+      ]
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:11:45.120",
+    "event": "LOOT_CLICK",
+    "data": {
+      "cx": 154,
+      "cy": 317,
+      "index": 1,
+      "total": 1
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:11:45.164",
+    "event": "LOOT_DONE",
+    "data": {
+      "reason": "all_clicked"
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:11:45.191",
+    "event": "PATROL_START"
+  },
+  {
+    "timestamp": "2026-09-17T09:11:45.660",
+    "event": "LOOT_START",
+    "data": {
+      "count": 1,
+      "targets": [
+        [
+          150,
+          329
+        ]
+      ]
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:11:46.116",
+    "event": "LOOT_CLICK",
+    "data": {
+      "cx": 150,
+      "cy": 329,
+      "index": 1,
+      "total": 1
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:11:46.526",
+    "event": "LOOT_DONE",
+    "data": {
+      "reason": "all_clicked"
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:11:46.559",
+    "event": "PATROL_START"
+  },
+  {
+    "timestamp": "2026-09-17T09:11:47.050",
+    "event": "LOOT_START",
+    "data": {
+      "count": 1,
+      "targets": [
+        [
+          158,
+          309
+        ]
+      ]
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:11:47.496",
+    "event": "LOOT_CLICK",
+    "data": {
+      "cx": 158,
+      "cy": 309,
+      "index": 1,
+      "total": 1
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:11:47.531",
+    "event": "LOOT_DONE",
+    "data": {
+      "reason": "all_clicked"
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:11:47.559",
+    "event": "PATROL_START"
+  },
+  {
+    "timestamp": "2026-09-17T09:12:01.130",
+    "event": "LOOT_START",
+    "data": {
+      "count": 1,
+      "targets": [
+        [
+          13,
+          156
+        ]
+      ]
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:01.581",
+    "event": "LOOT_CLICK",
+    "data": {
+      "cx": 13,
+      "cy": 156,
+      "index": 1,
+      "total": 1
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:01.612",
+    "event": "LOOT_DONE",
+    "data": {
+      "reason": "all_clicked"
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:01.639",
+    "event": "PATROL_START"
+  },
+  {
+    "timestamp": "2026-09-17T09:12:03.122",
+    "event": "TARGET_SELECTED",
+    "data": {
+      "cx": 1100,
+      "cy": 281,
+      "conf": 0.444,
+      "abs_cx": 1472,
+      "abs_cy": 540
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:03.122",
+    "event": "COMBAT_START",
+    "data": {
+      "cx": 1100,
+      "cy": 281,
+      "conf": 0.444
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:07.619",
+    "event": "TARGET_LOST",
+    "data": {
+      "target": "cx=1100 cy=281 conf=0.44",
+      "miss_timeout_sec": 3.5
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:23.048",
+    "event": "LOOT_START",
+    "data": {
+      "count": 1,
+      "targets": [
+        [
+          544,
+          132
+        ]
+      ]
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:23.481",
+    "event": "LOOT_CLICK",
+    "data": {
+      "cx": 544,
+      "cy": 132,
+      "index": 1,
+      "total": 1
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:23.515",
+    "event": "LOOT_DONE",
+    "data": {
+      "reason": "all_clicked"
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:23.538",
+    "event": "PATROL_START"
+  },
+  {
+    "timestamp": "2026-09-17T09:12:23.987",
+    "event": "LOOT_START",
+    "data": {
+      "count": 1,
+      "targets": [
+        [
+          543,
+          190
+        ]
+      ]
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:24.415",
+    "event": "LOOT_CLICK",
+    "data": {
+      "cx": 543,
+      "cy": 190,
+      "index": 1,
+      "total": 1
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:24.792",
+    "event": "LOOT_DONE",
+    "data": {
+      "reason": "all_clicked"
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:24.818",
+    "event": "PATROL_START"
+  },
+  {
+    "timestamp": "2026-09-17T09:12:24.818",
+    "event": "LOOT_START",
+    "data": {
+      "count": 1,
+      "targets": [
+        [
+          544,
+          302
+        ]
+      ]
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:25.207",
+    "event": "LOOT_CLICK",
+    "data": {
+      "cx": 544,
+      "cy": 302,
+      "index": 1,
+      "total": 1
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:25.236",
+    "event": "LOOT_DONE",
+    "data": {
+      "reason": "all_clicked"
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:25.292",
+    "event": "PATROL_START"
+  },
+  {
+    "timestamp": "2026-09-17T09:12:25.730",
+    "event": "LOOT_START",
+    "data": {
+      "count": 1,
+      "targets": [
+        [
+          687,
+          342
+        ]
+      ]
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:26.176",
+    "event": "LOOT_CLICK",
+    "data": {
+      "cx": 687,
+      "cy": 342,
+      "index": 1,
+      "total": 1
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:26.233",
+    "event": "LOOT_DONE",
+    "data": {
+      "reason": "all_clicked"
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:26.280",
+    "event": "PATROL_START"
+  },
+  {
+    "timestamp": "2026-09-17T09:12:27.069",
+    "event": "LOOT_START",
+    "data": {
+      "count": 1,
+      "targets": [
+        [
+          844,
+          418
+        ]
+      ]
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:27.513",
+    "event": "LOOT_CLICK",
+    "data": {
+      "cx": 844,
+      "cy": 418,
+      "index": 1,
+      "total": 1
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:27.559",
+    "event": "LOOT_DONE",
+    "data": {
+      "reason": "all_clicked"
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:27.570",
+    "event": "PATROL_START"
+  },
+  {
+    "timestamp": "2026-09-17T09:12:28.104",
+    "event": "LOOT_START",
+    "data": {
+      "count": 1,
+      "targets": [
+        [
+          889,
+          438
+        ]
+      ]
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:28.532",
+    "event": "LOOT_CLICK",
+    "data": {
+      "cx": 889,
+      "cy": 438,
+      "index": 1,
+      "total": 1
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:28.600",
+    "event": "LOOT_DONE",
+    "data": {
+      "reason": "all_clicked"
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:28.645",
+    "event": "PATROL_START"
+  },
+  {
+    "timestamp": "2026-09-17T09:12:29.727",
+    "event": "LOOT_START",
+    "data": {
+      "count": 1,
+      "targets": [
+        [
+          700,
+          441
+        ]
+      ]
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:30.171",
+    "event": "LOOT_CLICK",
+    "data": {
+      "cx": 700,
+      "cy": 441,
+      "index": 1,
+      "total": 1
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:30.214",
+    "event": "LOOT_DONE",
+    "data": {
+      "reason": "all_clicked"
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:30.248",
+    "event": "PATROL_START"
+  },
+  {
+    "timestamp": "2026-09-17T09:12:30.632",
+    "event": "LOOT_START",
+    "data": {
+      "count": 1,
+      "targets": [
+        [
+          587,
+          442
+        ]
+      ]
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:31.019",
+    "event": "LOOT_CLICK",
+    "data": {
+      "cx": 587,
+      "cy": 442,
+      "index": 1,
+      "total": 1
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:31.070",
+    "event": "LOOT_DONE",
+    "data": {
+      "reason": "all_clicked"
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:31.101",
+    "event": "PATROL_START"
+  },
+  {
+    "timestamp": "2026-09-17T09:12:44.004",
+    "event": "LOOT_START",
+    "data": {
+      "count": 1,
+      "targets": [
+        [
+          676,
+          437
+        ]
+      ]
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:44.392",
+    "event": "LOOT_CLICK",
+    "data": {
+      "cx": 676,
+      "cy": 437,
+      "index": 1,
+      "total": 1
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:44.414",
+    "event": "LOOT_DONE",
+    "data": {
+      "reason": "all_clicked"
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:44.424",
+    "event": "PATROL_START"
+  },
+  {
+    "timestamp": "2026-09-17T09:12:45.522",
+    "event": "LOOT_START",
+    "data": {
+      "count": 1,
+      "targets": [
+        [
+          638,
+          397
+        ]
+      ]
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:45.955",
+    "event": "LOOT_CLICK",
+    "data": {
+      "cx": 638,
+      "cy": 397,
+      "index": 1,
+      "total": 1
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:45.998",
+    "event": "LOOT_DONE",
+    "data": {
+      "reason": "all_clicked"
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:46.021",
+    "event": "PATROL_START"
+  },
+  {
+    "timestamp": "2026-09-17T09:12:46.416",
+    "event": "LOOT_START",
+    "data": {
+      "count": 1,
+      "targets": [
+        [
+          638,
+          408
+        ]
+      ]
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:46.855",
+    "event": "LOOT_CLICK",
+    "data": {
+      "cx": 638,
+      "cy": 408,
+      "index": 1,
+      "total": 1
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:46.894",
+    "event": "LOOT_DONE",
+    "data": {
+      "reason": "all_clicked"
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:46.919",
+    "event": "PATROL_START"
+  },
+  {
+    "timestamp": "2026-09-17T09:12:48.115",
+    "event": "TARGET_SELECTED",
+    "data": {
+      "cx": 1059,
+      "cy": 338,
+      "conf": 0.236,
+      "abs_cx": 1431,
+      "abs_cy": 597
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:48.115",
+    "event": "COMBAT_START",
+    "data": {
+      "cx": 1059,
+      "cy": 338,
+      "conf": 0.236
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:54.195",
+    "event": "TARGET_LOST",
+    "data": {
+      "target": "cx=1059 cy=338 conf=0.24",
+      "miss_timeout_sec": 3.5
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:55.770",
+    "event": "TARGET_SELECTED",
+    "data": {
+      "cx": 499,
+      "cy": 435,
+      "conf": 0.369,
+      "abs_cx": 871,
+      "abs_cy": 694
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:12:55.770",
+    "event": "COMBAT_START",
+    "data": {
+      "cx": 499,
+      "cy": 435,
+      "conf": 0.369
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:13:03.734",
+    "event": "TARGET_LOST",
+    "data": {
+      "target": "cx=499 cy=435 conf=0.37",
+      "miss_timeout_sec": 3.5
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:13:04.402",
+    "event": "TARGET_SELECTED",
+    "data": {
+      "cx": 735,
+      "cy": 333,
+      "conf": 0.404,
+      "abs_cx": 1107,
+      "abs_cy": 592
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:13:04.402",
+    "event": "COMBAT_START",
+    "data": {
+      "cx": 735,
+      "cy": 333,
+      "conf": 0.404
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:13:10.357",
+    "event": "COMBAT_BLOCK_NEW_ATTACK",
+    "data": {
+      "target": "cx=735 cy=333 conf=0.40"
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:13:13.332",
+    "event": "TARGET_LOST",
+    "data": {
+      "target": "cx=735 cy=333 conf=0.40",
+      "miss_timeout_sec": 3.5
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:13:13.721",
+    "event": "TARGET_SELECTED",
+    "data": {
+      "cx": 1080,
+      "cy": 406,
+      "conf": 0.309,
+      "abs_cx": 1452,
+      "abs_cy": 665
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:13:13.721",
+    "event": "COMBAT_START",
+    "data": {
+      "cx": 1080,
+      "cy": 406,
+      "conf": 0.309
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:13:21.772",
+    "event": "COMBAT_BLOCK_NEW_ATTACK",
+    "data": {
+      "target": "cx=1080 cy=406 conf=0.31"
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:13:25.299",
+    "event": "TARGET_LOST",
+    "data": {
+      "target": "cx=1080 cy=406 conf=0.31",
+      "miss_timeout_sec": 3.5
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:13:50.388",
+    "event": "LOOT_START",
+    "data": {
+      "count": 1,
+      "targets": [
+        [
+          824,
+          323
+        ]
+      ]
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:13:50.833",
+    "event": "LOOT_CLICK",
+    "data": {
+      "cx": 824,
+      "cy": 323,
+      "index": 1,
+      "total": 1
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:13:50.857",
+    "event": "LOOT_DONE",
+    "data": {
+      "reason": "all_clicked"
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:13:50.888",
+    "event": "PATROL_START"
+  },
+  {
+    "timestamp": "2026-09-17T09:13:51.287",
+    "event": "LOOT_START",
+    "data": {
+      "count": 1,
+      "targets": [
+        [
+          831,
+          324
+        ]
+      ]
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:13:51.678",
+    "event": "LOOT_CLICK",
+    "data": {
+      "cx": 831,
+      "cy": 324,
+      "index": 1,
+      "total": 1
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:13:51.722",
+    "event": "LOOT_DONE",
+    "data": {
+      "reason": "all_clicked"
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:13:51.750",
+    "event": "PATROL_START"
+  },
+  {
+    "timestamp": "2026-09-17T09:13:53.152",
+    "event": "TARGET_SELECTED",
+    "data": {
+      "cx": 496,
+      "cy": 354,
+      "conf": 0.276,
+      "abs_cx": 868,
+      "abs_cy": 613
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:13:53.152",
+    "event": "COMBAT_START",
+    "data": {
+      "cx": 496,
+      "cy": 354,
+      "conf": 0.276
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:13:56.780",
+    "event": "TARGET_LOST",
+    "data": {
+      "target": "cx=496 cy=354 conf=0.28",
+      "miss_timeout_sec": 3.5
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:14:00.516",
+    "event": "TARGET_SELECTED",
+    "data": {
+      "cx": 25,
+      "cy": 411,
+      "conf": 0.203,
+      "abs_cx": 397,
+      "abs_cy": 670
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:14:00.516",
+    "event": "COMBAT_START",
+    "data": {
+      "cx": 25,
+      "cy": 411,
+      "conf": 0.203
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:14:02.028",
+    "event": "COMBAT_BLOCK_NEW_ATTACK",
+    "data": {
+      "target": "cx=25 cy=411 conf=0.20"
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:14:08.995",
+    "event": "TARGET_LOST",
+    "data": {
+      "target": "cx=25 cy=411 conf=0.20",
+      "miss_timeout_sec": 3.5
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:14:20.773",
+    "event": "TARGET_SELECTED",
+    "data": {
+      "cx": 215,
+      "cy": 382,
+      "conf": 0.235,
+      "abs_cx": 587,
+      "abs_cy": 641
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:14:20.773",
+    "event": "COMBAT_START",
+    "data": {
+      "cx": 215,
+      "cy": 382,
+      "conf": 0.235
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:14:27.652",
+    "event": "TARGET_LOST",
+    "data": {
+      "target": "cx=215 cy=382 conf=0.23",
+      "miss_timeout_sec": 3.5
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:14:49.018",
+    "event": "TARGET_SELECTED",
+    "data": {
+      "cx": 42,
+      "cy": 264,
+      "conf": 0.42,
+      "abs_cx": 414,
+      "abs_cy": 523
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:14:49.018",
+    "event": "COMBAT_START",
+    "data": {
+      "cx": 42,
+      "cy": 264,
+      "conf": 0.42
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:14:49.095",
+    "event": "COMBAT_BLOCK_NEW_ATTACK",
+    "data": {
+      "target": "cx=42 cy=264 conf=0.42"
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:14:52.613",
+    "event": "TARGET_LOST",
+    "data": {
+      "target": "cx=42 cy=264 conf=0.42",
+      "miss_timeout_sec": 3.5
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:14:55.237",
+    "event": "LOOT_START",
+    "data": {
+      "count": 1,
+      "targets": [
+        [
+          297,
+          79
+        ]
+      ]
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:14:55.668",
+    "event": "LOOT_CLICK",
+    "data": {
+      "cx": 297,
+      "cy": 79,
+      "index": 1,
+      "total": 1
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:14:55.719",
+    "event": "LOOT_DONE",
+    "data": {
+      "reason": "all_clicked"
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:14:55.746",
+    "event": "PATROL_START"
+  },
+  {
+    "timestamp": "2026-09-17T09:14:57.702",
+    "event": "TARGET_SELECTED",
+    "data": {
+      "cx": 345,
+      "cy": 385,
+      "conf": 0.431,
+      "abs_cx": 717,
+      "abs_cy": 644
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:14:57.702",
+    "event": "COMBAT_START",
+    "data": {
+      "cx": 345,
+      "cy": 385,
+      "conf": 0.431
+    }
+  },
+  {
+    "timestamp": "2026-09-17T09:14:59.128",
+    "event": "COMBAT_BLOCK_NEW_ATTACK",
+    "data": {
+      "target": "cx=345 cy=385 conf=0.43"
+    }
+  }
+]
