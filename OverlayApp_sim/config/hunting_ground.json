@@ -1,0 +1,15 @@
+{
+  "name": "test_field",
+  "points": [
+    {"name": "Start",  "x": 100, "y": 236},
+    {"name": "P1",     "x": 300, "y": 150},
+    {"name": "P2",     "x": 567, "y": 200},
+    {"name": "P3",     "x": 800, "y": 300},
+    {"name": "P4",     "x": 950, "y": 180},
+    {"name": "Return", "x": 100, "y": 236}
+  ],
+  "routes": [
+    ["Start", "P1", "P2", "P3", "P4", "Return"],
+    ["Return", "P4", "P3", "P2", "P1", "Start"]
+  ]
+}
