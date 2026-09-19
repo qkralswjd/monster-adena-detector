@@ -476,6 +476,78 @@ check("maxActiveTargets=1 → secondary = -1",
       f"secondary={res_one.secondaryTargetId}, primary={res_one.primaryTargetId}")
 
 # ══════════════════════════════════════════════════════════════════════════════
+# Q8. Pico HID 절대좌표 변환 검증
+#     SimulationEngine.h MakeAttackEvent() 변환 로직 Python 재현
+# ══════════════════════════════════════════════════════════════════════════════
+print("\n[Q8] Pico HID 절대좌표 변환 검증 (SimulationEngine.h MakeAttackEvent)")
+
+def make_attack_hid(center_pixel_x, center_pixel_y,
+                    frame_w=1135, frame_h=472,
+                    window_left=100, window_top=50,
+                    monitor_w=1920, monitor_h=1080):
+    """
+    SimulationEngine.h MakeAttackEvent() 변환 파이프라인 Python 재현
+    1) centerPixelX/Y : 게임 창 픽셀 (0 ~ frameW/frameH)
+    2) 모니터 절대 픽셀: windowLeft + centerPixelX
+    3) Pico HID 단위  : absX * 65535 / monitorW  (0 ~ 65535)
+    """
+    # 게임 창 픽셀 → 모니터 절대 픽셀
+    abs_x = window_left + int(center_pixel_x)
+    abs_y = window_top  + int(center_pixel_y)
+    # 모니터 절대 픽셀 → Pico HID 단위
+    safe_mon_w = monitor_w if monitor_w > 0 else 1920
+    safe_mon_h = monitor_h if monitor_h > 0 else 1080
+    hid_x = abs_x * 65535 // safe_mon_w
+    hid_y = abs_y * 65535 // safe_mon_h
+    return abs_x, abs_y, hid_x, hid_y
+
+# 케이스 1: 게임 창 좌상단(0,0) → 모니터 절대 (100,50)
+abs_x, abs_y, hid_x, hid_y = make_attack_hid(0, 0, window_left=100, window_top=50)
+check("창 픽셀(0,0) → 모니터절대 (100,50)",
+      abs_x == 100 and abs_y == 50,
+      f"absX={abs_x}, absY={abs_y}")
+check("모니터절대(100,50)/1920x1080 → HID (3413,3030)",
+      hid_x == 100*65535//1920 and hid_y == 50*65535//1080,
+      f"hidX={hid_x} expect={100*65535//1920}, hidY={hid_y} expect={50*65535//1080}")
+
+# 케이스 2: 게임 창 중심 (567, 236) → 모니터 절대 (667, 286)
+abs_x, abs_y, hid_x, hid_y = make_attack_hid(567, 236, window_left=100, window_top=50)
+check("창 중심(567,236) → 모니터절대 (667,286)",
+      abs_x == 667 and abs_y == 286,
+      f"absX={abs_x}, absY={abs_y}")
+check("HID 단위 0~65535 범위 이내",
+      0 <= hid_x <= 65535 and 0 <= hid_y <= 65535,
+      f"hidX={hid_x}, hidY={hid_y}")
+
+# 케이스 3: 게임 창 우하단 (1135, 472) → 정확한 HID 값 검증
+abs_x, abs_y, hid_x, hid_y = make_attack_hid(1135, 472, window_left=100, window_top=50)
+expected_hid_x = 1235 * 65535 // 1920
+expected_hid_y =  522 * 65535 // 1080
+check("창 우하단(1135,472) → HID 값 정확성",
+      hid_x == expected_hid_x and hid_y == expected_hid_y,
+      f"hidX={hid_x} expect={expected_hid_x}, hidY={hid_y} expect={expected_hid_y}")
+
+# 케이스 4: windowLeft/Top = 0 (창이 모니터 좌상단에 있을 때)
+abs_x, abs_y, hid_x, hid_y = make_attack_hid(567, 236, window_left=0, window_top=0)
+check("windowLeft=0, windowTop=0 → 게임 창 픽셀 = 모니터 절대 픽셀",
+      abs_x == 567 and abs_y == 236,
+      f"absX={abs_x}, absY={abs_y}")
+
+# 케이스 5: monitorW=0 방어 로직 (0으로 나누기 방지)
+abs_x, abs_y, hid_x, hid_y = make_attack_hid(500, 200, monitor_w=0, monitor_h=0)
+check("monitorW=0 방어 → safeMonW=1920 폴백 적용",
+      0 <= hid_x <= 65535 and 0 <= hid_y <= 65535,
+      f"hidX={hid_x}, hidY={hid_y} (폴백 1920x1080 기준)")
+
+# 케이스 6: 모니터 2560x1440 (QHD) 스케일
+abs_x, abs_y, hid_x, hid_y = make_attack_hid(567, 236, window_left=200, window_top=100,
+                                               monitor_w=2560, monitor_h=1440)
+check("QHD(2560x1440) 모니터에서도 HID 단위 0~65535 범위",
+      0 <= hid_x <= 65535 and 0 <= hid_y <= 65535,
+      f"hidX={hid_x}, hidY={hid_y}")
+print(f"         좌표 흐름: 창픽셀(567,236) → 절대({200+567},{100+236}) → HID({hid_x},{hid_y})")
+
+# ══════════════════════════════════════════════════════════════════════════════
 # 최종 집계
 # ══════════════════════════════════════════════════════════════════════════════
 print("\n" + "=" * 70)

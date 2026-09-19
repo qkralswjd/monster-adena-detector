@@ -104,9 +104,11 @@ struct AttackSimEvent {
     double      endMs         = 0.0;
 
     // 시뮬레이션된 drag 정보 (실제 입력 없음)
-    int         dragFromX     = 0;
+    // dragFromX/Y, dragToX/Y = Pico HID 단위 (0~65535)
+    // absFromX/Y, absToX/Y   = 모니터 절대 픽셀 (디버그용)
+    int         dragFromX     = 0;   // Pico HID 단위
     int         dragFromY     = 0;
-    int         dragToX       = 0;
+    int         dragToX       = 0;   // Pico HID 단위
     int         dragToY       = 0;
     double      dragDurationMs= 150.0;
 
@@ -121,10 +123,10 @@ struct AttackSimEvent {
            << "\"confidence\":"    << std::setprecision(4) << confidence << ","
            << "\"startMs\":"       << std::setprecision(2) << startMs   << ","
            << "\"endMs\":"         << endMs         << ","
-           << "\"dragFromX\":"     << dragFromX     << ","
-           << "\"dragFromY\":"     << dragFromY     << ","
-           << "\"dragToX\":"       << dragToX       << ","
-           << "\"dragToY\":"       << dragToY       << ","
+           << "\"dragFromX_hid\":" << dragFromX     << ","
+           << "\"dragFromY_hid\":" << dragFromY     << ","
+           << "\"dragToX_hid\":"   << dragToX       << ","
+           << "\"dragToY_hid\":"   << dragToY       << ","
            << "\"dragDurationMs\":" << dragDurationMs
            << "}";
         return ss.str();

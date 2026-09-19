@@ -25,9 +25,28 @@
 
 // ── 시뮬레이션 설정 ──────────────────────────────────────────────────────────
 struct SimEngineConfig {
-    // 프레임 해상도 (Detection 정규화 좌표 → 픽셀 변환에 사용)
-    int   frameW          = 1135;   // ROI 너비
-    int   frameH          = 472;    // ROI 높이
+    // 프레임 해상도 (Detection 정규화 좌표 → 게임 창 픽셀 변환에 사용)
+    // ScreenCapture가 캡처한 게임 창 전체 크기 (ROI 아님)
+    int   frameW          = 1135;   // 게임 창 너비 (픽셀)
+    int   frameH          = 472;    // 게임 창 높이 (픽셀)
+
+    // ── Pico HID 절대좌표 변환용 ─────────────────────────────────────────
+    // main.cpp: DwmGetWindowAttribute(DWMWA_EXTENDED_FRAME_BOUNDS) 결과를
+    // gameWindowRect에서 읽어서 채워 넣는다.
+    //
+    //   SimEngineConfig cfg;
+    //   cfg.windowLeft = gameWindowRect.x;   // rect.left
+    //   cfg.windowTop  = gameWindowRect.y;   // rect.top
+    //   cfg.monitorW   = GetSystemMetrics(SM_CXSCREEN);
+    //   cfg.monitorH   = GetSystemMetrics(SM_CYSCREEN);
+    //
+    // 변환 공식:
+    //   absX = windowLeft + centerPixelX          (모니터 절대 픽셀)
+    //   hidX = absX * 65535 / monitorW            (Pico HID 단위 0~65535)
+    int   windowLeft      = 0;      // 게임 창 좌상단 X (모니터 절대 픽셀)
+    int   windowTop       = 0;      // 게임 창 좌상단 Y (모니터 절대 픽셀)
+    int   monitorW        = 1920;   // 모니터 전체 너비 (픽셀)
+    int   monitorH        = 1080;   // 모니터 전체 높이 (픽셀)
 
     // 공격 선택 기준
     float minConfidence   = 0.50f;  // CASE A 기준과 동일
@@ -39,8 +58,8 @@ struct SimEngineConfig {
     // 이동 시뮬레이션
     double moveSpeedPxPerSec = 200.0; // 가상 이동 속도 (픽셀/초)
 
-    // 캐릭터 초기 위치 (픽셀, ROI 기준)
-    float  charStartX     = 567.0f; // ROI 중심 근처
+    // 캐릭터 초기 위치 (픽셀, 게임 창 기준)
+    float  charStartX     = 567.0f; // 게임 창 중심 근처
     float  charStartY     = 236.0f;
 
     // 로그 레벨 (0=quiet, 1=summary, 2=verbose)
@@ -382,6 +401,14 @@ private:
     }
 
     // 공격 이벤트 생성
+    // ── 좌표 변환 파이프라인 ─────────────────────────────────────────────
+    // 1) tc.centerPixelX/Y : 게임 창 픽셀 (0 ~ frameW/frameH)
+    // 2) 모니터 절대 픽셀  : windowLeft + centerPixelX
+    // 3) Pico HID 단위     : absX * 65535 / monitorW  (0 ~ 65535)
+    //
+    // windowLeft/Top = DwmGetWindowAttribute(DWMWA_EXTENDED_FRAME_BOUNDS)
+    // monitorW/H     = GetSystemMetrics(SM_CXSCREEN / SM_CYSCREEN)
+    // ─────────────────────────────────────────────────────────────────────
     AttackSimEvent MakeAttackEvent(const TargetCandidate& tc, double nowMs) {
         AttackSimEvent ev;
         ev.targetId       = tc.id;
@@ -391,12 +418,33 @@ private:
         ev.startMs        = nowMs;
         ev.endMs          = nowMs + m_cfg.attackDragMs;
 
-        // drag: 캐릭터 현재 위치 → 목표 중심
-        ev.dragFromX      = static_cast<int>(m_charX);
-        ev.dragFromY      = static_cast<int>(m_charY);
-        ev.dragToX        = static_cast<int>(tc.centerPixelX);
-        ev.dragToY        = static_cast<int>(tc.centerPixelY);
+        // ── 게임 창 픽셀 → 모니터 절대 픽셀 ──────────────────────────
+        const int absTargetX = m_cfg.windowLeft + static_cast<int>(tc.centerPixelX);
+        const int absTargetY = m_cfg.windowTop  + static_cast<int>(tc.centerPixelY);
+        const int absCharX   = m_cfg.windowLeft + static_cast<int>(m_charX);
+        const int absCharY   = m_cfg.windowTop  + static_cast<int>(m_charY);
+
+        // ── 모니터 절대 픽셀 → Pico HID 단위 (0~65535) ───────────────
+        // monitorW/H가 0이면 변환 없이 픽셀 그대로 (실수 방지 가드)
+        const int safeMonW = (m_cfg.monitorW > 0) ? m_cfg.monitorW : 1920;
+        const int safeMonH = (m_cfg.monitorH > 0) ? m_cfg.monitorH : 1080;
+
+        ev.dragFromX      = absCharX   * 65535 / safeMonW;
+        ev.dragFromY      = absCharY   * 65535 / safeMonH;
+        ev.dragToX        = absTargetX * 65535 / safeMonW;
+        ev.dragToY        = absTargetY * 65535 / safeMonH;
         ev.dragDurationMs = m_cfg.attackDragMs;
+
+        if (m_cfg.logLevel >= 2) {
+            std::printf(
+                "  [CoordConv] gameWinPx(%.0f,%.0f)"
+                " -> absPx(%d,%d)"
+                " -> hidUnit(%d,%d)\n",
+                tc.centerPixelX, tc.centerPixelY,
+                absTargetX, absTargetY,
+                ev.dragToX, ev.dragToY
+            );
+        }
         return ev;
     }
 
