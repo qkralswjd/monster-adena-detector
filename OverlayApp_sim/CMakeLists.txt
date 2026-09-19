@@ -233,3 +233,39 @@ target_compile_definitions(SimulationTest PRIVATE
 if(MSVC)
     target_compile_options(SimulationTest PRIVATE /W4 /permissive-)
 endif()
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SimTestUnit: C++ 독립 유닛 테스트
+#   - Win32/D3D11/ONNX 의존성 없음 (헤더-only simulation 모듈만 사용)
+#   - 실제 HID/마우스/키보드 입력 없음 (MockPicoHID 전용)
+#   - Windows 이외 환경에서도 컴파일 가능 (std::chrono 사용)
+#   - 기존 OverlayApp, AdenaDetectTest, SimulationTest 빌드에 영향 없음
+# ─────────────────────────────────────────────────────────────────────────────
+add_executable(SimTestUnit
+    src/tools/SimTest_unit.cpp
+    src/simulation/SimulationEngine.cpp   # 컴파일 단위 stub (헤더-only 분리)
+)
+
+target_include_directories(SimTestUnit PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+# ★ D3D11/ONNX/WIC 의존성 없음 — 순수 C++ 표준 라이브러리만 사용 ★
+# target_link_libraries: 없음 (모든 구현이 헤더-only)
+
+target_compile_definitions(SimTestUnit PRIVATE
+    NOMINMAX
+    WIN32_LEAN_AND_MEAN
+)
+
+if(MSVC)
+    target_compile_options(SimTestUnit PRIVATE /W4 /permissive-)
+endif()
+
+# config/ 폴더 복사 (hunting_ground.json 참조용)
+add_custom_command(TARGET SimTestUnit POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/config
+        $<TARGET_FILE_DIR:SimTestUnit>/config
+)
